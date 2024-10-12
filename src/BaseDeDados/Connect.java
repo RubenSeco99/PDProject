@@ -7,9 +7,10 @@ public class Connect {
     static final String DB_URL = "jdbc:sqlite:src/BaseDeDados/BaseDados.db";
     // Define o caminho para o arquivo da base de dados
 
+    static Connection conn = null;
+    static Statement stmt = null;
+
     public static void criarBaseDeDados() {
-        Connection conn = null;
-        Statement stmt = null;
 
         try {
             // Conectar a base de dados (será criada se não existir)
@@ -37,12 +38,15 @@ public class Connect {
             System.out.println("Erro de SQL: " + ex.getMessage());
         } finally {
             // Fechar os recursos
-            try {
-                if (stmt != null) stmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                System.out.println("Erro ao fechar os recursos: " + ex.getMessage());
-            }
+            fecharBaseDeDados();
+        }
+    }
+    public static void fecharBaseDeDados(){
+        try {
+            if (stmt != null) stmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException ex) {
+            System.out.println("Erro ao fechar os recursos: " + ex.getMessage());
         }
     }
 }

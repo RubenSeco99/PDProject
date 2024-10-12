@@ -36,10 +36,11 @@ public class Servidor {
         int servicePort = Integer.parseInt(args[0]);
         String caminhoBD = args[1];
 
+
         try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
 
             System.out.println("Server iniciado...\n");
-
+            //Lançar thread para enviar base de dados atualizada ao servidor de backup atualizando a versão
             while (true) {
                 try (Socket clientSocket = serverSocket.accept()) {
                     //[PT] Deserializar o objecto
@@ -50,14 +51,14 @@ public class Servidor {
                     System.out.println("Recebido \"" + comunicacaoRecebida.toString() + "\" de "
                             + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
 
-                    if(comunicacaoRecebida.getMensaguem().equalsIgnoreCase("registo")){
+                    if(comunicacaoRecebida.getMensagem().equalsIgnoreCase("registo")){
                         if(Funcoes.verificaRegisto(listaUtilizadores, comunicacaoRecebida.getUtilizador().getEmail())){
                             listaUtilizadores.add(comunicacaoRecebida.getUtilizador());
                         }else{
-                            comunicacaoSaida.setMensaguem("Email existente");
+                            comunicacaoSaida.setMensagem("Email existente");
                             //Já existe um email igual, enviar erro
                         }
-                    }else if(comunicacaoRecebida.getMensaguem().equalsIgnoreCase("login")){
+                    }else if(comunicacaoRecebida.getMensagem().equalsIgnoreCase("login")){
 
                     }
                 }

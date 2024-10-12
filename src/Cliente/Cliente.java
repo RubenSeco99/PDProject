@@ -48,15 +48,17 @@ public class Cliente {
                     op = Integer.parseInt(in.readLine());
 
                     if(op == 1) {
-                        comunicacao.setMensaguem("Registo");
+                        comunicacao.setMensagem("Registo");
                         break;
                     }else if(op == 2) {
-                        comunicacao.setMensaguem("Login");
+                        comunicacao.setMensagem("Login");
                         break;
                     }else{
                         System.out.println("Opcao invalida!");
                     }
                 }
+
+                //Lançar thread para receber pedidos do servidor
 
                 while(true) {
 

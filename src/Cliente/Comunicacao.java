@@ -6,7 +6,7 @@ import Utilizador.Utilizador;
 
 public class Comunicacao implements Serializable {
 
-    private String mensaguem;
+    private String mensagem;
     private Utilizador utilizador;
 
     public Comunicacao() {}
@@ -14,11 +14,11 @@ public class Comunicacao implements Serializable {
     public Comunicacao(Utilizador utilizador) {
         this.utilizador = utilizador;
     }
-    public String getMensaguem() {return mensaguem;}
+    public String getMensagem() {return mensagem;}
 
     public Utilizador getUtilizador() {return utilizador;}
 
-    public void setMensaguem(String mensaguem) {
-        this.mensaguem = mensaguem;
+    public void setMensagem(String mensagem) {
+        this.mensagem = mensagem;
     }
 }
