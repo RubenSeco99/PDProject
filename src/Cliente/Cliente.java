@@ -103,6 +103,7 @@ public class Cliente {
                     Comunicacao comunicacao = new Comunicacao(utilizador);
 
                     if(op == 1) {
+                        // não pode fazer o registo uma 2º vez
                         comunicacao.setMensagem("Registo");
                     }else if(op == 2) {
                         comunicacao.setMensagem("Login");

@@ -6,9 +6,9 @@ Requisitos funcionais:✅
     .Conexão base de dados❎
     .Inserção, edição e remoção de dados na base de dados❎
   --Utilizadores não Registados--
-   .Registo de um novo src.Utilizador❎
+   .Registo de um novo Utilizador❎
   --Utilizadores Registados--
-   .Autenticação de um src.Utilizador❎
+   .Autenticação de um Utilizador❎
    .Edição dos dados de registo❎
    .Criação de um novo Grupo❎
    .Criação de convites para adesão a um grupo❎
