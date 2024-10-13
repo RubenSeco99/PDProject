@@ -1,0 +1,24 @@
+Requisitos funcionais:✅
+  --Utilizadores não Registados--
+   .Registo de um novo src.Utilizador❎
+  --Utilizadores Registados--
+   .Autenticação de um src.Utilizador❎
+   .Edição dos dados de registo❎
+   .Criação de um novo Grupo❎
+   .Criação de convites para adesão a um grupo❎
+   .Visualização dos convites de adesão (recebidos/pendentes)❎
+   .Listar grupos pertencentes(do src.Utilizador)❎
+   .Edição do nome de um Grupo❎
+   .Eliminação de um grupo❎
+   .Saída de um grupo❎
+   .Inserção de despesa❎
+   .Visualização do total gasto❎
+   .Visualização do histórico de despesas❎
+   .Exportação da lista de despesas❎
+   .Edição de despesa❎
+   .Eliminação de despesa❎
+   .Inserção de pagamentos entre Utilizadores❎
+   .Listagem dos pagamentos entre Utilizadores❎
+   .Eliminação dos pagamentos entre Utilizadores❎
+   .Visualização de valores correntes /elemento❎
+   .Logout❎
