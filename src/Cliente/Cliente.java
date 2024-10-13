@@ -2,30 +2,60 @@ package Cliente;
 
 import Utilizador.Utilizador;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
+import java.sql.Time;
 
 class processServerRequest implements Runnable{
 
-    Socket socket;
+    private Socket socket;
+    private Comunicacao response;
+    private boolean running;
 
     public processServerRequest(Socket socket){
         this.socket = socket;
+        running = true;
     }
 
+    public void terminate(){running = false;}
+
     @Override
-    public void run(){
+    public void run() {
 
+        try {
+            while(running){
 
+                try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
 
-     }
+                    response = (Comunicacao) Oin.readObject();
+
+                    System.out.println("\nResponse: " + response.toString());
+                    System.out.println("> ");
+
+                }
+            }
+        }
+        catch (UnknownHostException e) {
+        System.out.println("Destino desconhecido:\n\t" + e);
+        } catch (NumberFormatException e) {
+            System.out.println("O porto do servidor deve ser um inteiro positivo.");
+        } catch (SocketTimeoutException e) {
+            System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
+        } catch (SocketException e) {
+            System.out.println("Ocorreu um erro ao nivel do socket TCP:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+        } catch(ClassNotFoundException e){
+            System.out.println("O objecto recebido não é do tipo esperado:\n\t"+e);
+        }
+
+    }
 }
 
 public class Cliente {
 
-    public static final int TIMEOUT = 3000;
+    public static final int TIMEOUT = 5000;
+    public static String EXIT = "EXIT";
 
     public static void main(String[] args) {
 
@@ -41,13 +71,18 @@ public class Cliente {
         Utilizador utilizador = new Utilizador();
 
         try {
-            serverAddr = InetAddress.getLocalHost();  //Passar por parametro
-            serverPort = 5000; //Integer.parseInt(args[0]);
+            serverAddr = InetAddress.getByName(args[0]);  //Passar por parametro
+            serverPort = Integer.parseInt(args[1]);
 
-            System.out.println("Coloque o seu email:");
+            System.out.print("Coloque o seu nome: ");
+            utilizador.setNome(in.readLine());
+            System.out.println();
+            System.out.print("Coloque o seu email: ");
             utilizador.setEmail(in.readLine());
-            System.out.println("Coloque a password:");
+            System.out.println();
+            System.out.print("Coloque a password: ");
             utilizador.setPassword(in.readLine());
+            System.out.println();
 
             Comunicacao comunicacao = new Comunicacao(utilizador);  //Objeto para comunicação
 
@@ -60,6 +95,7 @@ public class Cliente {
                             O que pretende fazer?
                             1. Registo
                             2. Login""");
+                    System.out.println("> ");
 
                     op = Integer.parseInt(in.readLine());
 
@@ -74,14 +110,24 @@ public class Cliente {
                     }
                 }
 
-                //Lançar thread para receber pedidos do servidor
+                ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
+                Oout.writeObject(comunicacao);
+                Oout.flush();
+
+                Thread td1 = new Thread(new processServerRequest(socket));
+                td1.start();
+                String pedido;
 
                 while(true) {
+                    System.out.print("> ");
+                    pedido = in.readLine();
 
+                    if (pedido.equalsIgnoreCase(EXIT)) {
+                        break;
+                    }
 
 
                 }
-
             }
         } catch (UnknownHostException e) {
             System.out.println("Destino desconhecido:\n\t" + e);

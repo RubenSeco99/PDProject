@@ -54,10 +54,24 @@ public class Servidor {
                     if(comunicacaoRecebida.getMensagem().equalsIgnoreCase("registo")){
                         if(Funcoes.verificaRegisto(listaUtilizadores, comunicacaoRecebida.getUtilizador().getEmail())){
                             listaUtilizadores.add(comunicacaoRecebida.getUtilizador());
+
+                            //TESTE DE CONECTIVIDADE
+                            comunicacaoSaida = comunicacaoRecebida;
+                            comunicacaoSaida.setMensagem("Aceite");
+                            ObjectOutputStream Oout = new ObjectOutputStream(clientSocket.getOutputStream());
+                            Oout.writeObject(comunicacaoSaida);
+                            Oout.flush();
+
                         }else{
-                            comunicacaoSaida.setMensagem("Email existente");
+
                             //Já existe um email igual, enviar erro
+                            comunicacaoSaida = comunicacaoRecebida;
+                            comunicacaoSaida.setMensagem("Email existente");
+                            ObjectOutputStream Oout = new ObjectOutputStream(clientSocket.getOutputStream());
+                            Oout.writeObject(comunicacaoSaida);
+                            Oout.flush();
                         }
+
                     }else if(comunicacaoRecebida.getMensagem().equalsIgnoreCase("login")){
 
                     }

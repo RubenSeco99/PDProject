@@ -21,4 +21,10 @@ public class Comunicacao implements Serializable {
     public void setMensagem(String mensagem) {
         this.mensagem = mensagem;
     }
+
+    @Override
+    public String toString() {
+        return "Comunicacao : mensagem=" + mensagem +"\n " +
+               "Utilizador= " + utilizador.getEmail() + "\n";
+    }
 }

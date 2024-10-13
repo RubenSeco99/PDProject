@@ -16,7 +16,7 @@ rem Esperar alguns segundos para o servidor iniciar (ajuste conforme necessário
 timeout /t 2 /nobreak >nul
 
 rem Abrir uma nova janela para iniciar o Cliente
-start cmd /k "java -cp bin Cliente.Cliente 5000"
+start cmd /k "java -cp bin Cliente.Cliente localhost 5000"
 
 rem Pausar o terminal original para ver mensagens de erro ou saída
 pause

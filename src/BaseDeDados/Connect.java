@@ -57,7 +57,6 @@ public class Connect {
                     + "FOREIGN KEY (despesa_id) REFERENCES Despesa(id) ON DELETE CASCADE);";
             stmt.executeUpdate(tabelaUtilizadorDespesa);
 
-
             String tabelaPagamento = "CREATE TABLE IF NOT EXISTS Pagamento ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + "data TEXT NOT NULL, "

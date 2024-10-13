@@ -1,12 +1,13 @@
 package Utilizador;
 
-public class Utilizador {
+import java.io.Serializable;
+
+public class Utilizador implements Serializable {
 
     private String nome;
     private String password;
     private int telefone;
     private String email;
-
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
