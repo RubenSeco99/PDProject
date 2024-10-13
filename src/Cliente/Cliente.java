@@ -84,7 +84,6 @@ public class Cliente {
             utilizador.setPassword(in.readLine());
             System.out.println();
 
-            Comunicacao comunicacao = new Comunicacao(utilizador);
             //Objeto para comunicação
 
             Comunicacao response = new Comunicacao();
@@ -101,6 +100,8 @@ public class Cliente {
 
                     op = Integer.parseInt(in.readLine());
 
+                    Comunicacao comunicacao = new Comunicacao(utilizador);
+
                     if(op == 1) {
                         comunicacao.setMensagem("Registo");
                     }else if(op == 2) {
@@ -115,11 +116,10 @@ public class Cliente {
                     response = (Comunicacao) Oin.readObject();
                     System.out.println("\nResponse: " + response.toString());
 
-                    if(op == 2) {break;}
+                    if (op == 2 && response.getMensagem().equalsIgnoreCase("Login aceite")) {
+                        break;
+                    }
                 }
-
-
-
 
                 Thread td1 = new Thread(new processServerRequest(socket));
                 td1.start();
@@ -132,9 +132,6 @@ public class Cliente {
                     if (pedido.equalsIgnoreCase(EXIT)) {
                         break;
                     }
-
-
-
 
                 }
             } catch (ClassNotFoundException e) {

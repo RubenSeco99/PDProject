@@ -15,7 +15,6 @@ class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
     private boolean running;
-    //Comunicacao pedidoCliente;
     private static ArrayList <Utilizador> listaUtilizadores;
 
     public processaClienteThread(Socket clienteSocket, ArrayList<Utilizador> listaUtilizadores) {
@@ -34,7 +33,6 @@ class processaClienteThread implements Runnable {
                 try {
 
                     Comunicacao pedidoCliente = (Comunicacao) Oin.readObject();
-
                     Comunicacao respostaSaida = new Comunicacao();
 
                     System.out.println("\nPedido recebido: " + pedidoCliente.toString());
