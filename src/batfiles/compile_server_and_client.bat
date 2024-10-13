@@ -13,7 +13,7 @@ rem Abrir uma nova janela para iniciar o Servidor
 start cmd /c "java -cp bin;lib/sqlite-jdbc-3.46.1.3.jar Servidor.Servidor 5000 src/BaseDeDados/BaseDados.db"
 
 rem Esperar alguns segundos para o servidor iniciar (ajuste conforme necessário)
-timeout /t 2 /nobreak >nul
+ping -n 2 127.0.0.1 >null
 
 rem Abrir uma nova janela para iniciar o Cliente
 start cmd /k "java -cp bin Cliente.Cliente localhost 5000"
