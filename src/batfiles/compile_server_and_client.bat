@@ -10,7 +10,7 @@ rem Voltar para o diretório principal do projeto
 cd ..
 
 rem Abrir uma nova janela para iniciar o Servidor
-start cmd /k "java -cp bin Servidor.Servidor 5000 src/BaseDeDados/BaseDados.db"
+start cmd /c "java -cp bin;lib/sqlite-jdbc-3.46.1.3.jar Servidor.Servidor 5000 src/BaseDeDados/BaseDados.db"
 
 rem Esperar alguns segundos para o servidor iniciar (ajuste conforme necessário)
 timeout /t 2 /nobreak >nul

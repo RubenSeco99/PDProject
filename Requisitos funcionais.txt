@@ -1,4 +1,10 @@
 Requisitos funcionais:✅
+  -- Estrutura do projeto --
+    .Criar base de dados ✅
+    .Criar arquitetura multithread ✅
+    .Criar servidor backup e comunicação multicast ❎
+    .Conexão base de dados❎
+    .Inserção, edição e remoção de dados na base de dados❎
   --Utilizadores não Registados--
    .Registo de um novo src.Utilizador❎
   --Utilizadores Registados--

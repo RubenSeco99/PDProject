@@ -23,9 +23,9 @@ class processServerRequest implements Runnable{
     public void run() {
 
         try {
-            while(running){
+            try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
 
-                try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
+                while(running){
 
                     response = (Comunicacao) Oin.readObject();
 
@@ -84,12 +84,14 @@ public class Cliente {
             utilizador.setPassword(in.readLine());
             System.out.println();
 
-            Comunicacao comunicacao = new Comunicacao(utilizador);  //Objeto para comunicação
+            Comunicacao comunicacao = new Comunicacao(utilizador);
+            //Objeto para comunicação
+
+            Comunicacao response = new Comunicacao();
 
             try(Socket socket = new Socket(serverAddr, serverPort)) {
-                //3 segundos a espera de fazer comunicacao
-                socket.setSoTimeout(TIMEOUT);
-
+                ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream());
                 while(true) {
                     System.out.println("""
                             O que pretende fazer?
@@ -101,18 +103,23 @@ public class Cliente {
 
                     if(op == 1) {
                         comunicacao.setMensagem("Registo");
-                        break;
                     }else if(op == 2) {
                         comunicacao.setMensagem("Login");
-                        break;
                     }else{
                         System.out.println("Opcao invalida!");
                     }
+                    System.out.println(comunicacao.getMensagem());
+                    Oout.writeObject(comunicacao);
+                    Oout.flush();
+
+                    response = (Comunicacao) Oin.readObject();
+                    System.out.println("\nResponse: " + response.toString());
+
+                    if(op == 2) {break;}
                 }
 
-                ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
-                Oout.writeObject(comunicacao);
-                Oout.flush();
+
+
 
                 Thread td1 = new Thread(new processServerRequest(socket));
                 td1.start();
@@ -127,7 +134,11 @@ public class Cliente {
                     }
 
 
+
+
                 }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         } catch (UnknownHostException e) {
             System.out.println("Destino desconhecido:\n\t" + e);
