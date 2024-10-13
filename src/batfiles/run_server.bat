@@ -1,3 +1,3 @@
-java -cp ".\bin" Server 6000
+java -cp ".\bin" Servidor.Servidor 6000
 pause 
  

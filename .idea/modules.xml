@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/G10Meta1_PD.iml" filepath="$PROJECT_DIR$/G10Meta1_PD.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PDProject.iml" filepath="$PROJECT_DIR$/PDProject.iml" />
     </modules>
   </component>
 </project>

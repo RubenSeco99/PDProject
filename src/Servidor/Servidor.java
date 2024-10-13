@@ -33,11 +33,11 @@ public class Servidor {
         Comunicacao comunicacaoRecebida = new Comunicacao(); //Receber
         Comunicacao comunicacaoSaida = new Comunicacao(); //Enviar
         ArrayList<Utilizador> listaUtilizadores = new ArrayList<>();
+
         int servicePort = Integer.parseInt(args[0]);
         String caminhoBD = args[1];
 
-
-        try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
+        try (ServerSocket serverSocket = new ServerSocket(5000)) {
 
             System.out.println("Server iniciado...\n");
             //Lançar thread para enviar base de dados atualizada ao servidor de backup atualizando a versão

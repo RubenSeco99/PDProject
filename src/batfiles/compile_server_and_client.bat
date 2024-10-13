@@ -1,14 +1,22 @@
 @echo off
-REM Compila o cliente e servidor
 
-REM Diretório onde está a pasta src
-cd src
+rem Navegar até a pasta src onde estão os arquivos Java
+cd..
 
-REM Compilar o cliente
-javac Cliente/Cliente.java -d ../out/production/G10Meta1_PD
+rem Compilar todos os arquivos .java e colocar os binários na pasta bin
+javac -d ../bin Cliente/*.java Servidor/*.java
 
-REM Compilar o servidor
-javac Servidor/Servidor.java -d ../out/production/G10Meta1_PD
+rem Voltar para o diretório principal do projeto
+cd ..
 
-echo Compilação concluída com sucesso!
+rem Abrir uma nova janela para iniciar o Servidor
+start cmd /k "java -cp bin Servidor.Servidor 5000 src/BaseDeDados/BaseDados.db"
+
+rem Esperar alguns segundos para o servidor iniciar (ajuste conforme necessário)
+timeout /t 2 /nobreak >nul
+
+rem Abrir uma nova janela para iniciar o Cliente
+start cmd /k "java -cp bin Cliente.Cliente 5000"
+
+rem Pausar o terminal original para ver mensagens de erro ou saída
 pause
