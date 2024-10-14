@@ -1,26 +1,32 @@
 package Servidor;
 
-import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
-
+import BaseDeDados.ConnectDB;
 import BaseDeDados.UtilizadorDB;
 import Cliente.Comunicacao;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
+import com.sun.jdi.connect.spi.Connection;
 
-import static BaseDeDados.ConnectDB.criarBaseDeDados;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
     private boolean running;
-    private static ArrayList <Utilizador> listaUtilizadores;//temporario
+    private java.sql.Connection connection;
+    private UtilizadorDB utilizadorDB;
 
-    public processaClienteThread(Socket clienteSocket, ArrayList<Utilizador> listaUtilizadores) {
+    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection) {
         this.clienteSocket = clienteSocket;
-        this.listaUtilizadores = listaUtilizadores;
+        this.connection =  connection;
         this.running = true;
+        this.utilizadorDB = new UtilizadorDB(connection);
     }
 
     @Override
@@ -38,31 +44,26 @@ class processaClienteThread implements Runnable {
                     System.out.println("\nPedido recebido: " + pedidoCliente.toString());
                     System.out.println("> ");
 
-                    if(!pedidoCliente.getUtilizador().getAtivo()){
+                    if(pedidoCliente.getUtilizador().getAtivo()==0){
                         if(pedidoCliente.getMensagem().equalsIgnoreCase("Registo")){
-                            /*esta a funcionar, comentado por simplicidade.
-                            if(!Funcoes.isValidEmail(comunicacaoRecebida.getUtilizador().getEmail())){
-                                comunicacaoSaida = comunicacaoRecebida;
-                                comunicacaoSaida.setMensagem("Formato Email Inválido!");
-                                ObjectOutputStream Oout = new ObjectOutputStream(clientSocket.getOutputStream());
-                                Oout.writeObject(comunicacaoSaida);
+                            if(!Funcoes.isValidEmail(pedidoCliente.getUtilizador().getEmail())){
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Formato Email Inválido!");
+                                Oout.writeObject(respostaSaida);
                                 Oout.flush();
                             } else
-                            */
-                            if(Funcoes.verificaRegisto(listaUtilizadores, pedidoCliente.getUtilizador().getEmail())){
-                                listaUtilizadores.add(pedidoCliente.getUtilizador());
-                                //TESTE DE CONECTIVIDADE
+                            if(!utilizadorDB.verificaRegisto(pedidoCliente.getUtilizador().getEmail())){
+                                utilizadorDB.insertUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setMensagem("Aceite");
                             }else{
-                                //Já existe um email igual, enviar erro
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Email existente");
-
                             }
                         } else if(pedidoCliente.getMensagem().equalsIgnoreCase("login")){
-                            if(Funcoes.verificaLogin(listaUtilizadores, pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
-                                pedidoCliente.getUtilizador().setAtivo(true);
+                            if(utilizadorDB.verificaLogin(pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
+                                pedidoCliente.getUtilizador().setAtivo(1);
+                                utilizadorDB.updateUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Login aceite");
                             } else {
@@ -75,21 +76,28 @@ class processaClienteThread implements Runnable {
                         }
                     } else {
                         if(pedidoCliente.getMensagem().equalsIgnoreCase("logout")){
-                            for(var u: listaUtilizadores){
-                                if(u.getEmail().equalsIgnoreCase(pedidoCliente.getUtilizador().getEmail())){
-                                    u.setAtivo(false);
-                                    respostaSaida = pedidoCliente;
-                                    break;
-                                }
+                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
+                            if (utilizador != null) {
+                                utilizador.setAtivo(0);
+                                utilizadorDB.updateUtilizador(utilizador);
+                                respostaSaida.setMensagem("Logout aceite");
+                            } else {
+                                respostaSaida.setMensagem("Utilizador não encontrado.");
                             }
                         }
                     }
 
                     Oout.writeObject(respostaSaida);
                     Oout.flush();
+                    List<Utilizador> listaUtilizadores = utilizadorDB.selectTodosUtilizadores();
 
-                    for(var u: listaUtilizadores){
-                        System.out.println("Users registados : " + u.toString());
+                    // Itera sobre a lista de utilizadores e imprime seus dados
+                    for (Utilizador utilizador : listaUtilizadores) {
+                        System.out.println("Nome: " + utilizador.getNome());
+                        System.out.println("Email: " + utilizador.getEmail());
+                        System.out.println("Telefone: " + utilizador.getTelefone());
+                        System.out.println("Ativo: " + utilizador.getAtivo());
+                        System.out.println("---------------");
                     }
 
                 } catch (SocketException e) {
@@ -130,15 +138,13 @@ public class Servidor {
 
     public static void main(String[] args) throws IOException {
 
-        criarBaseDeDados(); //Cria base de dados
-
+        java.sql.Connection connection = ConnectDB.criarBaseDeDados();
         Comunicacao comunicacaoRecebida = new Comunicacao(); //Receber
         Comunicacao comunicacaoSaida = new Comunicacao(); //Enviar
         ArrayList<Thread> arrayThreads = new ArrayList<>();
-        ArrayList<Utilizador> listaUtilizadores = new ArrayList<>();
 
         int servicePort = Integer.parseInt(args[0]);
-        String caminhoBD = args[1];
+        //String caminhoBD = args[1]; //para uso futuro
 
         try (ServerSocket serverSocket = new ServerSocket(5000)) {
 
@@ -148,7 +154,7 @@ public class Servidor {
 
                 Socket clientSocket = serverSocket.accept();
 
-                Thread td = new Thread(new processaClienteThread(clientSocket, listaUtilizadores));
+                Thread td = new Thread(new processaClienteThread(clientSocket, (java.sql.Connection) connection));
                 td.start();
                 arrayThreads.add(td);
 
@@ -159,6 +165,9 @@ public class Servidor {
             System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
         } catch (IOException e) {
             System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
+        }
+        finally {
+            ConnectDB.criarBaseDeDados();
         }
     }
 }

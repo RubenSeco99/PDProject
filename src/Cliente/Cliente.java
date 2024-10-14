@@ -143,16 +143,43 @@ public class Cliente {
                     }
                 }
 
-                Thread td1 = new Thread(new processServerRequest(socket));
+                processServerRequest serverRequest = new processServerRequest(socket);//conversão para garantir saída no logout
+                Thread td1 = new Thread(serverRequest);
                 td1.start();
-                String pedido;
 
                 while(true) {
+                    System.out.println("""
+                        O que pretende fazer?
+                          1. Logout""");
                     System.out.print("> ");
-                    pedido = in.readLine();
+                    Comunicacao comunicacao = new Comunicacao(utilizador);
+                    try {
+                        op = Integer.parseInt(in.readLine());
+                        if(op == 1) {
+                            comunicacao.setMensagem("Logout");
 
-                    if (pedido.equalsIgnoreCase(EXIT)) {
-                        break;
+                        }else{
+                            System.out.println("Opcao invalida!");
+                            continue;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Opcao invalida! Insira uma opção válida.");
+                        continue;  // Volta ao início do ciclo se a entrada não for válida
+                    }
+                    System.out.println(comunicacao.getMensagem());
+                    Oout.writeObject(comunicacao);
+                    Oout.flush();
+                    if(op!=1){
+                    response = (Comunicacao) Oin.readObject();
+                    System.out.println("\nResponse: " + response.toString());
+                    }
+
+
+                    if (op==1 && response.getMensagem().equalsIgnoreCase("Logout aceite")) {
+                        System.out.println("Logout efetuado com sucesso!");
+                        serverRequest.terminate();
+                        socket.close();  // Agora pode fechar o socket
+                        break;  // Sai do loop
                     }
 
                 }

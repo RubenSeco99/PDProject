@@ -8,14 +8,14 @@ public class Utilizador implements Serializable {
     private String password;
     private int telefone;
     private String email;
-    private boolean ativo;
+    private int ativo;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
         this.password = password;
         this.telefone = telefone;
         this.email = email;
-        this.ativo = false;
+        this.ativo = 0;
     }
 
     public Utilizador() {}
@@ -28,8 +28,8 @@ public class Utilizador implements Serializable {
     public void setPassword(String password) {this.password = password;}
     public void setTelefone(int telefone) {this.telefone = telefone;}
     public void setEmail(String email) {this.email = email;}
-    public boolean getAtivo() {return ativo;}
-    public void setAtivo(boolean ativo) {this.ativo = ativo;}
+    public int getAtivo() {return ativo;}
+    public void setAtivo(int ativo) {this.ativo = ativo;}
 
 
 

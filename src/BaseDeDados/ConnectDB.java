@@ -10,7 +10,7 @@ public class ConnectDB {
     static Connection conn = null;
     static Statement stmt = null;
 
-    public static void criarBaseDeDados() {
+    public static Connection criarBaseDeDados() {
 
         try {
             // Conectar a base de dados (será criada se não existir)
@@ -23,7 +23,9 @@ public class ConnectDB {
                     + "nome TEXT NOT NULL, "
                     + "telefone TEXT, "
                     + "email TEXT NOT NULL UNIQUE, "
-                    + "password TEXT NOT NULL);";
+                    + "password TEXT NOT NULL, "
+                    + "ativo INTEGER NOT NULL DEFAULT 0);";//0==false, 1==true
+
             stmt.executeUpdate(tabelaUtilizador);
 
             String tabelaGrupo = "CREATE TABLE IF NOT EXISTS Grupo ("
@@ -77,10 +79,10 @@ public class ConnectDB {
 
         } catch (SQLException ex) {
             System.out.println("Erro de SQL: " + ex.getMessage());
-        } finally {
-            // Fechar os recursos
-            fecharBaseDeDados();
         }
+
+        return conn;
+
     }
     public static void fecharBaseDeDados(){
         try {
