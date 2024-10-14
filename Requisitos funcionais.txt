@@ -2,29 +2,29 @@ Requisitos funcionais:✅
   -- Estrutura do projeto --
     .Criar base de dados ✅
     .Criar arquitetura multithread ✅
-    .Criar servidor backup e comunicação multicast ❎
-    .Conexão base de dados❎
-    .Inserção, edição e remoção de dados na base de dados❎
+    .Criar servidor backup e comunicação multicast ❌
+    .Conexão base de dados✅
+    .Inserção, edição e remoção de dados na base de dados❌✅
   --Utilizadores não Registados--
-   .Registo de um novo Utilizador❎
+   .Registo de um novo Utilizador✅
   --Utilizadores Registados--
-   .Autenticação de um Utilizador❎
-   .Edição dos dados de registo❎
-   .Criação de um novo Utilizador.Grupo❎
-   .Criação de convites para adesão a um grupo❎
-   .Visualização dos convites de adesão (recebidos/pendentes)❎
-   .Listar grupos pertencentes(do src.Entidades)❎
-   .Edição do nome de um Entidades.Grupo❎
-   .Eliminação de um grupo❎
-   .Saída de um grupo❎
-   .Inserção de despesa❎
-   .Visualização do total gasto❎
-   .Visualização do histórico de despesas❎
-   .Exportação da lista de despesas❎
-   .Edição de despesa❎
-   .Eliminação de despesa❎
-   .Inserção de pagamentos entre Utilizadores❎
-   .Listagem dos pagamentos entre Utilizadores❎
-   .Eliminação dos pagamentos entre Utilizadores❎
-   .Visualização de valores correntes /elemento❎
-   .Logout❎
+   .Autenticação de um Utilizador✅
+   .Edição dos dados de registo❌
+   .Criação de um novo Grupo❌
+   .Criação de convites para adesão a um grupo❌
+   .Visualização dos convites de adesão (recebidos/pendentes)❌
+   .Listar grupos pertencentes(do Utiliazdor)❌
+   .Edição do nome de um Entidades.Grupo❌
+   .Eliminação de um grupo❌
+   .Saída de um grupo❌
+   .Inserção de despesa❌
+   .Visualização do total gasto❌
+   .Visualização do histórico de despesas❌
+   .Exportação da lista de despesas❌
+   .Edição de despesa❌
+   .Eliminação de despesa❌
+   .Inserção de pagamentos entre Utilizadores❌
+   .Listagem dos pagamentos entre Utilizadores❌
+   .Eliminação dos pagamentos entre Utilizadores❌
+   .Visualização de valores correntes /elemento❌
+   .Logout❌✅
