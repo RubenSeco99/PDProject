@@ -34,13 +34,13 @@ class processaClienteThread implements Runnable {
 
         try(ObjectInputStream Oin = new ObjectInputStream(clienteSocket.getInputStream());
             ObjectOutputStream Oout = new ObjectOutputStream(clienteSocket.getOutputStream())) {
-
+            Utilizador utilizadorThread = new Utilizador();
             while(running && !clienteSocket.isClosed()){
                 try {
 
                     Comunicacao pedidoCliente = (Comunicacao) Oin.readObject();
                     Comunicacao respostaSaida = new Comunicacao();
-
+                    utilizadorThread = pedidoCliente.getUtilizador();
                     System.out.println("\nPedido recebido: " + pedidoCliente.toString());
                     System.out.println("> ");
 
@@ -78,6 +78,7 @@ class processaClienteThread implements Runnable {
                         if(pedidoCliente.getMensagem().equalsIgnoreCase("logout")){
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (utilizador != null) {
+                                respostaSaida=pedidoCliente;
                                 utilizador.setAtivo(0);
                                 utilizadorDB.updateUtilizador(utilizador);
                                 respostaSaida.setMensagem("Logout aceite");
@@ -101,10 +102,20 @@ class processaClienteThread implements Runnable {
                     }
 
                 } catch (SocketException e) {
-                    System.out.println("Cliente desconectado: " + clienteSocket.getRemoteSocketAddress());
-                    running = false; // Encerrar a thread se o cliente se desconectar
+                    System.out.println("Cliente desconectado inesperadamente: " + clienteSocket.getRemoteSocketAddress());
+                    if (utilizadorThread != null) {
+                        utilizadorThread.setAtivo(0);
+                        utilizadorDB.updateUtilizador(utilizadorThread);
+                        System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
+                    }
+                    running = false;
                 } catch (EOFException e) {
                     System.out.println("Fim da conexão com o cliente: " + clienteSocket.getRemoteSocketAddress());
+                    if (utilizadorThread != null) {
+                        utilizadorThread.setAtivo(0);
+                        utilizadorDB.updateUtilizador(utilizadorThread);
+                        System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
+                    }
                     running = false; // Encerrar a thread no fim da conexão
                 } catch (ClassNotFoundException | IOException e) {
                     System.out.println("Erro na comunicação com o cliente:\n\t" + e);

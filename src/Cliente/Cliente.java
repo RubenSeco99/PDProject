@@ -16,23 +16,27 @@ class processServerRequest implements Runnable{
         running = true;
     }
 
-    public void terminate(){running = false;}
+    public void terminate(){
+        running = false;
+        try {
+            socket.shutdownInput();  // Fecha a entrada do socket para desbloquear o `readObject()`
+        } catch (IOException e) {
+            System.out.println("Erro ao fechar a entrada do socket: " + e.getMessage());
+        }}
 
     @Override
     public void run() {
 
-        try {
-            try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
 
-                while(running){
+        try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
 
-                    response = (Comunicacao) Oin.readObject();
-
-                    System.out.println("\nResponse: " + response.toString());
-                    System.out.println("> ");
-
-                }
+            while(running){
+                response = (Comunicacao) Oin.readObject();
+                System.out.println("\nResponse: " + response.toString());
+                System.out.println("> ");
             }
+        } catch (EOFException e) {
+                System.out.println("Conexão terminada pelo servidor.");
         }
         catch (UnknownHostException e) {
         System.out.println("Destino desconhecido:\n\t" + e);
@@ -175,15 +179,18 @@ public class Cliente {
                     }
 
 
-                    if (op==1 && response.getMensagem().equalsIgnoreCase("Logout aceite")) {
+                    if (op==1) {
                         System.out.println("Logout efetuado com sucesso!");
                         serverRequest.terminate();
+                        td1.join();
                         socket.close();  // Agora pode fechar o socket
                         break;  // Sai do loop
                     }
 
                 }
             } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {//erro no join
                 throw new RuntimeException(e);
             }
         } catch (UnknownHostException e) {
