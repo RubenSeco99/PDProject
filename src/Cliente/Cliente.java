@@ -1,10 +1,9 @@
 package Cliente;
 
-import Utilizador.Utilizador;
+import Entidades.Utilizador;
 
 import java.io.*;
 import java.net.*;
-import java.sql.Time;
 
 class processServerRequest implements Runnable{
 
@@ -67,7 +66,7 @@ public class Cliente {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         InetAddress serverAddr;
         int serverPort;
-        int op = 0;
+        int op;
         Utilizador utilizador = new Utilizador();
 
         try {
@@ -85,31 +84,45 @@ public class Cliente {
             System.out.println();
 
             //Objeto para comunicação
-
             Comunicacao response = new Comunicacao();
 
             try(Socket socket = new Socket(serverAddr, serverPort)) {
                 ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream());
+                boolean registado=false;
                 while(true) {
-                    System.out.println("""
-                            O que pretende fazer?
-                            1. Registo
-                            2. Login""");
+                    if (!registado) {
+                        System.out.println("""
+                        O que pretende fazer?
+                          1. Registo
+                          2. Login""");
+                    } else {
+                        System.out.println("""
+                        O que pretende fazer?
+                          2. Login""");
+                    }
                     System.out.println("> ");
 
-                    op = Integer.parseInt(in.readLine());
-
                     Comunicacao comunicacao = new Comunicacao(utilizador);
+                    try {
+                        op = Integer.parseInt(in.readLine());
+                        if(op == 1 && !registado) {
+                            comunicacao.setMensagem("Registo");
 
-                    if(op == 1) {
-                        // não pode fazer o registo uma 2º vez
-                        comunicacao.setMensagem("Registo");
-                    }else if(op == 2) {
-                        comunicacao.setMensagem("Login");
-                    }else{
-                        System.out.println("Opcao invalida!");
+                        }else if(op == 1 && registado) {
+                            System.out.println("Já se encontra registado!");
+                            continue;
+                        }else if(op == 2) {
+                            comunicacao.setMensagem("Login");
+                        }else{
+                            System.out.println("Opcao invalida!");
+                            continue;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Opcao invalida! Insira uma opção válida.");
+                        continue;  // Volta ao início do ciclo se a entrada não for válida
                     }
+
                     System.out.println(comunicacao.getMensagem());
                     Oout.writeObject(comunicacao);
                     Oout.flush();
@@ -117,7 +130,15 @@ public class Cliente {
                     response = (Comunicacao) Oin.readObject();
                     System.out.println("\nResponse: " + response.toString());
 
-                    if (op == 2 && response.getMensagem().equalsIgnoreCase("Login aceite")) {
+                    //falta o formato email invalido
+                    if (op == 1 && response.getMensagem().equalsIgnoreCase("Aceite")) {
+                        registado = true;
+                        System.out.println("Registo efetuado com sucesso!");
+                    }else if (op == 1 && response.getMensagem().equalsIgnoreCase("Email existente")) {
+                        System.out.println("Email já existente!");
+                    }else if (op == 2 && response.getMensagem().equalsIgnoreCase("Credencias incorretas")) {
+                        System.out.println("Credenciais incorretas!");
+                    }else if (op == 2 && response.getMensagem().equalsIgnoreCase("Login aceite")) {
                         break;
                     }
                 }

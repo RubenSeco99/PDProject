@@ -1,5 +1,5 @@
 package Uteis;
-import Utilizador.Utilizador;
+import Entidades.Utilizador;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 

@@ -1,7 +1,7 @@
 package Cliente;
 
 import java.io.Serializable;
-import Utilizador.Utilizador;
+import Entidades.Utilizador;
 
 
 public class Comunicacao implements Serializable {

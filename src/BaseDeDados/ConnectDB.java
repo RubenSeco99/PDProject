@@ -2,7 +2,7 @@ package BaseDeDados;
 
 import java.sql.*;
 
-public class Connect {
+public class ConnectDB {
 
     static final String DB_URL = "jdbc:sqlite:src/BaseDeDados/BaseDados.db";
     // Define o caminho para o arquivo da base de dados
@@ -69,9 +69,6 @@ public class Connect {
 
             String tabelaVersao = "CREATE TABLE IF NOT EXISTS Versao ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    + "data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " // Momento da criação da versão
-                    + "estado TEXT DEFAULT 'pendente' CHECK (estado IN ('pendente', 'bem sucedido', 'mal sucedido')), " // Estado da versão,
-                    //  ⬆️⬆️⬆️ atualizar para bem sucedido/mal sucedido depois do envio para o backup
                     + "versao_numero INTEGER NOT NULL);";  // Número sequencial da versão
             stmt.executeUpdate(tabelaVersao);
 

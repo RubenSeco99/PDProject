@@ -10,11 +10,11 @@ Requisitos funcionais:✅
   --Utilizadores Registados--
    .Autenticação de um Utilizador❎
    .Edição dos dados de registo❎
-   .Criação de um novo Grupo❎
+   .Criação de um novo Utilizador.Grupo❎
    .Criação de convites para adesão a um grupo❎
    .Visualização dos convites de adesão (recebidos/pendentes)❎
-   .Listar grupos pertencentes(do src.Utilizador)❎
-   .Edição do nome de um Grupo❎
+   .Listar grupos pertencentes(do src.Entidades)❎
+   .Edição do nome de um Entidades.Grupo❎
    .Eliminação de um grupo❎
    .Saída de um grupo❎
    .Inserção de despesa❎

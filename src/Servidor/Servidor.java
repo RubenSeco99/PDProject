@@ -3,19 +3,19 @@ package Servidor;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Collections;
 
+import BaseDeDados.UtilizadorDB;
 import Cliente.Comunicacao;
-import Utilizador.Utilizador;
+import Entidades.Utilizador;
 import Uteis.Funcoes;
 
-import static BaseDeDados.Connect.criarBaseDeDados;
+import static BaseDeDados.ConnectDB.criarBaseDeDados;
 
 class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
     private boolean running;
-    private static ArrayList <Utilizador> listaUtilizadores;
+    private static ArrayList <Utilizador> listaUtilizadores;//temporario
 
     public processaClienteThread(Socket clienteSocket, ArrayList<Utilizador> listaUtilizadores) {
         this.clienteSocket = clienteSocket;
@@ -39,7 +39,7 @@ class processaClienteThread implements Runnable {
                     System.out.println("> ");
 
                     if(!pedidoCliente.getUtilizador().getAtivo()){
-                        if(pedidoCliente.getMensagem().equalsIgnoreCase("registo")){
+                        if(pedidoCliente.getMensagem().equalsIgnoreCase("Registo")){
                             /*esta a funcionar, comentado por simplicidade.
                             if(!Funcoes.isValidEmail(comunicacaoRecebida.getUtilizador().getEmail())){
                                 comunicacaoSaida = comunicacaoRecebida;
@@ -47,7 +47,7 @@ class processaClienteThread implements Runnable {
                                 ObjectOutputStream Oout = new ObjectOutputStream(clientSocket.getOutputStream());
                                 Oout.writeObject(comunicacaoSaida);
                                 Oout.flush();
-                            }
+                            } else
                             */
                             if(Funcoes.verificaRegisto(listaUtilizadores, pedidoCliente.getUtilizador().getEmail())){
                                 listaUtilizadores.add(pedidoCliente.getUtilizador());

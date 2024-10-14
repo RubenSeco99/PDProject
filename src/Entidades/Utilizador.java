@@ -1,4 +1,4 @@
-package Utilizador;
+package Entidades;
 
 import java.io.Serializable;
 
@@ -15,6 +15,7 @@ public class Utilizador implements Serializable {
         this.password = password;
         this.telefone = telefone;
         this.email = email;
+        this.ativo = false;
     }
 
     public Utilizador() {}
