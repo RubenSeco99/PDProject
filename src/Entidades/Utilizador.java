@@ -31,8 +31,6 @@ public class Utilizador implements Serializable {
     public int getAtivo() {return ativo;}
     public void setAtivo(int ativo) {this.ativo = ativo;}
 
-
-
     @Override
     public String toString() {
         return  "Utilizador{" +

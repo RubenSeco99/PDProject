@@ -4,12 +4,12 @@ Requisitos funcionais:✅
     .Criar arquitetura multithread ✅
     .Criar servidor backup e comunicação multicast ❌
     .Conexão base de dados✅
-    .Inserção, edição e remoção de dados na base de dados❌✅
+    .Inserção, edição e remoção de dados na base de dados✅
   --Utilizadores não Registados--
    .Registo de um novo Utilizador✅
   --Utilizadores Registados--
    .Autenticação de um Utilizador✅
-   .Edição dos dados de registo❌
+   .Edição dos dados de registo✅
    .Criação de um novo Grupo❌
    .Criação de convites para adesão a um grupo❌
    .Visualização dos convites de adesão (recebidos/pendentes)❌
@@ -27,4 +27,4 @@ Requisitos funcionais:✅
    .Listagem dos pagamentos entre Utilizadores❌
    .Eliminação dos pagamentos entre Utilizadores❌
    .Visualização de valores correntes /elemento❌
-   .Logout❌✅
+   .Logout✅

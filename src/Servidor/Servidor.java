@@ -21,6 +21,7 @@ class processaClienteThread implements Runnable {
     private boolean running;
     private java.sql.Connection connection;
     private UtilizadorDB utilizadorDB;
+    private boolean conectado;
 
     public processaClienteThread(Socket clienteSocket, java.sql.Connection connection) {
         this.clienteSocket = clienteSocket;
@@ -44,27 +45,30 @@ class processaClienteThread implements Runnable {
                     System.out.println("\nPedido recebido: " + pedidoCliente.toString());
                     System.out.println("> ");
 
-                    if(pedidoCliente.getUtilizador().getAtivo()==0){
-                        if(pedidoCliente.getMensagem().equalsIgnoreCase("Registo")){
-                            if(!Funcoes.isValidEmail(pedidoCliente.getUtilizador().getEmail())){
+                    if(!conectado) {
+                        if (pedidoCliente.getMensagem().equalsIgnoreCase("Registo")) {
+                            if (!Funcoes.isValidEmail(pedidoCliente.getUtilizador().getEmail())) {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Formato Email Inválido!");
                                 Oout.writeObject(respostaSaida);
                                 Oout.flush();
-                            } else
-                            if(!utilizadorDB.verificaRegisto(pedidoCliente.getUtilizador().getEmail())){
+                            } else if (!utilizadorDB.verificaRegisto(pedidoCliente.getUtilizador().getEmail())) {
                                 utilizadorDB.insertUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setMensagem("Aceite");
-                            }else{
+                            } else {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Email existente");
                             }
-                        } else if(pedidoCliente.getMensagem().equalsIgnoreCase("login")){
-                            if(utilizadorDB.verificaLogin(pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
+                        } else if (pedidoCliente.getMensagem().equalsIgnoreCase("login")) {
+                            if (utilizadorDB.verificaLogin(pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
+                                pedidoCliente.setUtilizador(utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail()));
                                 pedidoCliente.getUtilizador().setAtivo(1);
+                                conectado = true;
                                 utilizadorDB.updateUtilizador(pedidoCliente.getUtilizador());
+                                utilizadorThread = pedidoCliente.getUtilizador();
                                 respostaSaida = pedidoCliente;
+                                respostaSaida.setUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setMensagem("Login aceite");
                             } else {
                                 respostaSaida = pedidoCliente;
@@ -75,21 +79,50 @@ class processaClienteThread implements Runnable {
                             respostaSaida.setMensagem("Comando invalido. Efetue o 'registo' ou 'login' primeiro.");
                         }
                     } else {
-                        if(pedidoCliente.getMensagem().equalsIgnoreCase("logout")){
+                        if (pedidoCliente.getMensagem().equalsIgnoreCase("Logout")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (utilizador != null) {
-                                respostaSaida=pedidoCliente;
+                                respostaSaida = pedidoCliente;
                                 utilizador.setAtivo(0);
                                 utilizadorDB.updateUtilizador(utilizador);
                                 respostaSaida.setMensagem("Logout aceite");
                             } else {
-                                respostaSaida.setMensagem("Utilizador não encontrado.");
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Utilizador não encontrado");
+                            }
+                        } else if (pedidoCliente.getMensagem().contains("Editar dados")) {
+                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
+                            if (utilizador != null) {
+                                if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados nome"))
+                                    utilizador.setNome(pedidoCliente.getUtilizador().getNome());
+                                else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados password"))
+                                    utilizador.setPassword(pedidoCliente.getUtilizador().getPassword());//telefone, etc.
+                                else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados telefone"))
+                                    utilizador.setTelefone(pedidoCliente.getUtilizador().getTelefone());
+                                utilizadorDB.updateUtilizador(utilizador);
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Edicao utilizador bem sucedida");
+                            } else {
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Utilizador não encontrado");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Criar grupo")) {
+                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
+                            if(utilizador != null) {
+
+                                //POR IMPLEMENTAR
+
+
+                            }else{
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Utilizador nao encontrado");
                             }
                         }
                     }
 
                     Oout.writeObject(respostaSaida);
                     Oout.flush();
+
                     List<Utilizador> listaUtilizadores = utilizadorDB.selectTodosUtilizadores();
 
                     // Itera sobre a lista de utilizadores e imprime seus dados
@@ -97,6 +130,7 @@ class processaClienteThread implements Runnable {
                         System.out.println("Nome: " + utilizador.getNome());
                         System.out.println("Email: " + utilizador.getEmail());
                         System.out.println("Telefone: " + utilizador.getTelefone());
+                        System.out.println("Password: " + utilizador.getPassword());
                         System.out.println("Ativo: " + utilizador.getAtivo());
                         System.out.println("---------------");
                     }

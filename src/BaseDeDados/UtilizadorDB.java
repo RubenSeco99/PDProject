@@ -10,6 +10,7 @@ public class UtilizadorDB {
     public UtilizadorDB(Connection connection) {
         this.connection = connection;
     }
+
     public boolean insertUtilizador(Utilizador utilizador){
         try {
             String query = "INSERT INTO Utilizador (nome, password, telefone, email, ativo) VALUES (?, ?, ?, ?, ?)";
@@ -26,6 +27,7 @@ public class UtilizadorDB {
             return false;
         }
     }
+
     public Utilizador selectUtilizador(String email){
         try {
             String query = "SELECT * FROM Utilizador WHERE email = ?";
