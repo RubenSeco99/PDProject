@@ -1,8 +1,11 @@
 package Servidor;
 
 import BaseDeDados.ConnectDB;
+import BaseDeDados.GrupoDB;
 import BaseDeDados.UtilizadorDB;
+import BaseDeDados.UtilizadorGrupoDB;
 import Cliente.Comunicacao;
+import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 import com.sun.jdi.connect.spi.Connection;
@@ -21,6 +24,8 @@ class processaClienteThread implements Runnable {
     private boolean running;
     private java.sql.Connection connection;
     private UtilizadorDB utilizadorDB;
+    private GrupoDB grupoDB;
+    private UtilizadorGrupoDB utilizadorGrupoDB;
     private boolean conectado;
 
     public processaClienteThread(Socket clienteSocket, java.sql.Connection connection) {
@@ -28,6 +33,8 @@ class processaClienteThread implements Runnable {
         this.connection =  connection;
         this.running = true;
         this.utilizadorDB = new UtilizadorDB(connection);
+        this.grupoDB=new GrupoDB(connection);
+        this.utilizadorGrupoDB=new UtilizadorGrupoDB(connection);
     }
 
     @Override
@@ -42,7 +49,7 @@ class processaClienteThread implements Runnable {
                     Comunicacao pedidoCliente = (Comunicacao) Oin.readObject();
                     Comunicacao respostaSaida = new Comunicacao();
                     utilizadorThread = pedidoCliente.getUtilizador();
-                    System.out.println("\nPedido recebido: " + pedidoCliente.toString());
+                    System.out.println("\nPedido recebido: " + pedidoCliente);
                     System.out.println("> ");
 
                     if(!conectado) {
@@ -93,13 +100,7 @@ class processaClienteThread implements Runnable {
                         } else if (pedidoCliente.getMensagem().contains("Editar dados")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (utilizador != null) {
-                                if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados nome"))
-                                    utilizador.setNome(pedidoCliente.getUtilizador().getNome());
-                                else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados password"))
-                                    utilizador.setPassword(pedidoCliente.getUtilizador().getPassword());//telefone, etc.
-                                else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar dados telefone"))
-                                    utilizador.setTelefone(pedidoCliente.getUtilizador().getTelefone());
-                                utilizadorDB.updateUtilizador(utilizador);
+                                utilizadorDB.updateUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Edicao utilizador bem sucedida");
                             } else {
@@ -109,8 +110,20 @@ class processaClienteThread implements Runnable {
                         }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Criar grupo")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if(utilizador != null) {
-
-                                //POR IMPLEMENTAR
+                                if(grupoDB.insertGrupo(pedidoCliente.getGrupo())){
+                                    if(utilizadorGrupoDB.insertUtilizadorGrupo(utilizadorDB.selectUtilizadorId(utilizador.getEmail()),grupoDB.selectGrupoId(pedidoCliente.getGrupo().getNome()))) {
+                                        respostaSaida = pedidoCliente;
+                                        respostaSaida.setMensagem("Grupo criado");
+                                    }
+                                    else {
+                                        respostaSaida = pedidoCliente;
+                                        respostaSaida.setMensagem("Utilizador já existe no grupo");//se não estou em erro nunca vai acontecer
+                                    }
+                                }
+                                else {
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Grupo nao criado");
+                                }
 
 
                             }else{

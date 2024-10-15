@@ -1,10 +1,15 @@
 package Entidades;
 
-public class Grupo {
+import java.io.Serializable;
+
+public class Grupo implements Serializable {
 
     private int id;
     private String nome;
-
+    public Grupo(){}//uso no GrupoDB
+    public Grupo(String nome) {
+        setNome(nome);
+    }
     public int getId() {
         return id;
     }

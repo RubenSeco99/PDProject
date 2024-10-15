@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.*;
 
 class processServerRequest implements Runnable{
-    private Socket socket;
+    private final Socket socket;
     private boolean running;
 
 
@@ -36,7 +36,7 @@ class processServerRequest implements Runnable{
 
                 if(response.getMensagem().equalsIgnoreCase("Login aceite")){
                     Cliente.registado = true;
-                    Cliente.utilizadorUpdate.setNome(response.getUtilizador().getNome());
+                        Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
                 }
 
                 System.out.println("\nResponse: " + response);
@@ -44,7 +44,7 @@ class processServerRequest implements Runnable{
             }
 
         } catch (EOFException e) {
-                System.out.println("Conexão terminada pelo servidor.");
+                System.out.println("Conexão terminada pelo servidor.");//descobrir porque está a ser lançada???
         }
         catch (UnknownHostException e) {
         System.out.println("Destino desconhecido:\n\t" + e);
@@ -64,14 +64,13 @@ class processServerRequest implements Runnable{
 }
 
 public class Cliente {
-
-    public static final int TIMEOUT = 5000;
     public static boolean registado = false;
     public static boolean valido = true;
     public static boolean EXIT = false;
     public static Utilizador utilizadorUpdate = new Utilizador();
+    public static Comunicacao comunicacao;
 
-    public static void main(String[] args) throws UnknownHostException, InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
 
        if (args.length != 2) {
             System.out.println("\nNumero de argumentos incorrecto\n");
@@ -81,8 +80,8 @@ public class Cliente {
         InetAddress serverAddr;
         int serverPort;
 
-        processServerRequest serverRequest = null;
-        Thread td1 = null;
+        processServerRequest serverRequest;
+        Thread td1;
 
         try {
             serverAddr = InetAddress.getByName(args[0]);
@@ -96,11 +95,10 @@ public class Cliente {
                 td1.start();
 
                 while (true) {
-                    Comunicacao comunicacao = new Comunicacao(utilizadorUpdate);
-
+                    comunicacao = new Comunicacao(utilizadorUpdate);
                     Funcoes.Menu(utilizadorUpdate, comunicacao);
-
                     if (valido) {
+                        System.out.println(comunicacao);//so imprime se tiver havido pedido ao server
                         Oout.writeObject(comunicacao);
                         Oout.flush();
                         Oout.reset();
