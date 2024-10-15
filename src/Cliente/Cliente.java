@@ -10,7 +10,6 @@ class processServerRequest implements Runnable{
     private final Socket socket;
     private boolean running;
 
-
     public processServerRequest(Socket socket) {
         this.socket = socket;
         running = true;
@@ -18,11 +17,6 @@ class processServerRequest implements Runnable{
 
     public void terminate(){
         running = false;
-        try {
-            socket.shutdownInput();  // Fecha a entrada do socket para desbloquear o `readObject()`
-        } catch (IOException e) {
-            System.out.println("Erro ao fechar a entrada do socket: " + e.getMessage());
-        }
     }
 
     @Override
@@ -41,6 +35,7 @@ class processServerRequest implements Runnable{
 
                 System.out.println("\nResponse: " + response);
                 System.out.println("> ");
+
             }
 
         } catch (EOFException e) {

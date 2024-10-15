@@ -103,7 +103,9 @@ public class Funcoes {
                                 O que pretende fazer?
                                   1. Logout
                                   2. Editar dados
-                                  3. Adicionar grupo""");
+                                  3. Adicionar grupo
+                                  4. Apagar grupo
+                                  5. Mudar nome grupo (not done)""");
         System.out.print("> ");
         try {
             op = Integer.parseInt(in.readLine());
@@ -119,7 +121,20 @@ public class Funcoes {
                 Cliente.valido = true;
                 System.out.println("Indique o nome do grupo");
                 Cliente.comunicacao.getGrupo().setNome(in.readLine());
-            }else{
+            }else if(op==4){
+                Cliente.comunicacao.setMensagem("Apagar grupo");
+                Cliente.valido = true;
+                System.out.println("Indique o nome do grupo");
+                Cliente.comunicacao.getGrupo().setNome(in.readLine());
+            }else if(op==5){
+                Cliente.comunicacao.setMensagem("Mudar nome grupo");
+                Cliente.valido = true;
+                System.out.println("Indique o nome atual do grupo");
+                Cliente.comunicacao.getGrupo().setNome(in.readLine());
+                System.out.println("Indique o novo nome do grupo");
+                Cliente.comunicacao.getGrupo().setNomeProvisorio(in.readLine());
+            }
+            else{
                 System.out.println("Opcao invalida!");
                 Cliente.valido = false;
             }

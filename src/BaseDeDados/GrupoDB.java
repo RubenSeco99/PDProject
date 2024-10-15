@@ -54,16 +54,37 @@ public class GrupoDB {
         }
         return null;
     }
-    public boolean updateNomeGrupo(int grupoId, String novoNome) {
+    public Grupo selectGrupoById(int id) {
         try {
-            if (verificaNomeGrupo(novoNome)) {
+            String query = "SELECT * FROM Grupo WHERE id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                Grupo grupo = new Grupo();
+                grupo.setId(resultSet.getInt("id"));
+                grupo.setNome(resultSet.getString("nome"));
+                return grupo;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao selecionar grupo por id: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean updateNomeGrupo(String nomeAtual, String nomeNovo) {
+        try {
+            // Verifica se o novo nome já existe, mas garante que o nome não seja o mesmo que o atual
+            if (verificaNomeGrupo(nomeNovo) && !nomeAtual.equals(nomeNovo)) {
                 System.out.println("Erro: Já existe um grupo com este nome.");
                 return false;
             }
-            String query = "UPDATE Grupo SET nome = ? WHERE id = ?";
+
+            // Atualiza o nome do grupo com base no nome antigo
+            String query = "UPDATE Grupo SET nome = ? WHERE nome = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, novoNome);
-            preparedStatement.setInt(2, grupoId);
+            preparedStatement.setString(1, nomeNovo);
+            preparedStatement.setString(2, nomeAtual);
             preparedStatement.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -71,6 +92,7 @@ public class GrupoDB {
             return false;
         }
     }
+
     public int selectGrupoId(String nomeGrupo) {
         try {
             String query = "SELECT id FROM Grupo WHERE nome = ?";
@@ -86,5 +108,31 @@ public class GrupoDB {
         }
         return -1;//nao encontrado
     }
+    public boolean deleteGrupo(String nomeGrupo) {
+        try {
+            Grupo grupo = selectGrupo(nomeGrupo);
+            if (grupo == null) {
+                System.out.println("Erro: Grupo não encontrado");
+                return false;
+            }
+
+            String deleteAssociacoes = "DELETE FROM Utilizador_Grupo WHERE grupo_id = ?";
+            PreparedStatement preparedStatementAssociacoes = connection.prepareStatement(deleteAssociacoes);
+            preparedStatementAssociacoes.setInt(1, grupo.getId());
+            preparedStatementAssociacoes.executeUpdate();
+
+            String deleteGrupo = "DELETE FROM Grupo WHERE id = ?";
+            PreparedStatement preparedStatementGrupo = connection.prepareStatement(deleteGrupo);
+            preparedStatementGrupo.setInt(1, grupo.getId());
+            int rowsAffected = preparedStatementGrupo.executeUpdate();
+
+            return rowsAffected > 0;//grupo removido quando for apagada uma linha
+        } catch (SQLException e) {
+            System.out.println("Erro ao remover grupo: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 
 }

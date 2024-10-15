@@ -6,6 +6,7 @@ public class Grupo implements Serializable {
 
     private int id;
     private String nome;
+    private String nomeProvisorio;//so usado quando da mudanca do nome do grupo
     public Grupo(){}//uso no GrupoDB
     public Grupo(String nome) {
         setNome(nome);
@@ -25,4 +26,12 @@ public class Grupo implements Serializable {
     public void setNome(String nome) {
         this.nome = nome;
     }
+    public String getNomeProvisorio() {
+        return nome;
+    }
+
+    public void setNomeProvisorio(String nome) {
+        this.nome = nome;
+    }
+
 }

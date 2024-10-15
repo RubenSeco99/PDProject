@@ -16,8 +16,21 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+
+class notificaCliente implements Runnable{
+
+    List <ClienteSocket> clienteSockets;
+    public notificaCliente(List<ClienteSocket> clienteSockets){
+        this.clienteSockets = clienteSockets;
+    }
+
+    public void run(){
+
+    }
+}
 class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
@@ -27,6 +40,7 @@ class processaClienteThread implements Runnable {
     private GrupoDB grupoDB;
     private UtilizadorGrupoDB utilizadorGrupoDB;
     private boolean conectado;
+    private boolean EXIT = false;
 
     public processaClienteThread(Socket clienteSocket, java.sql.Connection connection) {
         this.clienteSocket = clienteSocket;
@@ -93,6 +107,7 @@ class processaClienteThread implements Runnable {
                                 utilizador.setAtivo(0);
                                 utilizadorDB.updateUtilizador(utilizador);
                                 respostaSaida.setMensagem("Logout aceite");
+                                EXIT = true;
                             } else {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Utilizador não encontrado");
@@ -130,11 +145,50 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Utilizador nao encontrado");
                             }
+                        }else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
+                            Grupo grupo = grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());  // Buscar o grupo pelo nome
+                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());  // Buscar o utilizador (provavelmente responsável pela ação)
+
+                            if (grupo != null) {
+                                List<Utilizador> list = utilizadorGrupoDB.selectUtilizadoresPorGrupo(grupoDB.selectGrupoId(grupo.getNome()));
+
+                                if (utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(grupoDB.selectGrupoId(grupo.getNome()), list)) {
+                                    if (grupoDB.deleteGrupo(grupo.getNome())) {
+                                        respostaSaida.setMensagem("Grupo apagado com sucesso");
+                                        //atualizar grupos do utilizador e possivel variavel comunicacao
+                                    } else {
+                                        respostaSaida.setMensagem("Erro ao apagar o grupo");
+                                    }
+                                } else {
+                                    respostaSaida.setMensagem("Erro ao remover utilizadores do grupo");
+                                }
+                            } else {
+                                respostaSaida.setMensagem("Grupo não encontrado");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Mudar nome grupo")){
+                            Grupo grupo= grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());
+                            System.out.println(pedidoCliente.getGrupo().getNome());
+                            System.out.println(pedidoCliente.getGrupo().getNomeProvisorio());
+                            if(grupoDB.updateNomeGrupo(pedidoCliente.getGrupo().getNome(), pedidoCliente.getGrupo().getNomeProvisorio())){//novo nome esta no pedido cliente
+                                //update grupos do utilizador
+                                respostaSaida.setMensagem("Mudar nome grupo bem sucedido");
+                            }
+                            else{
+                                respostaSaida.setMensagem("Mudar nome grupo mal sucedido");
+                            }
+
                         }
+
+
                     }
 
                     Oout.writeObject(respostaSaida);
                     Oout.flush();
+
+                    if(EXIT){
+                        clienteSocket.close();
+                        break;
+                    }
 
                     List<Utilizador> listaUtilizadores = utilizadorDB.selectTodosUtilizadores();
 
@@ -197,21 +251,23 @@ public class Servidor {
     public static void main(String[] args) throws IOException {
 
         java.sql.Connection connection = ConnectDB.criarBaseDeDados();
-        Comunicacao comunicacaoRecebida = new Comunicacao(); //Receber
-        Comunicacao comunicacaoSaida = new Comunicacao(); //Enviar
         ArrayList<Thread> arrayThreads = new ArrayList<>();
+        List<ClienteSocket> clienteSockets = Collections.synchronizedList(new ArrayList<>());
 
         int servicePort = Integer.parseInt(args[0]);
         //String caminhoBD = args[1]; //para uso futuro
 
-        try (ServerSocket serverSocket = new ServerSocket(5000)) {
+        //Thread para
+        Thread notifica = new Thread(new notificaCliente(clienteSockets));
+        notifica.start();
+
+        try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
 
             System.out.println("Server iniciado...\n");
             //Lançar thread para enviar base de dados atualizada ao servidor de backup atualizando a versão
             while (true) {
 
                 Socket clientSocket = serverSocket.accept();
-
                 Thread td = new Thread(new processaClienteThread(clientSocket, (java.sql.Connection) connection));
                 td.start();
                 arrayThreads.add(td);
@@ -225,7 +281,7 @@ public class Servidor {
             System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
         }
         finally {
-            ConnectDB.criarBaseDeDados();
+            ConnectDB.fecharBaseDeDados();
         }
     }
 }

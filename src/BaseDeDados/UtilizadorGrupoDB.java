@@ -25,18 +25,50 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
-    public boolean removeUtilizadorGrupo(int utilizadorId, int grupoId) {
+    public boolean removeUtilizadorGrupo(String email, int grupoId) {
         try {
-            String query = "DELETE FROM Utilizador_Grupo WHERE utilizador_id = ? AND grupo_id = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
-            preparedStatement.setInt(2, grupoId);
-            preparedStatement.executeUpdate();
-            return true;
+
+            String querySelect = "SELECT id FROM Utilizador WHERE email = ?";
+            PreparedStatement preparedStatementSelect = connection.prepareStatement(querySelect);
+            preparedStatementSelect.setString(1, email);
+            ResultSet resultSet = preparedStatementSelect.executeQuery();
+
+            if (resultSet.next()) {
+                int utilizadorId = resultSet.getInt("id");
+
+                String queryDelete = "DELETE FROM Utilizador_Grupo WHERE utilizador_id = ? AND grupo_id = ?";
+                PreparedStatement preparedStatementDelete = connection.prepareStatement(queryDelete);
+                preparedStatementDelete.setInt(1, utilizadorId);
+                preparedStatementDelete.setInt(2, grupoId);
+                preparedStatementDelete.executeUpdate();
+
+                return true;
+            } else {
+                System.out.println("Utilizador com email: " + email + " não encontrado.");
+                return false; // Utilizador não encontrado
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao remover utilizador do grupo: " + e.getMessage());
             return false;
         }
+    }
+    public boolean removeTodosUtilizadoresDoGrupo(int grupoId, List<Utilizador> utilizadores) {
+        boolean sucesso = true;
+
+        // Iterar sobre todos os utilizadores na lista
+        for (Utilizador utilizador : utilizadores) {
+            String email = utilizador.getEmail(); // Obter o email do utilizador
+
+            // Remover utilizador do grupo usando o email
+            boolean removido = removeUtilizadorGrupo(email, grupoId);
+
+            // Se falhar em remover algum utilizador, marcar como falha geral
+            if (!removido) {
+                sucesso = false;
+                System.out.println("Falha ao remover utilizador com email: " + email + " do grupo com ID: " + grupoId);
+            }
+        }
+        return sucesso; // Retorna true se todos forem removidos com sucesso, false se houver falhas
     }
     public boolean selectUtilizadorNoGrupo(int utilizadorId, int grupoId) {
         try {

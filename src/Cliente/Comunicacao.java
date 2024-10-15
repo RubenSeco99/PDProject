@@ -12,7 +12,10 @@ public class Comunicacao implements Serializable {
     private Utilizador utilizador;
     private Grupo grupo;
 
-    public Comunicacao() {}
+    public Comunicacao() {
+        //this.utilizador= new Utilizador();
+        //this.grupo= new Grupo();
+    }
 
     public Comunicacao(Utilizador utilizador) {
         this.utilizador = utilizador;
@@ -30,8 +33,13 @@ public class Comunicacao implements Serializable {
     public void setNomeGrupo(String nome){this.grupo.setNome(nome);}
     @Override
     public String toString() {
-        return "Comunicacao : mensagem=" + mensagem +"\n " +
-               "Utilizador= " + utilizador.getEmail() + "\n" +
-               "EstaAtivo= " + utilizador.getAtivo() + "\n";
+        String result = "Comunicacao: mensagem=" + mensagem + "\n";
+        if (utilizador != null) {
+            result += "Utilizador= " + utilizador.getEmail() + "\n" + "EstaAtivo= " + utilizador.getAtivo() + "\n";
+        }
+        if (grupo != null) {
+            result += "Grupo= " + grupo.getNome() + "\n";
+        }
+        return result;
     }
 }
