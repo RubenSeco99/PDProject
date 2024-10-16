@@ -12,6 +12,7 @@ public class Utilizador implements Serializable {
     private String email;
     private int ativo;
     private List<Grupo> grupos;
+    private List<Convite> convites;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
@@ -37,6 +38,7 @@ public class Utilizador implements Serializable {
     public int getAtivo() {return ativo;}
     public void setAtivo(int ativo) {this.ativo = ativo;}
     public void setGrupos(List<Grupo> grupos) { this.grupos = grupos; }
+    public List<Convite> getConvites() {return convites;}
 
     public void setUtilizador(Utilizador utilizador){
         this.nome = utilizador.nome;

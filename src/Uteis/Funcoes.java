@@ -5,6 +5,7 @@ import Entidades.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class Funcoes {
@@ -58,21 +59,18 @@ public class Funcoes {
                         System.out.print("Coloque o seu novo nome: ");
                         utilizador.setNome(in.readLine());
                         System.out.println("Nome alterado com sucesso!");
-                        Cliente.valido = true;
                         change=true;
                         break;
                     case "2":
                         System.out.print("Coloque a sua nova password: ");
                         utilizador.setPassword(in.readLine());
                         System.out.println("Password alterada com sucesso!");
-                        Cliente.valido = true;
                         change=true;
                         break;
                     case "3":
                         System.out.print("Coloque o seu novo telefone: ");
                         utilizador.setTelefone(Integer.parseInt(in.readLine()));
                         System.out.println("Telefone alterado com sucesso!");
-                        Cliente.valido = true;
                         change=true;
                         break;
                     case "0":
@@ -80,6 +78,62 @@ public class Funcoes {
                         if(change) {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar dados");
+                        }
+                        else{
+                            Cliente.valido=false;
+                            System.out.println("Nenhuma alteração foi efetuada");}
+                        break;
+                    default:
+                        System.out.println("Opção inválida, tente novamente.");
+                }
+                System.out.println();
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro ao ler a entrada. Tente novamente.");
+            } catch (NumberFormatException e) {
+                System.out.println("Opção inválida. Insira um número válido.");
+            }
+        }
+    }
+    public static void menuConvites(Utilizador utilizador) {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
+        while (running) {
+            try{
+                System.out.println("""
+                                [Menu convites]
+                                O que pretende fazer?
+                                  1. Ver convites
+                                  2. Aceitar
+                                  3. Rejeitar
+                                  0. Sair""");
+                System.out.print("Opção: ");
+                String opcao = in.readLine();
+                System.out.println();
+
+                switch (opcao) {
+                    case "1":
+                        Cliente.comunicacao.setMensagem("Ver convites");
+                        Cliente.valido=true;
+                        break;
+                    case "2":
+                        Cliente.comunicacao.setMensagem("Aceitar convite");
+                        Cliente.valido=true;
+                        System.out.print("Indique o nome do convite que deseja aceitar: ");
+                        Cliente.comunicacao.setConvite(in.readLine());
+                        change=true;
+                        break;
+                    case "3":
+                        Cliente.comunicacao.setMensagem("Rejeitar convite");
+                        Cliente.valido=true;
+                        System.out.print("Indique o nome do convite que deseja rejeitar: ");
+                        Cliente.comunicacao.setConvite(in.readLine());
+                        change=true;
+                        break;
+                    case "0":
+                        running = false;
+                        if(change) {
+                            Cliente.valido = true;
+                            Cliente.comunicacao.setMensagem("Editar convites");
                         }
                         else{
                             Cliente.valido=false;
@@ -105,7 +159,9 @@ public class Funcoes {
                                   2. Editar dados
                                   3. Adicionar grupo
                                   4. Apagar grupo
-                                  5. Mudar nome grupo (not done)""");
+                                  5. Mudar nome grupo (not done)
+                                  6. Enviar convites
+                                  7. Menu convites""");
         System.out.print("> ");
         try {
             op = Integer.parseInt(in.readLine());
@@ -133,8 +189,10 @@ public class Funcoes {
                 Cliente.comunicacao.getGrupo().setNome(in.readLine());
                 System.out.println("Indique o novo nome do grupo");
                 Cliente.comunicacao.getGrupo().setNomeProvisorio(in.readLine());
-            }
-            else{
+            }else if(op == 6){
+                Cliente.comunicacao.setMensagem("Convite");
+                Cliente.valido = true;
+            } else{
                 System.out.println("Opcao invalida!");
                 Cliente.valido = false;
             }
@@ -176,7 +234,6 @@ public class Funcoes {
         Thread.sleep(150);
         if(!Cliente.registado){
             menuUtilizadoresSemLogin(utilizador,comunicacao);
-
         } else {
             menuUtilizadoresComLogin(utilizador,comunicacao);
         }//se for necessario criar uma variavel para ver se um utilizador esta num grupo e dividir as opcoes também se pode fazer

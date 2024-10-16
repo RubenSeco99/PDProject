@@ -71,7 +71,6 @@ public class GrupoDB {
         }
         return null;
     }
-
     public boolean updateNomeGrupo(String nomeAtual, String nomeNovo) {
         try {
             // Verifica se o novo nome já existe, mas garante que o nome não seja o mesmo que o atual
@@ -92,7 +91,6 @@ public class GrupoDB {
             return false;
         }
     }
-
     public int selectGrupoId(String nomeGrupo) {
         try {
             String query = "SELECT id FROM Grupo WHERE nome = ?";

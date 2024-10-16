@@ -8,7 +8,6 @@ import Cliente.Comunicacao;
 import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
-import com.sun.jdi.connect.spi.Connection;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -22,13 +21,33 @@ import java.util.List;
 
 class notificaCliente implements Runnable{
 
-    List <ClienteSocket> clienteSockets;
-    public notificaCliente(List<ClienteSocket> clienteSockets){
+    List <notificaThread> clienteSockets;
+    private final Object lock;
+
+    public notificaCliente(List<notificaThread> clienteSockets, Object lock){
         this.clienteSockets = clienteSockets;
+        this.lock = lock;
     }
 
     public void run(){
 
+        try{
+            synchronized (lock) {
+                while (true) {
+                    lock.wait();
+                    Comunicacao respostaSaida = new Comunicacao();
+                    respostaSaida.setMensagem("Recebeu um convite para o grupo xpto");
+                    for(var cli: clienteSockets){
+                        if(cli.getEmail().equals("miguel@isec.pt")){
+                            cli.getOout().writeObject(respostaSaida);
+                            cli.getOout().flush();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 class processaClienteThread implements Runnable {
@@ -41,14 +60,20 @@ class processaClienteThread implements Runnable {
     private UtilizadorGrupoDB utilizadorGrupoDB;
     private boolean conectado;
     private boolean EXIT = false;
+    List <notificaThread> notificaThreads;
+    private final Object lock;
 
-    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection) {
+    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection, List<notificaThread> clienteSockets, Object lock) {
         this.clienteSocket = clienteSocket;
         this.connection =  connection;
         this.running = true;
         this.utilizadorDB = new UtilizadorDB(connection);
         this.grupoDB=new GrupoDB(connection);
         this.utilizadorGrupoDB=new UtilizadorGrupoDB(connection);
+        //new objeto convite
+        this.notificaThreads = clienteSockets;
+
+        this.lock = lock;
     }
 
     @Override
@@ -57,6 +82,7 @@ class processaClienteThread implements Runnable {
         try(ObjectInputStream Oin = new ObjectInputStream(clienteSocket.getInputStream());
             ObjectOutputStream Oout = new ObjectOutputStream(clienteSocket.getOutputStream())) {
             Utilizador utilizadorThread = new Utilizador();
+
             while(running && !clienteSocket.isClosed()){
                 try {
 
@@ -84,6 +110,12 @@ class processaClienteThread implements Runnable {
                         } else if (pedidoCliente.getMensagem().equalsIgnoreCase("login")) {
                             if (utilizadorDB.verificaLogin(pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
                                 pedidoCliente.setUtilizador(utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail()));
+                                //Para atualizar a lista de utilizadores logados na thread notificação
+                                notificaThread clienteS = new notificaThread(clienteSocket);
+                                clienteS.setEmail(pedidoCliente.getUtilizador().getEmail());
+                                clienteS.setOout(Oout);
+                                notificaThreads.add(clienteS);
+
                                 pedidoCliente.getUtilizador().setAtivo(1);
                                 conectado = true;
                                 utilizadorDB.updateUtilizador(pedidoCliente.getUtilizador());
@@ -112,7 +144,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Utilizador não encontrado");
                             }
-                        } else if (pedidoCliente.getMensagem().contains("Editar dados")) {
+                        }
+                        else if (pedidoCliente.getMensagem().contains("Editar dados")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (utilizador != null) {
                                 utilizadorDB.updateUtilizador(pedidoCliente.getUtilizador());
@@ -122,7 +155,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Utilizador não encontrado");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Criar grupo")) {
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Criar grupo")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if(utilizador != null) {
                                 if(grupoDB.insertGrupo(pedidoCliente.getGrupo())){
@@ -145,7 +179,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Utilizador nao encontrado");
                             }
-                        }else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
+                        }
+                        else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
                             Grupo grupo = grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());  // Buscar o grupo pelo nome
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());  // Buscar o utilizador (provavelmente responsável pela ação)
 
@@ -165,12 +200,13 @@ class processaClienteThread implements Runnable {
                             } else {
                                 respostaSaida.setMensagem("Grupo não encontrado");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Mudar nome grupo")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Mudar nome grupo")){
                             Grupo grupo= grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());
                             System.out.println(pedidoCliente.getGrupo().getNome());
                             System.out.println(pedidoCliente.getGrupo().getNomeProvisorio());
                             if(grupoDB.updateNomeGrupo(pedidoCliente.getGrupo().getNome(), pedidoCliente.getGrupo().getNomeProvisorio())){//novo nome esta no pedido cliente
-                                //update grupos do utilizador
+                                //update grupos do utilizador?
                                 respostaSaida.setMensagem("Mudar nome grupo bem sucedido");
                             }
                             else{
@@ -178,8 +214,36 @@ class processaClienteThread implements Runnable {
                             }
 
                         }
-
-
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer convite")){
+                            //Teste
+                            respostaSaida = pedidoCliente;
+                            respostaSaida.setMensagem("Convite feito com sucesso");//adaptar
+                            synchronized (lock){
+                                lock.notify();//assinalar thread
+                            }
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver convites")){
+                            //Teste
+                            respostaSaida = pedidoCliente;
+                            respostaSaida.setMensagem("Convites bem preenchidos");//adaptar
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){
+                            //Logica
+                            //atualizarBD ,preencher pedido cliente
+                            respostaSaida = pedidoCliente;
+                            respostaSaida.setMensagem("Convite aceite com sucesso");
+                            synchronized (lock) {
+                                lock.notify();//assinalar thread
+                            }
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Rejeitar convite")){
+                            //Teste
+                            respostaSaida = pedidoCliente;
+                            respostaSaida.setMensagem("Convite rejeitado com sucesso");
+                            synchronized (lock){
+                                lock.notify();//assinalar thread
+                            }
+                        }
                     }
 
                     Oout.writeObject(respostaSaida);
@@ -252,13 +316,14 @@ public class Servidor {
 
         java.sql.Connection connection = ConnectDB.criarBaseDeDados();
         ArrayList<Thread> arrayThreads = new ArrayList<>();
-        List<ClienteSocket> clienteSockets = Collections.synchronizedList(new ArrayList<>());
+        List<notificaThread> clienteSockets = Collections.synchronizedList(new ArrayList<>());
+        Object lock = new Object();
 
         int servicePort = Integer.parseInt(args[0]);
         //String caminhoBD = args[1]; //para uso futuro
 
         //Thread para
-        Thread notifica = new Thread(new notificaCliente(clienteSockets));
+        Thread notifica = new Thread(new notificaCliente(clienteSockets, lock));
         notifica.start();
 
         try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
@@ -268,7 +333,7 @@ public class Servidor {
             while (true) {
 
                 Socket clientSocket = serverSocket.accept();
-                Thread td = new Thread(new processaClienteThread(clientSocket, (java.sql.Connection) connection));
+                Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets, lock));
                 td.start();
                 arrayThreads.add(td);
 

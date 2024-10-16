@@ -134,41 +134,5 @@ public class UtilizadorDB {
         }
         return -1;  // Retorna -1 se o utilizador não for encontrado
     }
-    //gerir convites
-    public List<Integer> listarConvitesPendentes(int utilizadorId) {
-        List<Integer> convites = new ArrayList<>();
-        try {
-            String query = "SELECT grupo_id FROM Convites_Grupo WHERE utilizador_id = ? AND estado = 'pendente'";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                convites.add(resultSet.getInt("grupo_id"));
-            }
-        } catch (SQLException e) {
-            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
-        }
-        return convites;
-    }
-    public boolean aceitarConvite(int utilizadorId, int grupoId) {
-        try {
-            // Atualizar o estado do convite para 'aceito'
-            String queryUpdate = "UPDATE Convites_Grupo SET estado = 'aceito' WHERE utilizador_id = ? AND grupo_id = ?";
-            PreparedStatement preparedStatementUpdate = connection.prepareStatement(queryUpdate);
-            preparedStatementUpdate.setInt(1, utilizadorId);
-            preparedStatementUpdate.setInt(2, grupoId);
-            int rowsUpdated = preparedStatementUpdate.executeUpdate();
-
-            // Se o convite foi aceito, adiciona o utilizador ao grupo
-            if (rowsUpdated > 0) {
-                UtilizadorGrupoDB utilizadorGrupoDB = new UtilizadorGrupoDB(connection);
-                return utilizadorGrupoDB.insertUtilizadorGrupo(utilizadorId, grupoId);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Erro ao aceitar convite: " + e.getMessage());
-        }
-        return false;
-    }
 
 }

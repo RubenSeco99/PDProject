@@ -5,6 +5,7 @@ Requisitos funcionais:✅
     .Criar servidor backup e comunicação multicast ❌
     .Conexão base de dados✅
     .Inserção, edição e remoção de dados na base de dados✅
+    .Criação de Thread no servidor para fazer multicast (convites, etc...)✅
   --Utilizadores não Registados--
    .Registo de um novo Utilizador✅
   --Utilizadores Registados--
