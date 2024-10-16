@@ -1,13 +1,12 @@
 package Servidor;
 
-import BaseDeDados.ConnectDB;
-import BaseDeDados.GrupoDB;
-import BaseDeDados.UtilizadorDB;
-import BaseDeDados.UtilizadorGrupoDB;
+import BaseDeDados.*;
 import Cliente.Comunicacao;
+import Entidades.Convite;
 import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
+import jdk.jshell.execution.Util;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -36,7 +35,12 @@ class notificaCliente implements Runnable{
                 while (true) {
                     lock.wait();
                     Comunicacao respostaSaida = new Comunicacao();
-                    respostaSaida.setMensagem("Recebeu um convite para o grupo xpto");
+                    Utilizador utilizador = new Utilizador();
+                    utilizador.setEmail("miguel@isec.pt");
+                    utilizador.getGrupoAtual().setNome("xpto");
+                    respostaSaida.setUtilizador(utilizador);
+                    respostaSaida.setMensagem("Convite recebido");
+                    System.out.println("Notificação enviada");
                     for(var cli: clienteSockets){
                         if(cli.getEmail().equals("miguel@isec.pt")){
                             cli.getOout().writeObject(respostaSaida);
@@ -57,6 +61,7 @@ class processaClienteThread implements Runnable {
     private java.sql.Connection connection;
     private UtilizadorDB utilizadorDB;
     private GrupoDB grupoDB;
+    private ConviteDB conviteDB;
     private UtilizadorGrupoDB utilizadorGrupoDB;
     private boolean conectado;
     private boolean EXIT = false;
@@ -70,6 +75,7 @@ class processaClienteThread implements Runnable {
         this.utilizadorDB = new UtilizadorDB(connection);
         this.grupoDB=new GrupoDB(connection);
         this.utilizadorGrupoDB=new UtilizadorGrupoDB(connection);
+        this.conviteDB=new ConviteDB(connection);
         //new objeto convite
         this.notificaThreads = clienteSockets;
 
@@ -159,8 +165,8 @@ class processaClienteThread implements Runnable {
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Criar grupo")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if(utilizador != null) {
-                                if(grupoDB.insertGrupo(pedidoCliente.getGrupo())){
-                                    if(utilizadorGrupoDB.insertUtilizadorGrupo(utilizadorDB.selectUtilizadorId(utilizador.getEmail()),grupoDB.selectGrupoId(pedidoCliente.getGrupo().getNome()))) {
+                                if(grupoDB.insertGrupo(pedidoCliente.getGrupos().get(0))) {
+                                    if(utilizadorGrupoDB.insertUtilizadorGrupo(utilizadorDB.selectUtilizadorId(utilizador.getEmail()),grupoDB.selectGrupoId(pedidoCliente.getGrupos().get(0).getNome()))){
                                         respostaSaida = pedidoCliente;
                                         respostaSaida.setMensagem("Grupo criado");
                                     }
@@ -181,51 +187,63 @@ class processaClienteThread implements Runnable {
                             }
                         }
                         else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
-                            Grupo grupo = grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());  // Buscar o grupo pelo nome
-                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());  // Buscar o utilizador (provavelmente responsável pela ação)
-
-                            if (grupo != null) {
-                                List<Utilizador> list = utilizadorGrupoDB.selectUtilizadoresPorGrupo(grupoDB.selectGrupoId(grupo.getNome()));
-
-                                if (utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(grupoDB.selectGrupoId(grupo.getNome()), list)) {
-                                    if (grupoDB.deleteGrupo(grupo.getNome())) {
-                                        respostaSaida.setMensagem("Grupo apagado com sucesso");
-                                        //atualizar grupos do utilizador e possivel variavel comunicacao
-                                    } else {
-                                        respostaSaida.setMensagem("Erro ao apagar o grupo");
-                                    }
-                                } else {
-                                    respostaSaida.setMensagem("Erro ao remover utilizadores do grupo");
-                                }
-                            } else {
-                                respostaSaida.setMensagem("Grupo não encontrado");
-                            }
+//                            Grupo grupo = grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());  // Buscar o grupo pelo nome
+//                            Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());  // Buscar o utilizador (provavelmente responsável pela ação)
+//
+//                            if (grupo != null) {
+//                                List<Utilizador> list = utilizadorGrupoDB.selectUtilizadoresPorGrupo(grupoDB.selectGrupoId(grupo.getNome()));
+//
+//                                if (utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(grupoDB.selectGrupoId(grupo.getNome()), list)) {
+//                                    if (grupoDB.deleteGrupo(grupo.getNome())) {
+//                                        respostaSaida.setMensagem("Grupo apagado com sucesso");
+//                                        //atualizar grupos do utilizador e possivel variavel comunicacao
+//                                    } else {
+//                                        respostaSaida.setMensagem("Erro ao apagar o grupo");
+//                                    }
+//                                } else {
+//                                    respostaSaida.setMensagem("Erro ao remover utilizadores do grupo");
+//                                }
+//                            } else {
+//                                respostaSaida.setMensagem("Grupo não encontrado");
+//                            }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Mudar nome grupo")){
-                            Grupo grupo= grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());
-                            System.out.println(pedidoCliente.getGrupo().getNome());
-                            System.out.println(pedidoCliente.getGrupo().getNomeProvisorio());
-                            if(grupoDB.updateNomeGrupo(pedidoCliente.getGrupo().getNome(), pedidoCliente.getGrupo().getNomeProvisorio())){//novo nome esta no pedido cliente
-                                //update grupos do utilizador?
-                                respostaSaida.setMensagem("Mudar nome grupo bem sucedido");
-                            }
-                            else{
-                                respostaSaida.setMensagem("Mudar nome grupo mal sucedido");
-                            }
-
+//                            Grupo grupo= grupoDB.selectGrupo(pedidoCliente.getGrupo().getNome());
+//                            System.out.println(pedidoCliente.getGrupo().getNome());
+//                            System.out.println(pedidoCliente.getGrupo().getNomeProvisorio());
+//                            if(grupoDB.updateNomeGrupo(pedidoCliente.getGrupo().getNome(), pedidoCliente.getGrupo().getNomeProvisorio())){//novo nome esta no pedido cliente
+//                                //update grupos do utilizador?
+//                                respostaSaida.setMensagem("Mudar nome grupo bem sucedido");
+//                            }
+//                            else{
+//                                respostaSaida.setMensagem("Mudar nome grupo mal sucedido");
+//                            }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer convite")){
-                            //Teste
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Escolher grupo")) {
+                            int utilizadorID = utilizadorDB.selectUtilizadorId(pedidoCliente.getUtilizador().getEmail());
+                            int grupoID = grupoDB.selectGrupoId(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            boolean utilizadorGrupo = utilizadorGrupoDB.selectUtilizadorNoGrupo(utilizadorID, grupoID);
+                            if (utilizadorGrupo) {
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Grupo escolhido");
+                            } else {
+                                pedidoCliente.getUtilizador().getGrupoAtual().setNome("");
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Utilizador não pertence ao grupo");
+                            }
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Enviar convite")){
+                            conviteDB.insertInvite(pedidoCliente.getConvites().getFirst());
                             respostaSaida = pedidoCliente;
-                            respostaSaida.setMensagem("Convite feito com sucesso");//adaptar
-                            synchronized (lock){
+                            respostaSaida.setMensagem("Convite feito com sucesso");
+                            synchronized (lock) {
                                 lock.notify();//assinalar thread
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver convites")){
-                            //Teste
+                            pedidoCliente.setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
                             respostaSaida = pedidoCliente;
-                            respostaSaida.setMensagem("Convites bem preenchidos");//adaptar
+                            respostaSaida.setMensagem("Lista de convites");
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){
                             //Logica

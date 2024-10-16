@@ -37,13 +37,13 @@ public class ConnectDB {
 
             String tabelaConvites = "CREATE TABLE IF NOT EXISTS Convites_Grupo ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "nome_grupo TEXT NOT NULL, "
                     + "remetente_email TEXT NOT NULL, "
                     + "destinatario_email TEXT NOT NULL, "
-                    + "grupo_id INTEGER NOT NULL, "
                     + "estado TEXT NOT NULL DEFAULT 'pendente', "
                     + "FOREIGN KEY (remetente_email) REFERENCES Utilizador(email) ON DELETE CASCADE, "
                     + "FOREIGN KEY (destinatario_email) REFERENCES Utilizador(email) ON DELETE CASCADE, "
-                    + "FOREIGN KEY (grupo_id) REFERENCES Grupo(id) ON DELETE CASCADE);";
+                    + "FOREIGN KEY (nome_grupo) REFERENCES Grupo(nome) ON DELETE CASCADE);";
             stmt.executeUpdate(tabelaConvites);
 
             String tabelaUtilizadorGrupo = "CREATE TABLE IF NOT EXISTS Utilizador_Grupo ("

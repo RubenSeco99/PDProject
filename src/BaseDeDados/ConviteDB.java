@@ -1,5 +1,7 @@
 package BaseDeDados;
 
+import Entidades.Convite;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,21 +16,40 @@ public class ConviteDB {
         this.connection = connection;
     }
 
-    public List<Integer> listarConvitesPendentes(int utilizadorId) {
-        List<Integer> convites = new ArrayList<>();
+//    public ArrayList<Convite> listarConvitesPendentes(int utilizadorId) {
+//        ArrayList<Convite> convites = new ArrayList<>();
+//        try {
+//            String query = "SELECT grupo_id FROM Convites_Grupo WHERE utilizador_id = ? AND estado = 'pendente'";
+//            PreparedStatement preparedStatement = connection.prepareStatement(query);
+//            preparedStatement.setInt(1, utilizadorId);
+//            ResultSet resultSet = preparedStatement.executeQuery();
+//            convites.add(new Convite("Teste", "pendente"));
+//            while (resultSet.next()) {
+//                convites.add(new Convite(resultSet.getString("nomeGrupo")));
+//            }
+//        } catch (SQLException e) {
+//            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
+//        }
+//        return convites;
+//    }
+
+    public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
+        ArrayList<Convite> convites = new ArrayList<>();
         try {
-            String query = "SELECT grupo_id FROM Convites_Grupo WHERE utilizador_id = ? AND estado = 'pendente'";
+            String query = "SELECT nome_grupo FROM Convites_Grupo WHERE destinatario_email = ? AND estado = 'pendente'";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
+            preparedStatement.setString(1, utilizadorEmail);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                convites.add(resultSet.getInt("grupo_id"));//mudar para o nome
+                convites.add(new Convite(resultSet.getString("nome_grupo")));
             }
         } catch (SQLException e) {
             System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
         }
         return convites;
     }
+
+
     public boolean acceptConvite(int utilizadorId, int grupoId) {
         try {
             // Atualizar o estado do convite para 'aceito'
@@ -70,6 +91,19 @@ public class ConviteDB {
             System.out.println("Erro ao remover convite: " + e.getMessage());
         }
         return false;
+    }
+
+    public void insertInvite(Convite convite) {
+        try {
+            String query = "INSERT INTO Convites_Grupo (nome_grupo, remetente_email, destinatario_email, estado) VALUES (?, ?, ?, 'pendente')";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, convite.getNomeGrupo());
+            preparedStatement.setString(2, convite.getRemetente());
+            preparedStatement.setString(3, convite.getDestinatario());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Erro ao inserir convite: " + e.getMessage());
+        }
     }
 
 }

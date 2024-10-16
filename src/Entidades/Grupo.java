@@ -7,7 +7,7 @@ public class Grupo implements Serializable {
     private int id;
     private String nome;
     private String nomeProvisorio;//so usado quando da mudanca do nome do grupo
-    public Grupo(){}//uso no GrupoDB
+    public Grupo(){this.nome = "";}//uso no GrupoDB
     public Grupo(String nome) {
         setNome(nome);
     }

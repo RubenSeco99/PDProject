@@ -13,6 +13,7 @@ public class Utilizador implements Serializable {
     private int ativo;
     private List<Grupo> grupos;
     private List<Convite> convites;
+    private Grupo grupo_atual;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
@@ -20,10 +21,12 @@ public class Utilizador implements Serializable {
         this.telefone = telefone;
         this.email = email;
         this.ativo = 0;
-        this.grupos=new ArrayList<>();
+        this.grupos = new ArrayList<>();
+        this.grupo_atual = new Grupo();
     }
     public Utilizador() {
         this.grupos = new ArrayList<>();
+        this.grupo_atual = new Grupo();
     }
 
     public String getNome() {return nome;}
@@ -39,6 +42,8 @@ public class Utilizador implements Serializable {
     public void setAtivo(int ativo) {this.ativo = ativo;}
     public void setGrupos(List<Grupo> grupos) { this.grupos = grupos; }
     public List<Convite> getConvites() {return convites;}
+    public Grupo getGrupoAtual() {return grupo_atual;}
+    public void setGrupoAtual(Grupo grupo) { this.grupo_atual = grupo; }
 
     public void setUtilizador(Utilizador utilizador){
         this.nome = utilizador.nome;
@@ -46,6 +51,9 @@ public class Utilizador implements Serializable {
         this.telefone = utilizador.telefone;
         this.email = utilizador.email;
         this.ativo = utilizador.ativo;
+        this.grupo_atual = utilizador.grupo_atual;
+        this.grupos = utilizador.grupos;
+        this.convites = utilizador.convites;
     }
     public void addGrupo(Grupo grupo) {
         if (!this.grupos.contains(grupo)) {

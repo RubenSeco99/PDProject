@@ -1,10 +1,13 @@
 package Cliente;
 
+import Entidades.Convite;
+import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 class processServerRequest implements Runnable{
     private final Socket socket;
@@ -28,9 +31,21 @@ class processServerRequest implements Runnable{
 
                 Comunicacao response = (Comunicacao) Oin.readObject();
 
-                if(response.getMensagem().equalsIgnoreCase("Login aceite")){
+                if(response.getMensagem().equalsIgnoreCase("Login aceite")) {
                     Cliente.registado = true;
-                        Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
+                    Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
+                } else if(response.getMensagem().equalsIgnoreCase("Lista de convites")) {
+                    ArrayList<Convite> convites = response.getConvites();
+                    System.out.println("Convites pendentes:");
+                    if(!convites.isEmpty()) {
+                        for (Convite convite : convites) {
+                            System.out.println("Convite para o grupo: " + convite.getNomeGrupo() + " (de: " + convite.getRemetente() + ")");
+                        }
+                    } else {
+                        System.out.println("Não tem convites pendentes.");
+                    }
+                } else if(response.getMensagem().equalsIgnoreCase("Utilizador não pertence ao grupo")) {
+                    Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
                 }
 
                 System.out.println("\nResponse: " + response);

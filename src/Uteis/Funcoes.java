@@ -105,6 +105,7 @@ public class Funcoes {
                                   1. Ver convites
                                   2. Aceitar
                                   3. Rejeitar
+                                  4. Fazer convite
                                   0. Sair""");
                 System.out.print("Opção: ");
                 String opcao = in.readLine();
@@ -114,20 +115,142 @@ public class Funcoes {
                     case "1":
                         Cliente.comunicacao.setMensagem("Ver convites");
                         Cliente.valido=true;
+                        running = false;
                         break;
                     case "2":
-                        Cliente.comunicacao.setMensagem("Aceitar convite");
-                        Cliente.valido=true;
-                        System.out.print("Indique o nome do convite que deseja aceitar: ");
-                        Cliente.comunicacao.setConvite(in.readLine());
-                        change=true;
+
                         break;
                     case "3":
-                        Cliente.comunicacao.setMensagem("Rejeitar convite");
+
+                        break;
+                    case "4":
+                        Cliente.comunicacao.setMensagem("Enviar convite");
                         Cliente.valido=true;
-                        System.out.print("Indique o nome do convite que deseja rejeitar: ");
-                        Cliente.comunicacao.setConvite(in.readLine());
+                        System.out.print("Indique o grupo: ");
+                        //fazer validação do grupo (se existe e se está nele)
+                        System.out.print("Indique o email do utilizador que quer convidar: ");
+                        //criar um novo convite com esses dados
                         change=true;
+                        break;
+                    case "0":
+                        running = false;
+                        if(change) {
+                            Cliente.valido = true;
+                            Cliente.comunicacao.setMensagem("Editar convites");
+                        }
+                        else{
+                            Cliente.valido=false;
+                            System.out.println("Nenhuma alteração foi efetuada");}
+                        break;
+                    default:
+                        System.out.println("Opção inválida, tente novamente.");
+                }
+                System.out.println();
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro ao ler a entrada. Tente novamente.");
+            } catch (NumberFormatException e) {
+                System.out.println("Opção inválida. Insira um número válido.");
+            }
+        }
+    }
+    public static void menuGrupoAtual(Utilizador utilizador) {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
+        while (running) {
+            try{
+                System.out.printf("""
+                        Grupo atual: %s
+                        [Menu grupo atual]
+                        O que pretende fazer?
+                          1. Enviar convite
+                          2. Nova despesa
+                          3. Fazer pagamento
+                          4. ...
+                          5. ...
+                          6. ...
+                          7. Sair do grupo
+                          0. Sair
+                        %n""", utilizador.getGrupoAtual().getNome());
+                System.out.print("Opção: ");
+                String opcao = in.readLine();
+                System.out.println();
+
+                switch (opcao) {
+                    case "1":
+                        System.out.print("Indique o email do utilizador que deseja convidar: ");
+                        Convite convite = new Convite(utilizador.getGrupoAtual().getNome(), in.readLine(), utilizador.getEmail(),"pendente");
+                        Cliente.comunicacao.setConvite(convite);
+                        Cliente.comunicacao.setMensagem("Enviar convite");
+                        Cliente.valido = true;
+                        change = true;
+                        running = false;
+                        break;
+                    case "2":
+
+                        break;
+                    case "3":
+
+                        break;
+                    case "4":
+
+                        break;
+                    case "0":
+                        running = false;
+                        if(change) {
+                            Cliente.valido = true;
+                            Cliente.comunicacao.setMensagem("Editar convites");
+                        }
+                        else{
+                            Cliente.valido=false;
+                            System.out.println("Nenhuma alteração foi efetuada");}
+                        break;
+                    default:
+                        System.out.println("Opção inválida, tente novamente.");
+                }
+                System.out.println();
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro ao ler a entrada. Tente novamente.");
+            } catch (NumberFormatException e) {
+                System.out.println("Opção inválida. Insira um número válido.");
+            }
+        }
+    }
+    public static void menuGrupos(Utilizador utilizador) {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
+        while (running) {
+            try{
+                System.out.println("""
+                                [Menu grupos]
+                                O que pretende fazer?
+                                  1. Escolher grupo
+                                  2. Criar grupo
+                                  0. Sair""");
+                System.out.print("Opção: ");
+                String opcao = in.readLine();
+                System.out.println();
+
+                switch (opcao) {
+                    case "1":
+                        System.out.print("Indique o nome do grupo que deseja escolher: ");
+                        utilizador.getGrupoAtual().setNome(in.readLine());
+                        Cliente.comunicacao.setMensagem("Escolher grupo");
+                        Cliente.valido = true;
+                        change = true;
+                        running = false;
+                        break;
+                    case "2":
+                        Cliente.comunicacao.setMensagem("Criar grupo");
+                        System.out.print("Indique o nome do grupo: ");
+                        Cliente.comunicacao.setGrupos(in.readLine());
+                        Cliente.valido = true;
+                        running = false;
+                        break;
+                    case "3":
+
+                        break;
+                    case "4":
+
                         break;
                     case "0":
                         running = false;
@@ -157,11 +280,8 @@ public class Funcoes {
                                 O que pretende fazer?
                                   1. Logout
                                   2. Editar dados
-                                  3. Adicionar grupo
-                                  4. Apagar grupo
-                                  5. Mudar nome grupo (not done)
-                                  6. Enviar convites
-                                  7. Menu convites""");
+                                  3. Menu grupos
+                                  4. Menu convites""");
         System.out.print("> ");
         try {
             op = Integer.parseInt(in.readLine());
@@ -172,26 +292,13 @@ public class Funcoes {
                 Cliente.EXIT = true;
             }else if(op == 2) {
                 updateUtilizador(utilizador);
-            }else if(op == 3) {
-                Cliente.comunicacao.setMensagem("Criar grupo");
-                Cliente.valido = true;
-                System.out.println("Indique o nome do grupo");
-                Cliente.comunicacao.getGrupo().setNome(in.readLine());
-            }else if(op==4){
-                Cliente.comunicacao.setMensagem("Apagar grupo");
-                Cliente.valido = true;
-                System.out.println("Indique o nome do grupo");
-                Cliente.comunicacao.getGrupo().setNome(in.readLine());
-            }else if(op==5){
-                Cliente.comunicacao.setMensagem("Mudar nome grupo");
-                Cliente.valido = true;
-                System.out.println("Indique o nome atual do grupo");
-                Cliente.comunicacao.getGrupo().setNome(in.readLine());
-                System.out.println("Indique o novo nome do grupo");
-                Cliente.comunicacao.getGrupo().setNomeProvisorio(in.readLine());
-            }else if(op == 6){
-                Cliente.comunicacao.setMensagem("Convite");
-                Cliente.valido = true;
+            }else if(op==3){
+                if(!utilizador.getGrupoAtual().getNome().isEmpty())
+                    menuGrupoAtual(utilizador);
+                else
+                    menuGrupos(utilizador);
+            }else if(op == 4){
+                menuConvites(utilizador);
             } else{
                 System.out.println("Opcao invalida!");
                 Cliente.valido = false;
