@@ -78,10 +78,13 @@ public class Funcoes {
                         if(change) {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar dados");
+                            Cliente.lastCommand="Editar dados";
+                            Cliente.mainEntrance=true;
                         }
                         else{
                             Cliente.valido=false;
-                            System.out.println("Nenhuma alteração foi efetuada");}
+                            System.out.println("Nenhuma alteração foi efetuada");
+                            Cliente.mainEntrance=true;}
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -103,9 +106,8 @@ public class Funcoes {
                                 [Menu convites]
                                 O que pretende fazer?
                                   1. Ver convites
-                                  2. Aceitar
-                                  3. Rejeitar
-                                  4. Fazer convite
+                                  2. Aceitar (not done)
+                                  3. Rejeitar (not done)
                                   0. Sair""");
                 System.out.print("Opção: ");
                 String opcao = in.readLine();
@@ -114,7 +116,7 @@ public class Funcoes {
                 switch (opcao) {
                     case "1":
                         Cliente.comunicacao.setMensagem("Ver convites");
-                        Cliente.valido=true;
+                        Cliente.lastCommand="Ver convites";
                         running = false;
                         break;
                     case "2":
@@ -123,24 +125,18 @@ public class Funcoes {
                     case "3":
 
                         break;
-                    case "4":
-                        Cliente.comunicacao.setMensagem("Enviar convite");
-                        Cliente.valido=true;
-                        System.out.print("Indique o grupo: ");
-                        //fazer validação do grupo (se existe e se está nele)
-                        System.out.print("Indique o email do utilizador que quer convidar: ");
-                        //criar um novo convite com esses dados
-                        change=true;
-                        break;
                     case "0":
                         running = false;
                         if(change) {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar convites");
+                            Cliente.lastCommand="Editar convites";
+                            Cliente.mainEntrance=false;
                         }
                         else{
                             Cliente.valido=false;
-                            System.out.println("Nenhuma alteração foi efetuada");}
+                            System.out.println("Nenhuma alteração foi efetuada");
+                            Cliente.mainEntrance=true;}
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -159,8 +155,7 @@ public class Funcoes {
         while (running) {
             try{
                 System.out.printf("""
-                        Grupo atual: %s
-                        [Menu grupo atual]
+                        [Menu grupo: %s]
                         O que pretende fazer?
                           1. Enviar convite
                           2. Nova despesa
@@ -178,9 +173,10 @@ public class Funcoes {
                 switch (opcao) {
                     case "1":
                         System.out.print("Indique o email do utilizador que deseja convidar: ");
-                        Convite convite = new Convite(utilizador.getGrupoAtual().getNome(), in.readLine(), utilizador.getEmail(),"pendente");
+                        Convite convite = new Convite(utilizador.getGrupoAtual().getNome(), utilizador.getEmail(), in.readLine(),"pendente");
                         Cliente.comunicacao.setConvite(convite);
                         Cliente.comunicacao.setMensagem("Enviar convite");
+                        Cliente.lastCommand="Enviar convite";
                         Cliente.valido = true;
                         change = true;
                         running = false;
@@ -199,10 +195,12 @@ public class Funcoes {
                         if(change) {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar convites");
+                            Cliente.lastCommand="Editar convites";
+                            Cliente.mainEntrance=false;
                         }
                         else{
                             Cliente.valido=false;
-                            System.out.println("Nenhuma alteração foi efetuada");}
+                            Cliente.mainEntrance=true;}
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -235,15 +233,15 @@ public class Funcoes {
                         System.out.print("Indique o nome do grupo que deseja escolher: ");
                         utilizador.getGrupoAtual().setNome(in.readLine());
                         Cliente.comunicacao.setMensagem("Escolher grupo");
-                        Cliente.valido = true;
+                        Cliente.lastCommand="Escolher grupo";
                         change = true;
                         running = false;
                         break;
                     case "2":
                         Cliente.comunicacao.setMensagem("Criar grupo");
+                        Cliente.lastCommand="Criar grupo";
                         System.out.print("Indique o nome do grupo: ");
                         Cliente.comunicacao.setGrupos(in.readLine());
-                        Cliente.valido = true;
                         running = false;
                         break;
                     case "3":
@@ -254,13 +252,13 @@ public class Funcoes {
                         break;
                     case "0":
                         running = false;
-                        if(change) {
+                        if(change){
                             Cliente.valido = true;
-                            Cliente.comunicacao.setMensagem("Editar convites");
+                            Cliente.mainEntrance=false;
                         }
-                        else{
+                        else
                             Cliente.valido=false;
-                            System.out.println("Nenhuma alteração foi efetuada");}
+                        Cliente.mainEntrance=true;
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -273,7 +271,7 @@ public class Funcoes {
             }
         }
     }
-    public static void menuUtilizadoresComLogin(Utilizador utilizador,Comunicacao comunicacao){
+    public static void menuUtilizadoresComLogin(Utilizador utilizador){
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
         System.out.println("""
@@ -287,7 +285,9 @@ public class Funcoes {
             op = Integer.parseInt(in.readLine());
             if(op == 1) {
                 Cliente.comunicacao.setMensagem("Logout");
+                Cliente.lastCommand="Logout";
                 Cliente.valido = true;
+                Cliente.mainEntrance=true;
                 System.out.println("Logout efetuado com sucesso!");
                 Cliente.EXIT = true;
             }else if(op == 2) {
@@ -302,12 +302,14 @@ public class Funcoes {
             } else{
                 System.out.println("Opcao invalida!");
                 Cliente.valido = false;
+                Cliente.mainEntrance=true;
             }
         } catch (NumberFormatException | IOException e) {
             System.out.println("Opcao invalida! Insira uma opção válida.");
+            Cliente.mainEntrance=true;
         }
     }
-    public static void menuUtilizadoresSemLogin(Utilizador utilizador,Comunicacao comunicacao){
+    public static void menuUtilizadoresSemLogin(Utilizador utilizador){
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
         System.out.println("""
@@ -318,32 +320,41 @@ public class Funcoes {
         System.out.print("> ");
         try {
             op = Integer.parseInt(in.readLine());
-
-            if (op == 1) {
+            if(op==0){
+                Cliente.comunicacao.setMensagem("Sair");
+                Cliente.valido = true;
+                System.out.println("Saida efetuado com sucesso!");
+                Cliente.EXIT = true;
+            }
+            else if (op == 1) {
                 Funcoes.camposMenuRegisto(utilizador);
                 Cliente.comunicacao.setMensagem("Registo");
                 Cliente.valido = true;
+                Cliente.mainEntrance=true;
             } else if (op == 2) {
                 Funcoes.camposMenuLogin(utilizador);
                 Cliente.comunicacao.setMensagem("Login");
                 Cliente.valido = true;
+                Cliente.mainEntrance=true;
             } else {
                 System.out.println("Opcao invalida");
                 Cliente.valido = false;
+                Cliente.mainEntrance=true;
             }
         } catch (NumberFormatException e) {
             System.out.println("Formato invalido " + e.getMessage());
+            Cliente.mainEntrance=true;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    public static void Menu(Utilizador utilizador, Comunicacao comunicacao) throws IOException, InterruptedException {
+    public static void Menu(Utilizador utilizador) throws IOException, InterruptedException {
         Thread.sleep(150);
         if(!Cliente.registado){
-            menuUtilizadoresSemLogin(utilizador,comunicacao);
+            menuUtilizadoresSemLogin(utilizador);
         } else {
-            menuUtilizadoresComLogin(utilizador,comunicacao);
-        }//se for necessario criar uma variavel para ver se um utilizador esta num grupo e dividir as opcoes também se pode fazer
+            menuUtilizadoresComLogin(utilizador);
+        }
     }
 
 }

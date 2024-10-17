@@ -99,7 +99,13 @@ class processaClienteThread implements Runnable {
                     System.out.println("> ");
 
                     if(!conectado) {
-                        if (pedidoCliente.getMensagem().equalsIgnoreCase("Registo")) {
+                        if (pedidoCliente.getMensagem().equalsIgnoreCase("Sair")) {
+                            respostaSaida = pedidoCliente;
+                            respostaSaida.setMensagem("Saida bem sucedida");
+                            Oout.writeObject(respostaSaida);
+                            Oout.flush();
+                        }
+                        else if (pedidoCliente.getMensagem().equalsIgnoreCase("Registo")) {
                             if (!Funcoes.isValidEmail(pedidoCliente.getUtilizador().getEmail())) {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Formato Email Inválido!");
@@ -113,7 +119,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Email existente");
                             }
-                        } else if (pedidoCliente.getMensagem().equalsIgnoreCase("login")) {
+                        }
+                        else if (pedidoCliente.getMensagem().equalsIgnoreCase("login")) {
                             if (utilizadorDB.verificaLogin(pedidoCliente.getUtilizador().getEmail(), pedidoCliente.getUtilizador().getPassword())) {
                                 pedidoCliente.setUtilizador(utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail()));
                                 //Para atualizar a lista de utilizadores logados na thread notificação
@@ -133,11 +140,13 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Credencias incorretas");
                             }
-                        } else {
+                        }
+                        else {
                             respostaSaida = pedidoCliente;
                             respostaSaida.setMensagem("Comando invalido. Efetue o 'registo' ou 'login' primeiro.");
                         }
-                    } else {
+                    }
+                    else {
                         if (pedidoCliente.getMensagem().equalsIgnoreCase("Logout")) {
                             Utilizador utilizador = utilizadorDB.selectUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (utilizador != null) {
@@ -233,11 +242,21 @@ class processaClienteThread implements Runnable {
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Enviar convite")){
-                            conviteDB.insertInvite(pedidoCliente.getConvites().getFirst());
-                            respostaSaida = pedidoCliente;
-                            respostaSaida.setMensagem("Convite feito com sucesso");
-                            synchronized (lock) {
-                                lock.notify();//assinalar thread
+                            if(utilizadorDB.selectUtilizador(pedidoCliente.getConvites().getFirst().getDestinatario())!=null) {
+                                if (!conviteDB.checkConviteExistance(pedidoCliente.getConvites().getFirst())) {
+                                    conviteDB.insertInvite(pedidoCliente.getConvites().getFirst());
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Convite feito com sucesso");
+                                    synchronized (lock) {
+                                        lock.notify();//assinalar thread
+                                    }
+                                } else {
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Convite repetido");
+                                }
+                            }else{
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Destinatario Convite inexistente");
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver convites")){
@@ -245,17 +264,14 @@ class processaClienteThread implements Runnable {
                             respostaSaida = pedidoCliente;
                             respostaSaida.setMensagem("Lista de convites");
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){
-                            //Logica
-                            //atualizarBD ,preencher pedido cliente
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){//not done
                             respostaSaida = pedidoCliente;
                             respostaSaida.setMensagem("Convite aceite com sucesso");
                             synchronized (lock) {
                                 lock.notify();//assinalar thread
                             }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Rejeitar convite")){
-                            //Teste
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Rejeitar convite")){//not done
                             respostaSaida = pedidoCliente;
                             respostaSaida.setMensagem("Convite rejeitado com sucesso");
                             synchronized (lock){
@@ -289,7 +305,8 @@ class processaClienteThread implements Runnable {
                     if (utilizadorThread != null) {
                         utilizadorThread.setAtivo(0);
                         utilizadorDB.updateUtilizador(utilizadorThread);
-                        System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
+                        if(utilizadorThread.getEmail()!=null)
+                            System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
                     }
                     running = false;
                 } catch (EOFException e) {
@@ -297,7 +314,8 @@ class processaClienteThread implements Runnable {
                     if (utilizadorThread != null) {
                         utilizadorThread.setAtivo(0);
                         utilizadorDB.updateUtilizador(utilizadorThread);
-                        System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
+                        if(utilizadorThread.getEmail()!=null)
+                            System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
                     }
                     running = false; // Encerrar a thread no fim da conexão
                 } catch (ClassNotFoundException | IOException e) {

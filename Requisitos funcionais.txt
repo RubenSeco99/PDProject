@@ -12,8 +12,8 @@ Requisitos funcionais:✅
    .Autenticação de um Utilizador✅
    .Edição dos dados de registo✅
    .Criação de um novo Grupo✅
-   .Criação de convites para adesão a um grupo❌
-   .Visualização dos convites de adesão (recebidos/pendentes)❌
+   .Criação de convites para adesão a um grupo✅
+   .Visualização dos convites de adesão (recebidos/pendentes)✅
    .Listar grupos pertencentes(do Utilizador)❌
    .Edição do nome de um grupo❌✅
    .Eliminação de um grupo✅

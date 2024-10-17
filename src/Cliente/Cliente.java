@@ -12,9 +12,11 @@ import java.util.ArrayList;
 class processServerRequest implements Runnable{
     private final Socket socket;
     private boolean running;
+    public Comunicacao response;
 
-    public processServerRequest(Socket socket) {
+    public processServerRequest(Socket socket,Comunicacao response) {
         this.socket = socket;
+        this.response=response;
         running = true;
     }
 
@@ -29,7 +31,7 @@ class processServerRequest implements Runnable{
 
             while(running){
 
-                Comunicacao response = (Comunicacao) Oin.readObject();
+                response = (Comunicacao) Oin.readObject();
 
                 if(response.getMensagem().equalsIgnoreCase("Login aceite")) {
                     Cliente.registado = true;
@@ -79,6 +81,8 @@ public class Cliente {
     public static boolean EXIT = false;
     public static Utilizador utilizadorUpdate = new Utilizador();
     public static Comunicacao comunicacao;
+    public  static String lastCommand="";
+    public  static boolean mainEntrance=true;
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -100,13 +104,21 @@ public class Cliente {
             try (Socket socket = new Socket(serverAddr, serverPort)) {
 
                 ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
-                serverRequest = new processServerRequest(socket);
+                Comunicacao response=new Comunicacao();
+                serverRequest = new processServerRequest(socket,response);
                 td1 = new Thread(serverRequest);
                 td1.start();
 
                 while (true) {
                     comunicacao = new Comunicacao(utilizadorUpdate);
-                    Funcoes.Menu(utilizadorUpdate, comunicacao);
+                    if(!mainEntrance && lastCommand.contains("convite")){
+                        Funcoes.menuConvites(utilizadorUpdate);
+                    } else if (!mainEntrance && lastCommand.contains("Grupo")&&(response.getMensagem()=="Grupo nao criado"||response.getMensagem()=="Utilizador não pertence ao grupo")) {
+                        Funcoes.menuGrupos(utilizadorUpdate);
+                    }else if(!mainEntrance &&lastCommand.contains("Grupo")){
+                        Funcoes.menuGrupoAtual(utilizadorUpdate);
+                    }else
+                        Funcoes.Menu(utilizadorUpdate);
                     if (valido) {
                         System.out.println(comunicacao);//so imprime se tiver havido pedido ao server
                         Oout.writeObject(comunicacao);

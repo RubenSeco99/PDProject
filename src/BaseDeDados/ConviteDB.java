@@ -15,39 +15,32 @@ public class ConviteDB {
     public ConviteDB(Connection connection) {
         this.connection = connection;
     }
+//public Convite(String nomeGrupo, String destinatario, String remetente, String estado)
+public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
+    ArrayList<Convite> convites = new ArrayList<>();
+    try {
+        // Seleciona todas as colunas necessárias para a criação do objeto Convite
+        String query = "SELECT nome_grupo, remetente_email, destinatario_email, estado FROM Convites_Grupo WHERE destinatario_email = ? AND estado = 'pendente'";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, utilizadorEmail);
+        ResultSet resultSet = preparedStatement.executeQuery();
 
-//    public ArrayList<Convite> listarConvitesPendentes(int utilizadorId) {
-//        ArrayList<Convite> convites = new ArrayList<>();
-//        try {
-//            String query = "SELECT grupo_id FROM Convites_Grupo WHERE utilizador_id = ? AND estado = 'pendente'";
-//            PreparedStatement preparedStatement = connection.prepareStatement(query);
-//            preparedStatement.setInt(1, utilizadorId);
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//            convites.add(new Convite("Teste", "pendente"));
-//            while (resultSet.next()) {
-//                convites.add(new Convite(resultSet.getString("nomeGrupo")));
-//            }
-//        } catch (SQLException e) {
-//            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
-//        }
-//        return convites;
-//    }
-
-    public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
-        ArrayList<Convite> convites = new ArrayList<>();
-        try {
-            String query = "SELECT nome_grupo FROM Convites_Grupo WHERE destinatario_email = ? AND estado = 'pendente'";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, utilizadorEmail);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                convites.add(new Convite(resultSet.getString("nome_grupo")));
-            }
-        } catch (SQLException e) {
-            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
+        // Itera sobre os resultados e adiciona cada convite à lista
+        while (resultSet.next()) {
+            Convite convite = new Convite(
+                    resultSet.getString("nome_grupo"),
+                    resultSet.getString("remetente_email"),
+                    resultSet.getString("destinatario_email"),
+                    resultSet.getString("estado")
+            );
+            convites.add(convite);
         }
-        return convites;
+    } catch (SQLException e) {
+        System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
     }
+    return convites;
+}
+
 
 
     public boolean acceptConvite(int utilizadorId, int grupoId) {
@@ -91,6 +84,23 @@ public class ConviteDB {
             System.out.println("Erro ao remover convite: " + e.getMessage());
         }
         return false;
+    }
+    public boolean checkConviteExistance(Convite convite) {
+        try {
+            String query = "SELECT COUNT(*) FROM Convites_Grupo WHERE nome_grupo = ? AND remetente_email = ? AND destinatario_email = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, convite.getNomeGrupo());
+            preparedStatement.setString(2, convite.getRemetente());
+            preparedStatement.setString(3, convite.getDestinatario());
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0; // Retorna true se o convite já existir
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar se o convite já existe: " + e.getMessage());
+        }
+        return false; // Retorna false se ocorrer um erro ou se o convite não existir
     }
 
     public void insertInvite(Convite convite) {

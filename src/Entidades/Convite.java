@@ -8,14 +8,13 @@ public class Convite implements Serializable {
     private String estado;
     private String destinatario;
     private String remetente;
-    //adicionar destinatario e remetente
 
 
     public Convite(String nomeGrupo, String estado) {
         this.nomeGrupo = nomeGrupo;
         this.estado = estado;
     }
-    public Convite(String nomeGrupo, String destinatario, String remetente, String estado) {
+    public Convite(String nomeGrupo, String remetente, String destinatario, String estado) {
         this.nomeGrupo = nomeGrupo;
         this.estado = estado;
         this.destinatario = destinatario;
@@ -30,5 +29,7 @@ public class Convite implements Serializable {
     public String getNomeGrupo() { return nomeGrupo; }
     public String getEstado() { return estado; }
     public String getDestinatario() { return destinatario; }
+    public void setDestinatario(String destinatario){this.destinatario=destinatario;}
+    public void setRemetente(String remetente){this.remetente=remetente;}
     public String getRemetente() { return remetente; }
 }
