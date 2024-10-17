@@ -96,54 +96,64 @@ public class Funcoes {
             }
         }
     }
-    public static boolean mudarEstadoConvite(Utilizador utilizador, String estado) throws IOException {
+    public static void mudarEstadoConvite(Utilizador utilizador) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
+        String estado = "";
+        Cliente.lastCommand ="";
         // Verificar se há convites pendentes
-        List<Convite> convitesPendentes = utilizador.getConvites();
-        if (convitesPendentes.isEmpty()) {
+        if (utilizador.getConvites().isEmpty()) {
             System.out.println("Não há convites pendentes.");
-            return false;
+            return;
         }
 
         boolean running = true;
         boolean change = false;
         while (running) {
             System.out.println("Convites pendentes:");
-            for (Convite convite : convitesPendentes) {
+            for (Convite convite : utilizador.getConvites()) {
                 System.out.println("Grupo: " + convite.getNomeGrupo() + " | Estado: " + convite.getEstado());
             }
 
+            System.out.println("""
+                                [Vizualizar Convites]
+                                O que pretende fazer?
+                                  1. Aceitar (not done)
+                                  2. Rejeitar (not done)
+                                  0. Sair""");
+            System.out.print("Opção: ");
+
+            estado = in.readLine();
+            if(estado.equals("1")) {
+                estado = "aceitar";
+            }else if (estado.equals("2")) {
+                estado = "rejeitar";
+            }else {
+                System.out.println("A sair para o menu");
+            }
 
             System.out.print("Coloque o nome do grupo (ou escreva 'sair menu' para sair): ");
             String nomeGrupo = in.readLine().trim();//trim elimina o espaço antes da primeira palavra e o espaço depois da ultima palavra, caso eles existam
 
-            Convite conviteSelecionado = null;
-            for (Convite convite : convitesPendentes) {
+            boolean found = false;
+            for (Convite convite : utilizador.getConvites()) {
                 if (convite.getNomeGrupo().equalsIgnoreCase(nomeGrupo)) {
-                    conviteSelecionado = convite;
+                    found = true;
+                    if(estado.equalsIgnoreCase("aceitar")) {
+                        convite.setEstado("aceite");
+                    }else {
+                        convite.setEstado("rejeitado");
+                    }
                     break;
                 }
             }
 
-            if (conviteSelecionado == null && nomeGrupo.equalsIgnoreCase("sair menu")) {
+            if (!found || nomeGrupo.equalsIgnoreCase("sair menu")) {
                 System.out.println("Saindo do menu de convites.");
-                return false;
+                return;
             }
 
-            if (conviteSelecionado != null) {
-                if (estado.equalsIgnoreCase("aceitar")) {
-                    conviteSelecionado.setEstado("aceite");
-                    System.out.println("Convite aceito para o grupo: " + nomeGrupo);
-                } else if (estado.equalsIgnoreCase("rejeitar")) {
-                    conviteSelecionado.setEstado("rejeitado");
-                    System.out.println("Convite rejeitado para o grupo: " + nomeGrupo);
-                }
-                change = true;
-                running = false;
-            } else {
-                System.out.println("Nome do grupo incorreto. Tente novamente ou escreva 'sair menu' para sair.");
-            }
+            change = true;
+            running = false;
         }
 
         if (change) {
@@ -154,8 +164,6 @@ public class Funcoes {
             Cliente.valido = false;
             System.out.println("Nenhuma alteração foi efetuada.");
         }
-
-        return change;
     }
 
     public static void menuConvites(Utilizador utilizador) {
@@ -165,10 +173,9 @@ public class Funcoes {
             try{
                 System.out.println("""
                                 [Menu convites]
+                                Por favor veja os convites para poder aceitar ou rejeitar
                                 O que pretende fazer?
-                                  1. Ver convites
-                                  2. Aceitar (not done)
-                                  3. Rejeitar (not done)
+                                  1. Ver convite
                                   0. Sair""");
                 System.out.print("Opção: ");
                 String opcao = in.readLine();
@@ -179,16 +186,6 @@ public class Funcoes {
                         Cliente.comunicacao.setMensagem("Ver convites");
                         Cliente.lastCommand="Ver convites";
                         running = false;
-                        break;
-                    case "2":
-                        System.out.print("Coloque o nome do grupo: ");
-                        mudarEstadoConvite(utilizador,"aceitar");
-                        running = false;
-                        break;
-                    case "3":
-                        running = false;
-                        System.out.print("Coloque o nome do grupo: ");
-                        mudarEstadoConvite(utilizador,"rejeitar");
                         break;
                     case "0":
                         running = false;
@@ -212,6 +209,7 @@ public class Funcoes {
             }
         }
     }
+
     public static void menuGrupoAtual(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
@@ -334,9 +332,14 @@ public class Funcoes {
             }
         }
     }
-    public static void menuUtilizadoresComLogin(Utilizador utilizador){
+    public static void menuUtilizadoresComLogin(Utilizador utilizador) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
+
+        if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
+            mudarEstadoConvite(utilizador);
+        }
+
         System.out.println("""
                                 O que pretende fazer?
                                   1. Logout

@@ -37,10 +37,10 @@ class processServerRequest implements Runnable{
                     Cliente.registado = true;
                     Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
                 } else if(response.getMensagem().equalsIgnoreCase("Lista de convites")) {
-                    ArrayList<Convite> convites = response.getConvites();
+                    Cliente.utilizadorUpdate.setConvites(response.getConvites());
                     System.out.println("Convites pendentes:");
-                    if(!convites.isEmpty()) {
-                        for (Convite convite : convites) {
+                    if(!Cliente.utilizadorUpdate.getConvites().isEmpty()) {
+                        for (var convite : Cliente.utilizadorUpdate.getConvites()) {
                             System.out.println("Convite para o grupo: " + convite.getNomeGrupo() + " (de: " + convite.getRemetente() + ")");
                         }
                     } else {

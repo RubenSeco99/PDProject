@@ -265,11 +265,41 @@ class processaClienteThread implements Runnable {
                             respostaSaida.setMensagem("Lista de convites");
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){//not done
+                            if(pedidoCliente.getConvites()!= null){
+                                for(var p : pedidoCliente.getConvites()){
+                                    if(p.getEstado().equalsIgnoreCase("aceite")){
+                                        Grupo grupo = grupoDB.selectGrupo(p.getNomeGrupo());
+                                        Utilizador utilizador = utilizadorDB.selectUtilizador(p.getDestinatario());
+                                        if (grupo != null && utilizador != null) {
+                                            // Insere o utilizador no grupo na tabela de associação UtilizadorGrupo
+                                            boolean sucesso = utilizadorGrupoDB.insertUtilizadorGrupo(
+                                                    utilizadorDB.selectUtilizadorId(utilizador.getEmail()),
+                                                    grupoDB.selectGrupoId(grupo.getNome())
+                                            );
+                                            if (sucesso) {
+                                                respostaSaida = pedidoCliente;
+                                                respostaSaida.setMensagem("Convite aceite e utilizador adicionado ao grupo com sucesso");
+                                            } else {
+                                                respostaSaida = pedidoCliente;
+                                                respostaSaida.setMensagem("Erro ao adicionar utilizador ao grupo");
+                                            }
+                                        } else {
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Grupo ou utilizador não encontrado");
+                                        }
+                                        break;
+                                    }
+                                }
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Convite aceite com sucesso");
 
-                            respostaSaida = pedidoCliente;
-                            respostaSaida.setMensagem("Convite aceite com sucesso");
-                            synchronized (lock) {
-                                lock.notify();//assinalar thread
+                                synchronized (lock) {
+                                    lock.notify();//assinalar thread
+                                }
+
+                            }else{
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Não existem convites (Insucesso)");
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Rejeitar convite")){//not done

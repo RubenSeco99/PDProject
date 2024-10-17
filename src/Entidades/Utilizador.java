@@ -60,6 +60,9 @@ public class Utilizador implements Serializable {
             this.grupos.add(grupo);
         }
     }
+
+    public void setConvites(ArrayList<Convite> convites) {this.convites = convites;}
+
     public void removeGrupo(Grupo grupo) {
         this.grupos.remove(grupo);
     }

@@ -41,8 +41,6 @@ public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
     return convites;
 }
 
-
-
     public boolean acceptConvite(int utilizadorId, int grupoId) {
         try {
             String queryUpdate = "UPDATE Convites_Grupo SET estado = 'aceite' WHERE utilizador_id = ? AND grupo_id = ?";
