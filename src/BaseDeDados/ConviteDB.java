@@ -45,14 +45,12 @@ public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
 
     public boolean acceptConvite(int utilizadorId, int grupoId) {
         try {
-            // Atualizar o estado do convite para 'aceito'
-            String queryUpdate = "UPDATE Convites_Grupo SET estado = 'aceito' WHERE utilizador_id = ? AND grupo_id = ?";
+            String queryUpdate = "UPDATE Convites_Grupo SET estado = 'aceite' WHERE utilizador_id = ? AND grupo_id = ?";
             PreparedStatement preparedStatementUpdate = connection.prepareStatement(queryUpdate);
             preparedStatementUpdate.setInt(1, utilizadorId);
             preparedStatementUpdate.setInt(2, grupoId);
             int rowsUpdated = preparedStatementUpdate.executeUpdate();
 
-            // Se o convite foi aceito, adiciona o utilizador ao grupo
             if (rowsUpdated > 0) {
                 UtilizadorGrupoDB utilizadorGrupoDB = new UtilizadorGrupoDB(connection);
                 return utilizadorGrupoDB.insertUtilizadorGrupo(utilizadorId, grupoId);
@@ -65,14 +63,27 @@ public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
     }
     public boolean declineConvite(int utilizadorId, int grupoId) {
         try {
-            // Deletar o convite da tabela Convites_Grupo
+            String queryUpdate = "UPDATE Convites_Grupo SET estado = 'rejeitado' WHERE utilizador_id = ? AND grupo_id = ?";
+            PreparedStatement preparedStatementUpdate = connection.prepareStatement(queryUpdate);
+            preparedStatementUpdate.setInt(1, utilizadorId);
+            preparedStatementUpdate.setInt(2, grupoId);
+            int rowsUpdated = preparedStatementUpdate.executeUpdate();
+
+            return rowsUpdated>0;
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao aceitar convite: " + e.getMessage());
+        }
+        return false;
+    }
+    public boolean removeConvite(int utilizadorId, int grupoId) {
+        try {
             String queryDelete = "DELETE FROM Convites_Grupo WHERE utilizador_id = ? AND grupo_id = ?";
             PreparedStatement preparedStatementDelete = connection.prepareStatement(queryDelete);
             preparedStatementDelete.setInt(1, utilizadorId);
             preparedStatementDelete.setInt(2, grupoId);
             int rowsDeleted = preparedStatementDelete.executeUpdate();
 
-            // Verifica se o convite foi removido com sucesso
             if (rowsDeleted > 0) {
                 System.out.println("Convite removido com sucesso.");
                 return true;

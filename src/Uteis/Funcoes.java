@@ -1,6 +1,5 @@
 package Uteis;
 import Cliente.Cliente;
-import Cliente.Comunicacao;
 import Entidades.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -79,12 +78,12 @@ public class Funcoes {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar dados");
                             Cliente.lastCommand="Editar dados";
-                            Cliente.mainEntrance=true;
                         }
                         else{
                             Cliente.valido=false;
                             System.out.println("Nenhuma alteração foi efetuada");
-                            Cliente.mainEntrance=true;}
+                        }
+                        Cliente.mainEntrance=true;
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -97,6 +96,68 @@ public class Funcoes {
             }
         }
     }
+    public static boolean mudarEstadoConvite(Utilizador utilizador, String estado) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
+        // Verificar se há convites pendentes
+        List<Convite> convitesPendentes = utilizador.getConvites();
+        if (convitesPendentes.isEmpty()) {
+            System.out.println("Não há convites pendentes.");
+            return false;
+        }
+
+        boolean running = true;
+        boolean change = false;
+        while (running) {
+            System.out.println("Convites pendentes:");
+            for (Convite convite : convitesPendentes) {
+                System.out.println("Grupo: " + convite.getNomeGrupo() + " | Estado: " + convite.getEstado());
+            }
+
+
+            System.out.print("Coloque o nome do grupo (ou escreva 'sair menu' para sair): ");
+            String nomeGrupo = in.readLine().trim();//trim elimina o espaço antes da primeira palavra e o espaço depois da ultima palavra, caso eles existam
+
+            Convite conviteSelecionado = null;
+            for (Convite convite : convitesPendentes) {
+                if (convite.getNomeGrupo().equalsIgnoreCase(nomeGrupo)) {
+                    conviteSelecionado = convite;
+                    break;
+                }
+            }
+
+            if (conviteSelecionado == null && nomeGrupo.equalsIgnoreCase("sair menu")) {
+                System.out.println("Saindo do menu de convites.");
+                return false;
+            }
+
+            if (conviteSelecionado != null) {
+                if (estado.equalsIgnoreCase("aceitar")) {
+                    conviteSelecionado.setEstado("aceite");
+                    System.out.println("Convite aceito para o grupo: " + nomeGrupo);
+                } else if (estado.equalsIgnoreCase("rejeitar")) {
+                    conviteSelecionado.setEstado("rejeitado");
+                    System.out.println("Convite rejeitado para o grupo: " + nomeGrupo);
+                }
+                change = true;
+                running = false;
+            } else {
+                System.out.println("Nome do grupo incorreto. Tente novamente ou escreva 'sair menu' para sair.");
+            }
+        }
+
+        if (change) {
+            Cliente.valido = true;
+            Cliente.comunicacao.setMensagem(estado.equalsIgnoreCase("aceitar") ? "Aceitar convite" : "Rejeitar convite");
+            Cliente.lastCommand = estado.equalsIgnoreCase("aceitar") ? "Aceitar convite" : "Rejeitar convite";
+        } else {
+            Cliente.valido = false;
+            System.out.println("Nenhuma alteração foi efetuada.");
+        }
+
+        return change;
+    }
+
     public static void menuConvites(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
@@ -120,17 +181,19 @@ public class Funcoes {
                         running = false;
                         break;
                     case "2":
-
+                        System.out.print("Coloque o nome do grupo: ");
+                        mudarEstadoConvite(utilizador,"aceitar");
+                        running = false;
                         break;
                     case "3":
-
+                        running = false;
+                        System.out.print("Coloque o nome do grupo: ");
+                        mudarEstadoConvite(utilizador,"rejeitar");
                         break;
                     case "0":
                         running = false;
                         if(change) {
                             Cliente.valido = true;
-                            Cliente.comunicacao.setMensagem("Editar convites");
-                            Cliente.lastCommand="Editar convites";
                             Cliente.mainEntrance=false;
                         }
                         else{

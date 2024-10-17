@@ -228,7 +228,7 @@ class processaClienteThread implements Runnable {
 //                                respostaSaida.setMensagem("Mudar nome grupo mal sucedido");
 //                            }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Escolher grupo")) {
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Escolher grupo")){
                             int utilizadorID = utilizadorDB.selectUtilizadorId(pedidoCliente.getUtilizador().getEmail());
                             int grupoID = grupoDB.selectGrupoId(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             boolean utilizadorGrupo = utilizadorGrupoDB.selectUtilizadorNoGrupo(utilizadorID, grupoID);
@@ -265,6 +265,7 @@ class processaClienteThread implements Runnable {
                             respostaSaida.setMensagem("Lista de convites");
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Aceitar convite")){//not done
+
                             respostaSaida = pedidoCliente;
                             respostaSaida.setMensagem("Convite aceite com sucesso");
                             synchronized (lock) {
