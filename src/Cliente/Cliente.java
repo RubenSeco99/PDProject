@@ -27,9 +27,7 @@ class processServerRequest implements Runnable{
         try(ObjectInputStream Oin = new ObjectInputStream(socket.getInputStream())){
 
             while(running){
-
                 response = (Comunicacao) Oin.readObject();
-
                 if(response.getMensagem().equalsIgnoreCase("Login aceite")) {
                     Cliente.registado = true;
                     Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());

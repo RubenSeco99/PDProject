@@ -144,65 +144,14 @@ public class Funcoes {
             System.out.println("Nenhuma alteração foi efetuada.");
         }
     }
-    /*
-    public static void mudarEstadoConvite(Utilizador utilizador) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        if (utilizador.getConvites().isEmpty()) {
-            System.out.println("Não há convites pendentes.");
-            return;
-        }
-        boolean running = true;
-        boolean change = false;
-        while (running) {
-            System.out.println("""
-                                [Vizualizar Convites]
-                                O que pretende fazer?
-                                  1. Aceitar (not done)
-                                  2. Rejeitar (not done)
-                                  0. Sair""");
-            System.out.print("Opção: ");
-
-            String estado = in.readLine();
-            if(estado.equals("1")) {
-                System.out.println("Indique o nome do grupo do qual pretende aceitar o convite: ");
-                String nomeGrupo= in.readLine();
-                if(utilizador.checkConviteExiste(nomeGrupo)) {
-                    utilizador.getConvite(nomeGrupo).setEstado("Aceite");
-                    change=true;
-                    Cliente.valido=true;
-                    Cliente.comunicacao.setMensagem("Aceitar convite");
-                    Cliente.lastCommand="Aceitar convite";
-                }
-                else{
-                    System.out.println("Convite nao existe");
-                }
-            }else if(estado.equals("2")) {
-                System.out.println("Indique o nome do grupo do qual pretende rejeitar o convite: ");
-                String nomeGrupo= in.readLine();
-                if(utilizador.checkConviteExiste(nomeGrupo)) {
-                    utilizador.getConvite(nomeGrupo).setEstado("Aceite");
-                    change=true;
-                    Cliente.valido=true;
-                    Cliente.comunicacao.setMensagem("Aceitar convite");
-                    Cliente.lastCommand="Aceitar convite";
-                }
-                else{
-                    System.out.println("Convite nao existe");
-                }
-            }else {
-                System.out.println("A sair para o menu");
-            }
-
-        }
-    }
-    */
 
     public static void menuConvites(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
+        Cliente.valido = false;
+        boolean running = true;
         while (running) {
             try{
-                if(!Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
+                if(!Cliente.lastCommand.equalsIgnoreCase("Ver convites") || (Cliente.utilizadorUpdate.getConvites() == null && Cliente.lastCommand.equalsIgnoreCase("Ver convites"))){
                     System.out.println("""
                             [Menu convites]
                               1. Ver convites
@@ -214,17 +163,14 @@ public class Funcoes {
                         case "1":
                             Cliente.comunicacao.setMensagem("Ver convites");
                             Cliente.lastCommand = "Ver convites";
+                            Cliente.valido = true;
                             running = false;
-                            change=true;
                             break;
                         case "0":
+                            Cliente.valido = false;
                             running = false;
-                            if (change) {
-                                Cliente.valido = true;
-                            } else {
-                                Cliente.valido = false;
-                                System.out.println("Nenhuma alteração foi efetuada");
-                            }
+                            Cliente.lastCommand ="";
+                            System.out.println("Nenhuma alteração foi efetuada");
                             break;
                         default:
                             System.out.println("Opção inválida, tente novamente.");
@@ -243,29 +189,24 @@ public class Funcoes {
                         case "1":
                             estado="Aceite";
                             mudarEstadoConvite(utilizador,estado);
-                            change=true;
+                            Cliente.valido = true;
                             running = false;
                             break;
                         case "2":
                             estado="Rejeitado";
                             mudarEstadoConvite(utilizador,estado);
-                            change=true;
+                            Cliente.valido = true;
                             running = false;
                             break;
                         case "0":
+                            Cliente.valido = false;
                             running = false;
-                            if (change) {
-                                Cliente.valido = true;
-                            } else {
-                                Cliente.valido = false;
-                                System.out.println("Nenhuma alteração foi efetuada");
-                            }
+                            System.out.println("Nenhuma alteração foi efetuada");
                             break;
                         default:
                             System.out.println("Opção inválida, tente novamente.");
                     }
                 }
-                System.out.println();
             } catch (IOException e) {
                 System.out.println("Ocorreu um erro ao ler a entrada. Tente novamente.");
             } catch (NumberFormatException e) {

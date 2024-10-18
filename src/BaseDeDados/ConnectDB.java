@@ -4,14 +4,14 @@ import java.sql.*;
 
 public class ConnectDB {
 
-    static final String DB_URL = "jdbc:sqlite:src/BaseDeDados/BaseDados.db";
     // Define o caminho para o arquivo da base de dados
-
+    static String DB_URL = "jdbc:sqlite:";
     static Connection conn = null;
     static Statement stmt = null;
 
-    public static Connection criarBaseDeDados() {
-
+    public static Connection criarBaseDeDados(String DBPATH) {
+        DB_URL += DBPATH;
+        System.out.println(DB_URL);
         try {
             // Conectar a base de dados (será criada se não existir)
             conn = DriverManager.getConnection(DB_URL);

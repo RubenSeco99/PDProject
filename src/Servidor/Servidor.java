@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-//Prototipo
 class encerraServerThread implements Runnable{
 
     List<notificaThread> arraySocketsClientes;
@@ -24,6 +23,7 @@ class encerraServerThread implements Runnable{
         this.serverS = serverS;
     }
 
+    @Override
     public void run(){
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String exit;
@@ -63,6 +63,7 @@ class notificaCliente implements Runnable{
         this.lock = lock;
     }
 
+    @Override
     public void run(){
         try{
             synchronized (lock) {
@@ -81,23 +82,23 @@ class notificaCliente implements Runnable{
                         }
                         break;
                     }
-
                     //ENVIA A NOTIFICAÇÃO
                     Comunicacao respostaSaida = new Comunicacao();
                     Utilizador utilizador = new Utilizador();
                     utilizador.setEmail(Servidor.EMAILSEND);
                     utilizador.getGrupoAtual().setNome(Servidor.NOMEGRUPO);
                     respostaSaida.setUtilizador(utilizador);
-                    respostaSaida.setMensagem("Convite recebido");
+                    respostaSaida.setMensagem("Convite recebido para o grupo " + Servidor.NOMEGRUPO + "\nEnviado por: " + Servidor.EMAILREMETENTE);
                     System.out.println("Notificação enviada");
                     for(var cli: clienteSockets){
-                        if(cli.getEmail().equals("miguel@isec.pt")){
+                        if(cli.getEmail().equals(Servidor.EMAILSEND)){
                             cli.getOout().writeObject(respostaSaida);
                             cli.getOout().flush();
                         }
                     }
                     Servidor.EMAILSEND = "";
                     Servidor.NOMEGRUPO = "";
+                    Servidor.EMAILREMETENTE = "";
                 }
             }
         } catch (Exception e) {
@@ -105,6 +106,7 @@ class notificaCliente implements Runnable{
         }
     }
 }
+
 class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
@@ -361,6 +363,7 @@ class processaClienteThread implements Runnable {
                                             synchronized (lock) {
                                                 Servidor.EMAILSEND = pedidoCliente.getConvites().getFirst().getDestinatario();
                                                 Servidor.NOMEGRUPO = pedidoCliente.getConvites().getFirst().getNomeGrupo();
+                                                Servidor.EMAILREMETENTE = pedidoCliente.getConvites().getFirst().getRemetente();
                                                 lock.notify();//assinalar thread
                                             }
                                         } else {
@@ -496,46 +499,114 @@ class processaClienteThread implements Runnable {
     }
 }
 
+class heartbeats implements Runnable{
+    //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
+    static final int PORTOBACKUPUDP = 4444;
+
+    @Override
+    public void run(){
+        try(MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
+            DatagramPacket dgram;
+            InetAddress groupAdress;
+            groupAdress = InetAddress.getByName(" 230.44.44.44");
+            NetworkInterface nif;
+            try {
+                nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //e.g., 127.0.0.1, 192.168.10.1, ...
+            } catch (SocketException | NullPointerException | UnknownHostException | SecurityException ex) {
+                nif = NetworkInterface.getByName("wlan0"); //e.g., lo, eth0, wlan0, en0, ...
+            }
+
+            multiSocket.joinGroup(new InetSocketAddress(groupAdress, PORTOBACKUPUDP),nif);
+            String messagePort = "5001";
+            while(true){
+                Thread.sleep(10000);
+                try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
+                     ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
+                    Oout.writeObject(messagePort);
+                    dgram = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
+                }
+                multiSocket.send(dgram);
+            }
+        }catch (NumberFormatException e) {
+            System.out.println("O porto de escuta deve ser um inteiro positivo.");
+        } catch (SocketException e) {
+            System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
+        } catch (InterruptedException e) {
+            System.out.println("Sleep interrompido");
+        }
+    }
+}
+
+class conectaServidoresBackup implements Runnable{
+    //THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
+    static final int PORTOBACKUPTCP = 5001;
+
+    @Override
+    public void run(){
+        try(ServerSocket socketBackup =  new ServerSocket(PORTOBACKUPTCP)) {
+
+
+
+        }catch (NumberFormatException e) {
+            System.out.println("O porto de escuta deve ser um inteiro positivo.");
+        } catch (SocketException e) {
+            System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
+        }
+    }
+}
+
 public class Servidor {
     public static String EMAILSEND;
     public static String NOMEGRUPO;
+    public static String EMAILREMETENTE;
     public static volatile boolean encerraServidor = false;
+
     public static void main(String[] args) throws IOException {
 
-        java.sql.Connection connection = ConnectDB.criarBaseDeDados();
-        ArrayList<Thread> arrayThreads = new ArrayList<>();
-        List<notificaThread> clienteSockets = Collections.synchronizedList(new ArrayList<>());
-        Object lock = new Object();
+        if (args.length != 2) {
+            System.out.println("\nNumero de argumentos incorrecto\n");
+            return;
+        }
 
         int servicePort = Integer.parseInt(args[0]);
-        //String caminhoBD = args[1]; //para uso futuro
+        final String DBPATH = args[1];
+        java.sql.Connection connection = ConnectDB.criarBaseDeDados(DBPATH);
+
+        List<notificaThread> clienteSockets = Collections.synchronizedList(new ArrayList<>());
+        Object lock = new Object();
 
         try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
 
             Thread notifica = new Thread(new notificaCliente(clienteSockets, lock));
+            notifica.setDaemon(true);
             notifica.start();
             Thread encerraServidorTh = new Thread(new encerraServerThread(clienteSockets, lock, serverSocket));
+            encerraServidorTh.setDaemon(true);
             encerraServidorTh.start();
 
             System.out.println("Server iniciado...\n");
-            //Lançar thread para enviar base de dados atualizada ao servidor de backup atualizando a versão
+
             while (true) {
                 if(encerraServidor)
                     break;
                 try {
                     Socket clientSocket = serverSocket.accept();
                     Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets, lock));
+                    td.setDaemon(true);
                     td.start();
                 }catch (IOException e){
                     if (encerraServidor) {
-                        // Se o servidor estiver sendo encerrado, saia do loop principal
+
                         System.out.println("Servidor encerrado com sucesso.");
                         break;
                     } else {
                         System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
                     }
                 }
-                //arrayThreads.add(td);
             }
         } catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo.");
@@ -543,18 +614,6 @@ public class Servidor {
             System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
         } catch (IOException e) {
             System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
-        }
-        finally {
-            //ConnectDB.fecharBaseDeDados();
-            /*try{
-                for(var thread : arrayThreads) {
-                    thread.join();
-                }
-                notifica.join();
-                encerraServidorTh.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }*/
         }
     }
 }
