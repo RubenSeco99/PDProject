@@ -31,8 +31,8 @@ public class ConnectDB {
             String tabelaGrupo = "CREATE TABLE IF NOT EXISTS Grupo ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + "nome TEXT NOT NULL UNIQUE, "
-                    + "criador_id INTEGER NOT NULL, "
-                    + "FOREIGN KEY (criador_id) REFERENCES Utilizador(id) ON DELETE CASCADE);";
+                    + "criador_email TEXT NOT NULL, "
+                    + "FOREIGN KEY (criador_email) REFERENCES Utilizador(email) ON DELETE CASCADE);";
             stmt.executeUpdate(tabelaGrupo);
 
             String tabelaConvites = "CREATE TABLE IF NOT EXISTS Convites_Grupo ("
@@ -47,11 +47,12 @@ public class ConnectDB {
             stmt.executeUpdate(tabelaConvites);
 
             String tabelaUtilizadorGrupo = "CREATE TABLE IF NOT EXISTS Utilizador_Grupo ("
-                    + "utilizador_id INTEGER NOT NULL, "
-                    + "grupo_id INTEGER NOT NULL, "
-                    + "PRIMARY KEY (utilizador_id, grupo_id), "
-                    + "FOREIGN KEY (utilizador_id) REFERENCES Utilizador(id) ON DELETE CASCADE, "
-                    + "FOREIGN KEY (grupo_id) REFERENCES Grupo(id) ON DELETE CASCADE);";
+                    + "utilizador_email TEXT NOT NULL, "
+                    + "grupo_nome TEXT NOT NULL, "
+                    + "PRIMARY KEY (utilizador_email, grupo_nome), "
+                    + "FOREIGN KEY (utilizador_email) REFERENCES Utilizador(email) ON DELETE CASCADE, "
+                    + "FOREIGN KEY (grupo_nome) REFERENCES Grupo(nome) ON DELETE CASCADE);";
+
             stmt.executeUpdate(tabelaUtilizadorGrupo);
 
             String tabelaDespesa = "CREATE TABLE IF NOT EXISTS Despesa ("

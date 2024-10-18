@@ -1,8 +1,9 @@
 Requisitos funcionais:✅
   -- Estrutura do projeto --
     .Criar base de dados ✅
-    .Criar arquitetura multithread ✅
+    .Criar arquitetura multithread✅
     .Criar servidor backup e comunicação multicast ❌
+    Criar thread para sair corretamente do servidor✅
     .Conexão base de dados✅
     .Inserção, edição e remoção de dados na base de dados✅
     .Criação de Thread no servidor para fazer multicast (convites, etc...)✅
@@ -14,8 +15,8 @@ Requisitos funcionais:✅
    .Criação de um novo Grupo✅
    .Criação de convites para adesão a um grupo✅
    .Visualização dos convites de adesão (recebidos/pendentes)✅
-   .Listar grupos pertencentes(do Utilizador)❌
-   .Edição do nome de um grupo❌✅
+   .Listar grupos pertencentes(do Utilizador)✅
+   .Edição do nome de um grupo✅
    .Eliminação de um grupo✅
    .Saída de um grupo❌
    .Inserção de despesa❌

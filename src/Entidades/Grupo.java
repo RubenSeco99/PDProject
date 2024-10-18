@@ -27,11 +27,11 @@ public class Grupo implements Serializable {
         this.nome = nome;
     }
     public String getNomeProvisorio() {
-        return nome;
+        return nomeProvisorio;
     }
 
-    public void setNomeProvisorio(String nome) {
-        this.nome = nome;
+    public void setNomeProvisorio(String nomeProvisorio) {
+        this.nomeProvisorio = nomeProvisorio;
     }
 
 }

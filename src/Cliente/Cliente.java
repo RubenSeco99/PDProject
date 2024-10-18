@@ -1,13 +1,10 @@
 package Cliente;
 
-import Entidades.Convite;
-import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
 
 class processServerRequest implements Runnable{
     private final Socket socket;
@@ -48,10 +45,20 @@ class processServerRequest implements Runnable{
                     }
                 } else if(response.getMensagem().equalsIgnoreCase("Utilizador não pertence ao grupo")) {
                     Cliente.utilizadorUpdate.setUtilizador(response.getUtilizador());
+                }else if(response.getMensagem().equalsIgnoreCase("Ver grupos bem sucedido")){
+                    System.out.println("Lista de Grupos pertencentes: ");
+                    for(var g:response.getUtilizador().getGrupos())
+                        System.out.println("Nome: "+g.getNome());
                 }
 
-                System.out.println("\nResponse: " + response);
-                System.out.println("> ");
+                if(response.getMensagem().equalsIgnoreCase("Servidor em baixo")){
+                    System.out.println("\nServidor em baixo, clique em alguma tecla para sair\n");
+                    Cliente.EXIT = true;
+                    Cliente.valido = false;
+                }else{
+                    System.out.println("\nResponse: " + response);
+                    System.out.println("> ");
+                }
 
             }
 
@@ -81,8 +88,8 @@ public class Cliente {
     public static boolean EXIT = false;
     public static Utilizador utilizadorUpdate = new Utilizador();
     public static Comunicacao comunicacao;
+    public static Comunicacao response;
     public  static String lastCommand="";
-    public  static boolean mainEntrance=true;
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -104,21 +111,16 @@ public class Cliente {
             try (Socket socket = new Socket(serverAddr, serverPort)) {
 
                 ObjectOutputStream Oout = new ObjectOutputStream(socket.getOutputStream());
-                Comunicacao response=new Comunicacao();
+                response=new Comunicacao();
                 serverRequest = new processServerRequest(socket,response);
                 td1 = new Thread(serverRequest);
                 td1.start();
 
                 while (true) {
                     comunicacao = new Comunicacao(utilizadorUpdate);
-                    if(!mainEntrance && lastCommand.contains("convite")){
-                        Funcoes.menuConvites(utilizadorUpdate);
-                    } else if (!mainEntrance && lastCommand.contains("Grupo")&&(response.getMensagem()=="Grupo nao criado"||response.getMensagem()=="Utilizador não pertence ao grupo")) {
-                        Funcoes.menuGrupos(utilizadorUpdate);
-                    }else if(!mainEntrance &&lastCommand.contains("Grupo")){
-                        Funcoes.menuGrupoAtual(utilizadorUpdate);
-                    }else
-                        Funcoes.Menu(utilizadorUpdate);
+                    if(lastCommand.equalsIgnoreCase("Aceitar convite"))
+                        System.out.println(utilizadorUpdate.getConvites());
+                    Funcoes.Menu(utilizadorUpdate);
                     if (valido) {
                         System.out.println(comunicacao);//so imprime se tiver havido pedido ao server
                         Oout.writeObject(comunicacao);

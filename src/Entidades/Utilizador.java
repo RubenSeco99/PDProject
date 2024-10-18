@@ -43,6 +43,20 @@ public class Utilizador implements Serializable {
     public void setGrupos(List<Grupo> grupos) { this.grupos = grupos; }
     public List<Convite> getConvites() {return convites;}
     public Grupo getGrupoAtual() {return grupo_atual;}
+    public boolean checkConviteExiste(String nome){
+        for(var convite:this.getConvites())
+            if(convite.getNomeGrupo().equalsIgnoreCase(nome)) {
+                return true;
+            }
+        return false;
+    }
+    public Convite getConvite(String nome){
+        for(var convite:this.getConvites())
+            if(convite.getNomeGrupo().equalsIgnoreCase(nome)) {
+                return convite;
+            }
+        return null;
+    }
     public void setGrupoAtual(Grupo grupo) { this.grupo_atual = grupo; }
 
     public void setUtilizador(Utilizador utilizador){
@@ -62,7 +76,15 @@ public class Utilizador implements Serializable {
     }
 
     public void setConvites(ArrayList<Convite> convites) {this.convites = convites;}
-
+    public Convite getConvitePorEstado(String estado){
+        for(var convite:convites)
+            if(convite.getEstado().equalsIgnoreCase(estado))
+                return convite;
+        return null;
+    }
+    public void setGrupoAtualPorNome(String nome){
+        this.grupo_atual.setNomeProvisorio(nome);
+    }
     public void removeGrupo(Grupo grupo) {
         this.grupos.remove(grupo);
     }

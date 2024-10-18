@@ -1,11 +1,14 @@
 package Servidor;
 
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class notificaThread {
     private String email;
     private Socket socket;
+
+
     ObjectOutputStream Oout;
 
     public notificaThread(String email, Socket socket){

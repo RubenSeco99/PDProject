@@ -32,4 +32,14 @@ public class Convite implements Serializable {
     public void setDestinatario(String destinatario){this.destinatario=destinatario;}
     public void setRemetente(String remetente){this.remetente=remetente;}
     public String getRemetente() { return remetente; }
+
+    @Override
+    public String toString() {
+        return "Convite{" +
+                ", nomeGrupo='" + nomeGrupo + '\'' +
+                ", estado='" + estado + '\'' +
+                ", destinatario='" + destinatario + '\'' +
+                ", remetente='" + remetente + '\'' +
+                '}'+"\n";
+    }
 }

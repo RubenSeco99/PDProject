@@ -11,71 +11,84 @@ public class UtilizadorGrupoDB {
     public UtilizadorGrupoDB(Connection connection) {
         this.connection = connection;
     }
-
-    public boolean insertUtilizadorGrupo(int utilizadorId, int grupoId) {
+    public boolean insertUtilizadorGrupo(String utilizadorEmail, String nomeGrupo) {
         try {
-            String query = "INSERT INTO Utilizador_Grupo (utilizador_id, grupo_id) VALUES (?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
-            preparedStatement.setInt(2, grupoId);
-            preparedStatement.executeUpdate();
+            String queryInsert = "INSERT INTO Utilizador_Grupo (utilizador_email, grupo_nome) VALUES (?, ?)";
+            PreparedStatement preparedStatementInsert = connection.prepareStatement(queryInsert);
+            preparedStatementInsert.setString(1, utilizadorEmail); // Email do utilizador
+            preparedStatementInsert.setString(2, nomeGrupo); // Nome do grupo
+            preparedStatementInsert.executeUpdate();
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir utilizador no grupo: " + e.getMessage());
             return false;
         }
     }
-    public boolean removeUtilizadorGrupo(String email, int grupoId) {
+    public boolean removeUtilizadorGrupo(String email, String grupoNome) {
         try {
-
-            String querySelect = "SELECT id FROM Utilizador WHERE email = ?";
+            String querySelect = "SELECT email FROM Utilizador WHERE email = ?";
             PreparedStatement preparedStatementSelect = connection.prepareStatement(querySelect);
             preparedStatementSelect.setString(1, email);
             ResultSet resultSet = preparedStatementSelect.executeQuery();
-
             if (resultSet.next()) {
-                int utilizadorId = resultSet.getInt("id");
-
-                String queryDelete = "DELETE FROM Utilizador_Grupo WHERE utilizador_id = ? AND grupo_id = ?";
+                String queryDelete = "DELETE FROM Utilizador_Grupo WHERE utilizador_email = ? AND grupo_nome = ?";
                 PreparedStatement preparedStatementDelete = connection.prepareStatement(queryDelete);
-                preparedStatementDelete.setInt(1, utilizadorId);
-                preparedStatementDelete.setInt(2, grupoId);
+                preparedStatementDelete.setString(1, resultSet.getString("email"));
+                preparedStatementDelete.setString(2, grupoNome);
                 preparedStatementDelete.executeUpdate();
-
                 return true;
             } else {
                 System.out.println("Utilizador com email: " + email + " não encontrado.");
-                return false; // Utilizador não encontrado
+                return false;
             }
         } catch (SQLException e) {
             System.out.println("Erro ao remover utilizador do grupo: " + e.getMessage());
             return false;
         }
     }
-    public boolean removeTodosUtilizadoresDoGrupo(int grupoId, List<Utilizador> utilizadores) {
+    public boolean removeTodosUtilizadoresDoGrupo(String grupoNome) {
         boolean sucesso = true;
+        try {
+            String querySelect = "SELECT utilizador_email FROM Utilizador_Grupo WHERE grupo_nome = ?";
+            PreparedStatement preparedStatementSelect = connection.prepareStatement(querySelect);
+            preparedStatementSelect.setString(1, grupoNome);
+            ResultSet resultSet = preparedStatementSelect.executeQuery();
 
-        // Iterar sobre todos os utilizadores na lista
-        for (Utilizador utilizador : utilizadores) {
-            String email = utilizador.getEmail(); // Obter o email do utilizador
-
-            // Remover utilizador do grupo usando o email
-            boolean removido = removeUtilizadorGrupo(email, grupoId);
-
-            // Se falhar em remover algum utilizador, marcar como falha geral
-            if (!removido) {
-                sucesso = false;
-                System.out.println("Falha ao remover utilizador com email: " + email + " do grupo com ID: " + grupoId);
+            while (resultSet.next()) {
+                String email = resultSet.getString("utilizador_email");
+                if (!removeUtilizadorGrupo(email, grupoNome)) {
+                    sucesso = false;
+                    System.out.println("Falha ao remover utilizador com email: " + email + " do grupo: " + grupoNome);
+                }
             }
+        } catch (SQLException e) {
+            System.out.println("Erro ao remover utilizadores do grupo: " + e.getMessage());
+            sucesso = false;
         }
         return sucesso; // Retorna true se todos forem removidos com sucesso, false se houver falhas
     }
-    public boolean selectUtilizadorNoGrupo(int utilizadorId, int grupoId) {
+    public boolean updateNomeGrupo(String nomeAtual,String nomeNovo) {
         try {
-            String query = "SELECT * FROM Utilizador_Grupo WHERE utilizador_id = ? AND grupo_id = ?";
+            String query= "UPDATE Utilizador_Grupo SET grupo_nome=? WHERE grupo_nome = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
-            preparedStatement.setInt(2, grupoId);
+            preparedStatement.setString(1,nomeNovo);
+            preparedStatement.setString(2,nomeAtual);
+            int rowsUpdated = preparedStatement.executeUpdate();
+
+            if(rowsUpdated>0)
+                return true;
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
+        }
+        return false;
+    }
+    public boolean selectUtilizadorNoGrupo(String utilizadorEmail, String grupoNome) {//verifica se o utilizador esta no grupo
+        try {
+            String query = "SELECT * FROM Utilizador_Grupo WHERE utilizador_email = ? AND grupo_nome = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, utilizadorEmail);
+            preparedStatement.setString(2, grupoNome);
             ResultSet resultSet = preparedStatement.executeQuery();
             return resultSet.next();
         } catch (SQLException e) {
@@ -83,19 +96,43 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
-    public List<Grupo> selectGruposPorUtilizador(int utilizadorId) {
+    public List<Utilizador> selectUtilizadoresGrupo(String grupoNome) {//erro aqui , whatsapp
+        //devolve a lista dos utilizadores num grupo para depois poder manipular(ex.:mudar nome do grupo)
+        try {
+            String query = "SELECT * FROM Utilizador_Grupo WHERE grupo_nome = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, grupoNome);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<Utilizador> utilizadores=new ArrayList<>();
+            while (resultSet.next()) {
+                    Utilizador utilizador=new Utilizador();
+                    utilizador.setAtivo(resultSet.getInt("ativo"));
+                    utilizador.setPassword(resultSet.getString("password"));
+                    utilizador.setTelefone(resultSet.getInt("telefone"));
+                    utilizador.setEmail(resultSet.getString("email"));
+                    utilizador.setNome(resultSet.getString("nome"));
+                    utilizadores.add(utilizador);
+            }
+            return utilizadores;
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar utilizador no grupo: " + e.getMessage());
+            return null;
+        }
+    }
+    public List<Grupo> selectGruposPorUtilizador(String utilizadorEmail) {
         List<Grupo> grupos = new ArrayList<>();
         try {
-            String query = "SELECT g.id, g.nome FROM Grupo g " +
-                    "JOIN Utilizador_Grupo ug ON g.id = ug.grupo_id " +
-                    "WHERE ug.utilizador_id = ?";
+            String query = "SELECT g.nome FROM Grupo g " +
+                    "JOIN Utilizador_Grupo ug ON g.nome = ug.grupo_nome " +
+                    "JOIN Utilizador u ON ug.utilizador_email = u.email " +
+                    "WHERE u.email = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, utilizadorId);
+            preparedStatement.setString(1, utilizadorEmail);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 Grupo grupo = new Grupo();
-                grupo.setId(resultSet.getInt("id"));
+                // Agora estamos apenas pegando o nome, não o id
                 grupo.setNome(resultSet.getString("nome"));
                 grupos.add(grupo);
             }
@@ -104,6 +141,7 @@ public class UtilizadorGrupoDB {
         }
         return grupos;
     }
+
     public List<Utilizador> selectUtilizadoresPorGrupo(int grupoId) {
         List<Utilizador> utilizadores = new ArrayList<>();
         try {
