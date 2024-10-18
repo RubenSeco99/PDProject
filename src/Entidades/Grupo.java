@@ -1,15 +1,20 @@
 package Entidades;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Grupo implements Serializable {
 
     private int id;
     private String nome;
     private String nomeProvisorio;//so usado quando da mudanca do nome do grupo
-    public Grupo(){this.nome = "";}//uso no GrupoDB
+    private List<Despesas> despesas;
+    public Grupo(){this.nome = "";
+    despesas= new ArrayList<>();}//uso no GrupoDB
     public Grupo(String nome) {
         setNome(nome);
+        despesas= new ArrayList<>();
     }
     public int getId() {
         return id;

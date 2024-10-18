@@ -116,6 +116,8 @@ class processaClienteThread implements Runnable {
     private GrupoDB grupoDB;
     private ConviteDB conviteDB;
     private UtilizadorGrupoDB utilizadorGrupoDB;
+    private DespesaDB despesaDB;
+    private DespesaPagadoresDB despesaPagadoresDB;
     private boolean conectado;
     private boolean EXIT = false;
     List <notificaThread> notificaThreads;
@@ -129,6 +131,8 @@ class processaClienteThread implements Runnable {
         this.grupoDB=new GrupoDB(connection);
         this.utilizadorGrupoDB=new UtilizadorGrupoDB(connection);
         this.conviteDB=new ConviteDB(connection);
+        this.despesaDB=new DespesaDB(connection);
+        this.despesaPagadoresDB= new DespesaPagadoresDB(connection);
         //new objeto convite
         this.notificaThreads = clienteSockets;
         this.lock = lock;
@@ -305,7 +309,7 @@ class processaClienteThread implements Runnable {
                                 respostaSaida.setMensagem("Utilizador não pertence ao grupo");
                             }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//TODO
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//todo
                             if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
                                                             pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
                             {

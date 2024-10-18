@@ -273,6 +273,7 @@ public class Funcoes {
                             Cliente.valido = true;
                             Cliente.comunicacao.setMensagem("Editar convites");
                             Cliente.lastCommand="Editar convites";
+                            utilizador.getGrupoAtual().setNome("");
                         }
                         else{
                             Cliente.valido=false;}
@@ -356,7 +357,9 @@ public class Funcoes {
     public static void menuUtilizadoresComLogin(Utilizador utilizador){
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
-
+        if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
+            menuConvites(utilizador);
+        }//todo
         if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
             menuConvites(utilizador);
         }
