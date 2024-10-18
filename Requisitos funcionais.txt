@@ -18,7 +18,7 @@ Requisitos funcionais:✅
    .Listar grupos pertencentes(do Utilizador)✅
    .Edição do nome de um grupo✅
    .Eliminação de um grupo✅
-   .Saída de um grupo❌
+   .Saída de um grupo❌✅
    .Inserção de despesa❌
    .Visualização do total gasto❌
    .Visualização do histórico de despesas❌

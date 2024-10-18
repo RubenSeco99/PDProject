@@ -59,9 +59,7 @@ class processServerRequest implements Runnable{
                     System.out.println("\nResponse: " + response);
                     System.out.println("> ");
                 }
-
             }
-
         } catch (EOFException e) {
                 System.out.println("Conexão terminada pelo servidor.");//descobrir porque está a ser lançada???
         }

@@ -142,14 +142,16 @@ public class UtilizadorGrupoDB {
         return grupos;
     }
 
-    public List<Utilizador> selectUtilizadoresPorGrupo(int grupoId) {
+    public List<Utilizador> selectUtilizadoresPorGrupo(String grupoNome) {
         List<Utilizador> utilizadores = new ArrayList<>();
         try {
             String query = "SELECT u.id, u.nome, u.email, u.telefone FROM Utilizador u " +
                     "JOIN Utilizador_Grupo ug ON u.id = ug.utilizador_id " +
-                    "WHERE ug.grupo_id = ?";
+                    "JOIN Grupo g ON g.nome = ug.grupo_nome " +
+                    "WHERE g.nome = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, grupoId);
+            preparedStatement.setString(1, grupoNome);
+
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
@@ -164,4 +166,5 @@ public class UtilizadorGrupoDB {
         }
         return utilizadores;
     }
+
 }

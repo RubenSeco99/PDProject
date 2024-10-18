@@ -202,7 +202,7 @@ public class Funcoes {
         boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
         while (running) {
             try{
-                if((Cliente.lastCommand.equalsIgnoreCase("Ver convite") && Cliente.response.getMensagem().equalsIgnoreCase("Lista de convites vazia"))|| !Cliente.lastCommand.contains("convite")) {
+                if(!Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
                     System.out.println("""
                             [Menu convites]
                               1. Ver convites
@@ -229,8 +229,8 @@ public class Funcoes {
                         default:
                             System.out.println("Opção inválida, tente novamente.");
                     }
-                }
-                else if(Cliente.lastCommand.contains(" convite")){
+                }else if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
+                    Cliente.lastCommand = "";
                     System.out.println("""
                             [Menu convites]
                               1. Aceitar convite
@@ -288,7 +288,7 @@ public class Funcoes {
                           4. Nova despesa (NOT DONE)
                           5. ... (NOT DONE)
                           6. ... (NOT DONE)
-                          7. Sair do grupo (NOT DONE)
+                          7. Sair do grupo
                           0. Sair
                         %n""", utilizador.getGrupoAtual().getNome());
                 System.out.print("Opção: ");
@@ -320,8 +320,11 @@ public class Funcoes {
                         change=true;
                         running=false;
                         break;
-                    case "4":
-
+                    case "7":
+                        Cliente.comunicacao.setMensagem("Sair grupo");
+                        Cliente.valido=true;
+                        change=true;
+                        running=false;
                         break;
                     case "0":
                         running = false;

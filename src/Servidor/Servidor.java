@@ -251,7 +251,7 @@ class processaClienteThread implements Runnable {
                                     if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
                                         pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
                                         respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Apagar todos utilizadores do grupo bem sucedido");
+                                        respostaSaida.setMensagem("Apagar grupo bem sucedido");
                                     }else{
                                         respostaSaida = pedidoCliente;
                                         respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
@@ -304,14 +304,40 @@ class processaClienteThread implements Runnable {
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//TODO
-                            //
+                            if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
+                                                            pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
+                            {
+                                List<Utilizador> ul=utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                                if(ul.isEmpty()){
+                                    if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                        if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                            if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                                pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
+                                                respostaSaida = pedidoCliente;
+                                                respostaSaida.setMensagem("Saida grupo bem sucedida");
+                                            }else{
+                                                respostaSaida = pedidoCliente;
+                                                respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
+                                            }
+                                        }else{
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Apagar todos convites mal sucedido");
+                                        }
+                                    }else{
+                                        respostaSaida = pedidoCliente;
+                                        respostaSaida.setMensagem("Apagar grupo mal sucedido");
+                                    }
+                                }else{
+                                    pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Saida grupo bem sucedida");
+                                }
+
+                            }
+                             else {
                                 respostaSaida = pedidoCliente;
-                                respostaSaida.setMensagem("Grupo escolhido");
-                             //else {
-                                pedidoCliente.getUtilizador().getGrupoAtual().setNome("");
-                                respostaSaida = pedidoCliente;
-                                respostaSaida.setMensagem("Utilizador não pertence ao grupo");
-                            //}
+                                respostaSaida.setMensagem("Saida Grupo mal sucedida");
+                            }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver grupos")){
                             List<Grupo> gruposUtilizador= utilizadorGrupoDB.selectGruposPorUtilizador(pedidoCliente.getUtilizador().getEmail());
@@ -326,25 +352,28 @@ class processaClienteThread implements Runnable {
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Enviar convite grupo")){
                             if(utilizadorDB.selectUtilizador(pedidoCliente.getConvites().getFirst().getDestinatario())!=null) {
-                                if(!utilizadorGrupoDB.selectUtilizadorNoGrupo(pedidoCliente.getConvites().getFirst().getDestinatario(),pedidoCliente.getConvites().getFirst().getNomeGrupo()))
-                                {
-                                    if (!conviteDB.checkConviteExistance(pedidoCliente.getConvites().getFirst())) {
-                                        conviteDB.insertInvite(pedidoCliente.getConvites().getFirst());
-                                        respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Convite feito com sucesso");
-                                        synchronized (lock) {
-                                            Servidor.EMAILSEND = pedidoCliente.getConvites().getFirst().getDestinatario();
-                                            Servidor.NOMEGRUPO = pedidoCliente.getConvites().getFirst().getNomeGrupo();
-                                            lock.notify();//assinalar thread
+                                if(!pedidoCliente.getConvites().getFirst().getDestinatario().equalsIgnoreCase(pedidoCliente.getConvites().getFirst().getRemetente())) {
+                                    if (!utilizadorGrupoDB.selectUtilizadorNoGrupo(pedidoCliente.getConvites().getFirst().getDestinatario(), pedidoCliente.getConvites().getFirst().getNomeGrupo())) {
+                                        if (!conviteDB.checkConviteExistance(pedidoCliente.getConvites().getFirst())) {
+                                            conviteDB.insertInvite(pedidoCliente.getConvites().getFirst());
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Convite feito com sucesso");
+                                            synchronized (lock) {
+                                                Servidor.EMAILSEND = pedidoCliente.getConvites().getFirst().getDestinatario();
+                                                Servidor.NOMEGRUPO = pedidoCliente.getConvites().getFirst().getNomeGrupo();
+                                                lock.notify();//assinalar thread
+                                            }
+                                        } else {
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Convite repetido");
                                         }
                                     } else {
                                         respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Convite repetido");
+                                        respostaSaida.setMensagem("Utilizador ja esta no grupo");
                                     }
-                                }
-                                else{
+                                }else{
                                     respostaSaida = pedidoCliente;
-                                    respostaSaida.setMensagem("Utilizador ja esta no grupo");
+                                    respostaSaida.setMensagem("Nao pode enviar convites a si mesmo");
                                 }
                             }else{
                                 respostaSaida = pedidoCliente;
@@ -483,8 +512,8 @@ public class Servidor {
 
         try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
 
-            //Thread notifica = new Thread(new notificaCliente(clienteSockets, lock));
-            //notifica.start();
+            Thread notifica = new Thread(new notificaCliente(clienteSockets, lock));
+            notifica.start();
             Thread encerraServidorTh = new Thread(new encerraServerThread(clienteSockets, lock, serverSocket));
             encerraServidorTh.start();
 
