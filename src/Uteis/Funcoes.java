@@ -283,7 +283,9 @@ public class Funcoes {
                                 Cliente.comunicacao.getDespesa().getFirst().setDescricao(in.readLine());
                                 System.out.print("Insira a data (formato: dd-MM-yyyy): ");
                                 String dataInput = in.readLine();
-                                Cliente.comunicacao.getDespesa().getFirst().setData(dateFormat.parse(dataInput));
+                                System.out.println(dataInput);
+                                System.out.println(dateFormat.parse(dataInput));
+                                Cliente.comunicacao.getDespesa().getFirst().setData(new java.sql.Date(dateFormat.parse(dataInput).getTime()));
                                 String dataFormatada = dateFormat.format(Cliente.comunicacao.getDespesa().getFirst().getData());
                                 System.out.println("Data inserida: " + dataFormatada);
                                 break;
@@ -311,12 +313,11 @@ public class Funcoes {
                     case "7":
                         Cliente.comunicacao.setMensagem("Sair grupo");
                         Cliente.valido=true;
-                        utilizador.getGrupoAtual().setNome("");
                         running=false;
                         break;
                     case "0":
                         running = false;
-                        utilizador.getGrupoAtual().setNome("");
+                        menuGrupos(utilizador);
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -396,9 +397,8 @@ public class Funcoes {
         int op ;
         if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
             menuConvites(utilizador);
-        }//todo
-        if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
-            menuConvites(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Escolher grupo")) {
+            menuGrupoAtual(utilizador);
         }
         else {
             System.out.println("""
