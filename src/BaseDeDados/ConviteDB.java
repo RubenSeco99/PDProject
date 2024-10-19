@@ -118,29 +118,20 @@ public class ConviteDB {
         }
         return false;
     }
-
-    public Convite selectConvitePorEstado(String destinatarioEmail, String estado) {
-        Convite convite = null;
+    public boolean checkConviteExistanceByGrupo(String nomeGrupo) {
         try {
-            String query = "SELECT  remetente_email, destinatario_email, estado " +
-                    "FROM Convites_Grupo " +
-                    "WHERE destinatario_email = ? AND estado = ?";
+            String query = "SELECT COUNT(*) FROM Convites_Grupo WHERE nome_grupo = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, destinatarioEmail);
-            preparedStatement.setString(2, estado);
+            preparedStatement.setString(1, nomeGrupo);
             ResultSet resultSet = preparedStatement.executeQuery();
+
             if (resultSet.next()) {
-                convite = new Convite(
-                        resultSet.getString("nome_grupo"),
-                        resultSet.getString("remetente_email"),
-                        resultSet.getString("destinatario_email"),
-                        resultSet.getString("estado")
-                );
+                return resultSet.getInt(1) > 0; // Retorna true se houver pelo menos um convite
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao selecionar convite por estado: " + e.getMessage());
+            System.out.println("Erro ao verificar convites do grupo: " + e.getMessage());
         }
-        return convite;
+        return false; // Retorna false se não houver convites ou ocorrer um erro
     }
 
 

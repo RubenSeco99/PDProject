@@ -254,7 +254,8 @@ class processaClienteThread implements Runnable {
                         }
                         else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
                             if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()) ||
+                                        !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
                                     if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
                                         pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
                                         respostaSaida = pedidoCliente;
@@ -310,15 +311,18 @@ class processaClienteThread implements Runnable {
                                 respostaSaida.setMensagem("Utilizador não pertence ao grupo");
                             }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//todo
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//quando estiverem adicionados as despesas e os pagamentos
+                            // temos de verificar se existem pagamentos pendentes antes de deixar sair todo
                             if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
                                                             pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
                             {
                                 List<Utilizador> ul=utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(ul.isEmpty()){
                                     if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                        if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                            if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                        if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())||
+                                                !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                            if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
+                                            {
                                                 pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
                                                 respostaSaida = pedidoCliente;
                                                 respostaSaida.setMensagem("Saida grupo bem sucedida");

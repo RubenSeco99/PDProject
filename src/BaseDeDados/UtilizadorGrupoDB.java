@@ -96,7 +96,6 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
-
     public List<String> selectEmailsDoGrupo(String grupoNome) {
         // Query para buscar os emails dos utilizadores pertencentes ao grupo
         String query = "SELECT utilizador_email FROM Utilizador_Grupo WHERE grupo_nome = ?";
@@ -116,7 +115,6 @@ public class UtilizadorGrupoDB {
             return null;
         }
     }
-
     public List<Grupo> selectGruposPorUtilizador(String utilizadorEmail) {
         List<Grupo> grupos = new ArrayList<>();
         try {
