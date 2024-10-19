@@ -9,6 +9,7 @@ import Entidades.Utilizador;
 import Uteis.Funcoes;
 import java.io.*;
 import java.net.*;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -253,24 +254,29 @@ class processaClienteThread implements Runnable {
                             }
                         }
                         else if (pedidoCliente.getMensagem().equalsIgnoreCase("Apagar grupo")) {
-                            if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()) ||
-                                        !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                    if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                        pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
-                                        respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Apagar grupo bem sucedido");
+                            if(despesaDB.temDespesas(pedidoCliente.getUtilizador().getGrupoAtual().getNome()) && despesaPagadoresDB.temDespesasPendentes(pedidoCliente.getUtilizador().getGrupoAtual().getNome())) {
+                                respostaSaida = pedidoCliente;
+                                respostaSaida.setMensagem("Grupo tem despesas pendentes");
+                            } else {
+                                if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                    if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()) ||
+                                            !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                        if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
+                                            pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Apagar grupo bem sucedido");
+                                        }else{
+                                            respostaSaida = pedidoCliente;
+                                            respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
+                                        }
                                     }else{
                                         respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
+                                        respostaSaida.setMensagem("Apagar todos convites mal sucedido");
                                     }
-                                }else{
+                                } else {
                                     respostaSaida = pedidoCliente;
-                                    respostaSaida.setMensagem("Apagar todos convites mal sucedido");
+                                    respostaSaida.setMensagem("Apagar grupo mal sucedido");
                                 }
-                            }else{
-                                respostaSaida = pedidoCliente;
-                                respostaSaida.setMensagem("Apagar grupo mal sucedido");
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Mudar nome grupo")){
@@ -316,7 +322,7 @@ class processaClienteThread implements Runnable {
                             if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
                                                             pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
                             {
-                                List<Utilizador> ul=utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                                List<Utilizador> ul = utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(ul.isEmpty()){
                                     if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
                                         if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())||
@@ -441,7 +447,7 @@ class processaClienteThread implements Runnable {
                             }
                         }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Inserir despesa")){
                             respostaSaida = pedidoCliente;
-                            int despesaID = despesaDB.inserirDespesa(pedidoCliente.getDespesa().getFirst().getDescricao(), pedidoCliente.getDespesa().getFirst().getValor(),pedidoCliente.getDespesa().getFirst().getData(),pedidoCliente.getUtilizador().getGrupoAtual().getNome(), pedidoCliente.getUtilizador().getEmail());
+                            int despesaID = despesaDB.inserirDespesa(pedidoCliente.getDespesa().getFirst().getDescricao(), pedidoCliente.getDespesa().getFirst().getValor(), pedidoCliente.getDespesa().getFirst().getData(), pedidoCliente.getUtilizador().getGrupoAtual().getNome(), pedidoCliente.getUtilizador().getEmail());
                             if(despesaID!= -1){
                                 List<String> emails = utilizadorGrupoDB.selectEmailsDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(emails != null){

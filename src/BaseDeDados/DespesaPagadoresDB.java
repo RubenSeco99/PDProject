@@ -37,4 +37,17 @@ public class DespesaPagadoresDB {
             return false; // Retorna false se houver uma falha
         }
     }
+
+    public boolean temDespesasPendentes(String grupoNome) {
+        String sql = "SELECT * FROM Despesa_Pagadores dp " +
+                     "JOIN Despesa d ON dp.despesa_id = d.id " +
+                     "WHERE d.grupo_nome = ? AND dp.estado_pagamento = 'Pendente'";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, grupoNome);
+            return pstmt.executeQuery().next(); // Retorna true se houver despesas pendentes
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar despesas pendentes: " + e.getMessage());
+            return false; // Retorna false em caso de erro
+        }
+    }
 }

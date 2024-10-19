@@ -76,19 +76,38 @@ public class DespesaDB {
                 Despesas despesa = new Despesas();
                 despesa.setDescricao(rs.getString("descricao"));
                 despesa.setValor(rs.getDouble("valor"));
+
                 String dataString = rs.getString("data");
-                despesa.setData(dateFormat.parse(dataString));
+                java.util.Date utilDate = null;
+                try {
+                    utilDate = dateFormat.parse(dataString);
+                } catch (ParseException e) {
+                    System.out.println("Erro ao converter string para data: " + e.getMessage());
+                }
+
+                if (utilDate != null) {
+                    java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+                    despesa.setData(sqlDate);
+                }
 
                 despesasList.add(despesa);
             }
         } catch (SQLException ex) {
             System.out.println("Erro ao obter despesas: " + ex.getMessage());
             return null;
-        } catch (ParseException e) {
-            System.out.println("Erro ao converter a data: " + e.getMessage());
-            return null;
         }
         return despesasList;
+    }
+
+    public boolean temDespesas(String grupoNome) {
+        String sql = "SELECT * FROM Despesa WHERE grupo_nome = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, grupoNome);
+            return pstmt.executeQuery().next();
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar despesas: " + e.getMessage());
+            return false;
+        }
     }
 
 }
