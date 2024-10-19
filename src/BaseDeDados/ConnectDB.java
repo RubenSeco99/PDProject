@@ -61,30 +61,19 @@ public class ConnectDB {
                     + "valor REAL NOT NULL, "
                     + "data TEXT NOT NULL, "
                     + "grupo_nome TEXT NOT NULL, "
-                    + "criador_email TEXT NOT NULL"
+                    + "criador_email TEXT NOT NULL, "
                     + "FOREIGN KEY (grupo_nome) REFERENCES Grupo(nome) ON DELETE CASCADE);";
             stmt.executeUpdate(tabelaDespesa);
 
             String tabelaDespesaPagadores = "CREATE TABLE IF NOT EXISTS Despesa_Pagadores ("
                     + "despesa_id INTEGER NOT NULL, "
                     + "utilizador_email TEXT NOT NULL, "
-                    + "valor_pago REAL NOT NULL, "
-                    + "estado_pagamento TEXT NOT NULL CHECK (estado_pagamento IN ('pago', 'pendente')), "
+                    + "valor_divida REAL NOT NULL, "
+                    + "estado_pagamento TEXT NOT NULL CHECK (estado_pagamento IN ('Pago', 'Pendente')), "
                     + "FOREIGN KEY (despesa_id) REFERENCES Despesa(id) ON DELETE CASCADE, "
                     + "FOREIGN KEY (utilizador_email) REFERENCES Utilizador(email) ON DELETE CASCADE, "
                     + "PRIMARY KEY (despesa_id, utilizador_email));";
             stmt.executeUpdate(tabelaDespesaPagadores);
-
-
-
-            String tabelaUtilizadorDespesa = "CREATE TABLE IF NOT EXISTS Utilizador_Despesa ("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    + "utilizador_id INTEGER NOT NULL, "
-                    + "despesa_id INTEGER NOT NULL, "
-                    + "tipo_relacionamento TEXT NOT NULL CHECK (tipo_relacionamento IN ('inserir', 'pagar', 'dividir')), "
-                    + "FOREIGN KEY (utilizador_id) REFERENCES Utilizador(id) ON DELETE CASCADE, "
-                    + "FOREIGN KEY (despesa_id) REFERENCES Despesa(id) ON DELETE CASCADE);";
-            stmt.executeUpdate(tabelaUtilizadorDespesa);
 
             String tabelaPagamento = "CREATE TABLE IF NOT EXISTS Pagamento ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "

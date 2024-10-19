@@ -6,6 +6,9 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -109,7 +112,6 @@ public class Funcoes {
         boolean running = true;
         boolean change = false;
         while (running) {
-            System.out.println("Convites pendentes:");
             for (Convite convite : utilizador.getConvites()) {
                 System.out.println("Grupo: " + convite.getNomeGrupo() + " | Estado: " + convite.getEstado());
             }
@@ -131,11 +133,12 @@ public class Funcoes {
                 } else if (estado.equalsIgnoreCase("rejeitar")) {
                     System.out.println("Convite rejeitado para o grupo: " + nomeGrupo);
                 }
+
                 change = true;
                 running = false;
-
         }
         if (change) {
+            System.out.println("Cheguei aqui");
             Cliente.valido = true;
             Cliente.comunicacao.setMensagem(estado.equalsIgnoreCase("Aceite") ? "Aceitar convite" : "Rejeitar convite");
             Cliente.lastCommand = estado.equalsIgnoreCase("Aceite") ? "Aceitar convite" : "Rejeitar convite";
@@ -226,9 +229,9 @@ public class Funcoes {
                           1. Enviar convite
                           2. Mudar nome grupo
                           3. Apagar grupo
-                          4. Nova despesa (NOT DONE)
-                          5. ... (NOT DONE)
-                          6. ... (NOT DONE)
+                          4. Nova despesa
+                          5. Ver gastos totais
+                          6. Ver historico de despesas
                           7. Sair do grupo
                           0. Sair
                         %n""", utilizador.getGrupoAtual().getNome());
@@ -244,7 +247,6 @@ public class Funcoes {
                         Cliente.comunicacao.setMensagem("Enviar convite grupo");
                         Cliente.lastCommand="Enviar convite grupo";
                         Cliente.valido = true;
-                        change = true;
                         running = false;
                         break;
                     case "2":
@@ -252,31 +254,69 @@ public class Funcoes {
                         utilizador.getGrupoAtual().setNomeProvisorio(in.readLine());
                         Cliente.comunicacao.setMensagem("Mudar nome grupo");
                         Cliente.valido=true;
-                        change=true;
                         running=false;
                         break;
                     case "3":
                         Cliente.comunicacao.setMensagem("Apagar grupo");
                         Cliente.valido=true;
-                        change=true;
+                        running=false;
+                        break;
+                    case "4":
+
+                        if (Cliente.comunicacao.getDespesa() == null) {
+                            Cliente.comunicacao.setDespesa(new ArrayList<>());
+                        }
+
+                        if (Cliente.comunicacao.getDespesa().isEmpty()) {
+                            Cliente.comunicacao.getDespesa().add(new Despesas());
+                        }
+
+                        Cliente.comunicacao.setMensagem("Inserir despesa");
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy"); // Define o formato da data
+                        while(true) {
+                            try {
+                                System.out.print("Insira o valor da despesa: ");
+                                String input = in.readLine();
+                                double valor = Double.parseDouble(input);
+                                Cliente.comunicacao.getDespesa().getFirst().setValor(valor);
+                                System.out.print("Descricao: ");
+                                Cliente.comunicacao.getDespesa().getFirst().setDescricao(in.readLine());
+                                System.out.print("Insira a data (formato: dd-MM-yyyy): ");
+                                String dataInput = in.readLine();
+                                Cliente.comunicacao.getDespesa().getFirst().setData(dateFormat.parse(dataInput));
+                                String dataFormatada = dateFormat.format(Cliente.comunicacao.getDespesa().getFirst().getData());
+                                System.out.println("Data inserida: " + dataFormatada);
+                                break;
+                            } catch (IOException e) {
+                                System.out.println("Erro ao ler a entrada: " + e.getMessage());
+                            } catch (NumberFormatException e) {
+                                System.out.println("Erro: entrada inválida. Por favor, insira um número válido.");
+                            } catch (ParseException e) {
+                                System.out.println("Erro: formato de data inválido. Use o formato dd-MM-yyyy.");
+                            }
+                        }
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "5":
+                        Cliente.comunicacao.setMensagem("Total gastos");
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "6":
+                        Cliente.comunicacao.setMensagem("Historio despesas");
+                        Cliente.valido=true;
                         running=false;
                         break;
                     case "7":
                         Cliente.comunicacao.setMensagem("Sair grupo");
                         Cliente.valido=true;
-                        change=true;
+                        utilizador.getGrupoAtual().setNome("");
                         running=false;
                         break;
                     case "0":
                         running = false;
-                        if(change) {
-                            Cliente.valido = true;
-                            Cliente.comunicacao.setMensagem("Editar convites");
-                            Cliente.lastCommand="Editar convites";
-                            utilizador.getGrupoAtual().setNome("");
-                        }
-                        else{
-                            Cliente.valido=false;}
+                        utilizador.getGrupoAtual().setNome("");
                         break;
                     default:
                         System.out.println("Opção inválida, tente novamente.");
@@ -289,6 +329,7 @@ public class Funcoes {
             }
         }
     }
+
     public static void menuGrupos(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         boolean running=true,change=false;//change -> se houver mudancas atualiza o valido
@@ -328,14 +369,10 @@ public class Funcoes {
                         change = true;
                         running = false;
                         break;
-                    case "4":
-
-                        break;
                     case "0":
                         running = false;
                         if(change){
                             Cliente.valido = true;
-
                         }
                         else {
                             Cliente.valido = false;

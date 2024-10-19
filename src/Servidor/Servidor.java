@@ -3,6 +3,7 @@ package Servidor;
 import BaseDeDados.*;
 import Cliente.Comunicacao;
 import Entidades.Convite;
+import Entidades.Despesas;
 import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
@@ -346,7 +347,7 @@ class processaClienteThread implements Runnable {
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver grupos")){
-                            List<Grupo> gruposUtilizador= utilizadorGrupoDB.selectGruposPorUtilizador(pedidoCliente.getUtilizador().getEmail());
+                            List<Grupo> gruposUtilizador = utilizadorGrupoDB.selectGruposPorUtilizador(pedidoCliente.getUtilizador().getEmail());
                             if (!gruposUtilizador.isEmpty()) {
                                 pedidoCliente.getUtilizador().setGrupos(gruposUtilizador);
                                 respostaSaida = pedidoCliente;
@@ -433,6 +434,45 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Não existem convites");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Inserir despesa")){
+                            respostaSaida = pedidoCliente;
+                            int despesaID = despesaDB.inserirDespesa(pedidoCliente.getDespesa().getFirst().getDescricao(), pedidoCliente.getDespesa().getFirst().getValor(),pedidoCliente.getDespesa().getFirst().getData(),pedidoCliente.getUtilizador().getGrupoAtual().getNome(), pedidoCliente.getUtilizador().getEmail());
+                            if(despesaID!= -1){
+                                List<String> emails = utilizadorGrupoDB.selectEmailsDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                                if(emails != null){
+                                    double valor = pedidoCliente.getDespesa().getFirst().getValor() / emails.size();
+                                    if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente")){
+                                        System.out.println("Despesa inserida com sucesso");
+                                        respostaSaida.setMensagem("Despesa inserida com sucesso");
+                                    }else{
+                                        respostaSaida.setMensagem("Erro a distribuir a despesa pelos membros do grupo");
+                                    }
+                                }else{
+                                    respostaSaida.setMensagem("Erro a identificar os membros do grupo");
+                                }
+                            }else{
+                                respostaSaida.setMensagem("Erro a inserir despesa");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Total gastos")){
+                            respostaSaida = pedidoCliente;
+                            double valorTotal = despesaDB.calcularTotalDespesas(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if(valorTotal != -1 && valorTotal != 0){
+                                pedidoCliente.setMensagem("Total de gastos do grupo atual: "+ valorTotal);
+                            }else if(valorTotal == 0){
+                                pedidoCliente.setMensagem("Grupo ainda nao tem gastos");
+                            }
+                            else{
+                                respostaSaida.setMensagem("Erro a calcular o total de gastos");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Historio despesas")){
+                            ArrayList<Despesas> despesas =  despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            respostaSaida = pedidoCliente;
+                            if(despesas != null){
+                                respostaSaida.setDespesa(despesas);
+                                respostaSaida.setMensagem("Historio de despesas");
+                            }else{
+                                respostaSaida.setMensagem("Erro ao puxar o historio de despesas");
                             }
                         }
                     }

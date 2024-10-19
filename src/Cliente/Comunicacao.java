@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import Entidades.Convite;
+import Entidades.Despesas;
 import Entidades.Grupo;
 import Entidades.Utilizador;
 
@@ -14,16 +15,17 @@ public class Comunicacao implements Serializable {
     private Utilizador utilizador;
     private ArrayList<Grupo> grupos;
     private ArrayList<Convite> convites;
+    private ArrayList<Despesas> despesa;
+
 
     public Comunicacao() {
-        //this.utilizador= new Utilizador();
-        //this.grupo= new Grupo();
     }
 
     public Comunicacao(Utilizador utilizador) {
         this.utilizador = utilizador;
         this.grupos = new ArrayList<>();
         this.convites= new ArrayList<>();
+        this.despesa = new ArrayList<>();
     }
 
     public String getMensagem() {return mensagem;}
@@ -33,12 +35,8 @@ public class Comunicacao implements Serializable {
         this.mensagem = mensagem;
     }
     public void setUtilizador(Utilizador utilizador) {this.utilizador = utilizador;}
-
     public ArrayList<Convite> getConvites() {return convites;}
-
     public void setConvites(ArrayList<Convite> convites) {this.convites = convites;}
-    //public ArrayList<String> getConvites() {return convites;}
-    //public void setConvites(ArrayList<String> convites) {this.convites = convites;}
     public void setConvite(Convite convite) {
         this.convites.clear();
         this.convites.add(convite);
@@ -48,6 +46,13 @@ public class Comunicacao implements Serializable {
         this.grupos.add(new Grupo(nomeGrupo));
     }
 
+    public ArrayList<Despesas> getDespesa() {
+        return despesa;
+    }
+
+    public void setDespesa(ArrayList<Despesas> despesa) {
+        this.despesa = despesa;
+    }
 
     @Override
     public String toString() {

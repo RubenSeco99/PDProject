@@ -1,5 +1,6 @@
 package Cliente;
 
+import Entidades.Despesas;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 
@@ -47,6 +48,10 @@ class processServerRequest implements Runnable{
                     System.out.println("Lista de Grupos pertencentes: ");
                     for(var g:response.getUtilizador().getGrupos())
                         System.out.println("Nome: "+g.getNome());
+                }else if(response.getMensagem().equalsIgnoreCase("Historio de despesas")){
+                    for(var d: response.getDespesa()){
+                        System.out.println(d.toString());
+                    }
                 }
 
                 if(response.getMensagem().equalsIgnoreCase("Servidor em baixo")){
@@ -96,6 +101,8 @@ public class Cliente {
 
         InetAddress serverAddr;
         int serverPort;
+
+        Despesas despesas;
 
         processServerRequest serverRequest;
         Thread td1;

@@ -96,29 +96,27 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
-    public List<Utilizador> selectUtilizadoresGrupo(String grupoNome) {//erro aqui , whatsapp
-        //devolve a lista dos utilizadores num grupo para depois poder manipular(ex.:mudar nome do grupo)
-        try {
-            String query = "SELECT * FROM Utilizador_Grupo WHERE grupo_nome = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
+
+    public List<String> selectEmailsDoGrupo(String grupoNome) {
+        // Query para buscar os emails dos utilizadores pertencentes ao grupo
+        String query = "SELECT utilizador_email FROM Utilizador_Grupo WHERE grupo_nome = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, grupoNome);
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Utilizador> utilizadores=new ArrayList<>();
+            List<String> emails = new ArrayList<>();
+
             while (resultSet.next()) {
-                    Utilizador utilizador=new Utilizador();
-                    utilizador.setAtivo(resultSet.getInt("ativo"));
-                    utilizador.setPassword(resultSet.getString("password"));
-                    utilizador.setTelefone(resultSet.getInt("telefone"));
-                    utilizador.setEmail(resultSet.getString("email"));
-                    utilizador.setNome(resultSet.getString("nome"));
-                    utilizadores.add(utilizador);
+                String email = resultSet.getString("utilizador_email");
+                emails.add(email);
             }
-            return utilizadores;
+            return emails;
         } catch (SQLException e) {
-            System.out.println("Erro ao verificar utilizador no grupo: " + e.getMessage());
+            System.out.println("Erro ao verificar utilizadores no grupo: " + e.getMessage());
             return null;
         }
     }
+
     public List<Grupo> selectGruposPorUtilizador(String utilizadorEmail) {
         List<Grupo> grupos = new ArrayList<>();
         try {

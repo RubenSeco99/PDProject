@@ -14,6 +14,7 @@ public class Utilizador implements Serializable {
     private List<Grupo> grupos;
     private List<Convite> convites;
     private Grupo grupo_atual;
+    private Despesas despesas;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
@@ -23,6 +24,7 @@ public class Utilizador implements Serializable {
         this.ativo = 0;
         this.grupos = new ArrayList<>();
         this.grupo_atual = new Grupo();
+        this.despesas = new Despesas();
     }
     public Utilizador() {
         this.grupos = new ArrayList<>();
