@@ -8,10 +8,8 @@ import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 import Uteis.FuncoesServidor;
-
 import java.io.*;
 import java.net.*;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -629,8 +627,8 @@ class processaClienteThread implements Runnable {
     }
 }
 
-class heartbeats implements Runnable{
-    //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
+class heardbeats implements Runnable{
+    //THREAD PARA EMITIR heardBEATS DE 10 EM 10 SEGUNDOS
     static final int PORTOBACKUPUDP = 4444;
 
     @Override
@@ -638,7 +636,7 @@ class heartbeats implements Runnable{
         try(MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
             DatagramPacket dgram;
             InetAddress groupAdress;
-            groupAdress = InetAddress.getByName(" 230.44.44.44");
+            groupAdress = InetAddress.getByName("230.44.44.44");
             NetworkInterface nif;
             try {
                 nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //e.g., 127.0.0.1, 192.168.10.1, ...
@@ -668,17 +666,89 @@ class heartbeats implements Runnable{
         }
     }
 }
+//criar thread para atender servidores bkup
+//⬆️⬆️⬆️ primeiro enviar copia integral da bd fazer envio do BaseDados.db(ficheiro)
+//
 
+//no servidor bkup existem duas threads, uma para receber heardBeats(main) e outra para receber informação tcp da bd (enviar as query's)
+class serverBackupDBUpdates implements Runnable{
+
+    private final Object lock;//para a thread ser assinalada
+    public serverBackupDBUpdates(Socket clientSocket, Object lock){
+        this.lock=lock;
+    }
+    @Override
+    public void run() {
+        try {
+            synchronized (lock){
+                while(true){
+                    lock.wait();
+                    //espera a thread ser assinalada para enviar a query para o servidor de backup
+                }
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }    }
+}
 class conectaServidoresBackup implements Runnable{
     //THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
     static final int PORTOBACKUPTCP = 5001;
-
+    private String DBUrl="jdbc:sqlite:";
+    private String receivedMsg;
+    static final String BKUP_SERVER_REQUEST = "BKUPCONNECT";
+    int packetSize = 1024;
+    int offset = 0;
+    File dbFile = new File(DBUrl);
+    public conectaServidoresBackup(String DBPATH){
+        this.DBUrl+=DBPATH;
+    }
     @Override
     public void run(){
+
+        Object lock = new Object();
+        Object baseDeDados= new Object();
         try(ServerSocket socketBackup =  new ServerSocket(PORTOBACKUPTCP)) {
+            //mesma logica clt multi thread quando recebe ligação cria thread para atender esse servidor bkup
+            while (true) {
+                try (Socket clientSocket = socketBackup.accept()) {
+                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                    receivedMsg=(String)in.readObject();
+                    System.out.println("Recebido \"" + receivedMsg + "\" de " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+                    if (!receivedMsg.equalsIgnoreCase(BKUP_SERVER_REQUEST)) {
+                        continue;
+                    }
+                    //TODO
+                    //criar metodo para obter todos os dados da base de dados
+                    //baseDeDados= metodoObterDados();
 
 
 
+                    byte[] data;
+                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                         ObjectOutputStream oos = new ObjectOutputStream(baos))
+                    {
+                        oos.writeObject(baseDeDados);
+                        data=baos.toByteArray();
+                        //sai daqui serializado
+                    }catch (IOException e) {
+                        System.out.println("Erro ao enviar os dados em blocos: " + e.getMessage());
+                    }
+                    /*enviar aos bocados a base de dados
+                    while (offset < data.length) {
+                        int remaining = Math.min(packetSize, data.length - offset);
+                        bufferedOut.write(data, offset, remaining);
+                        bufferedOut.flush();
+                        offset += remaining;
+                    }
+                     */
+                    //lançar thread para ser tratar de enviar aos servidores de backup as novas querys
+                    Thread serverBackupDBUpdates = new Thread(new serverBackupDBUpdates(clientSocket,lock));
+                    serverBackupDBUpdates.setDaemon(true);
+                    serverBackupDBUpdates.start();
+                } catch (ClassNotFoundException e) {
+                    System.out.println("O objecto recebido não é do tipo esperado:\n\t"+e);
+                }
+            }
         }catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo.");
         } catch (SocketException e) {
@@ -693,6 +763,7 @@ public class Servidor {
     public static String EMAILSEND;
     public static String NOMEGRUPO;
     public static String EMAILREMETENTE;
+    public static String queryBackupServer;
     public static volatile boolean encerraServidor = false;
 
     public static void main(String[] args) throws IOException {
@@ -717,6 +788,13 @@ public class Servidor {
             Thread encerraServidorTh = new Thread(new encerraServerThread(clienteSockets, lock, serverSocket));
             encerraServidorTh.setDaemon(true);
             encerraServidorTh.start();
+            Thread heardBeats = new Thread(new heardbeats());
+            heardBeats.setDaemon(true);
+            heardBeats.start();
+            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup(DBPATH));
+            conectaServidoresBackup.setDaemon(true);
+            conectaServidoresBackup.start();
+
 
             System.out.println("Server iniciado...\n");
 
