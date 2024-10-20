@@ -16,7 +16,6 @@ public class Funcoes {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
     public static String estado;
 
-    // Precompiled Pattern for efficiency
     private static final Pattern pattern = Pattern.compile(EMAIL_REGEX);
     public static boolean isValidEmail(String email) {
         if (email == null)
@@ -147,6 +146,107 @@ public class Funcoes {
             System.out.println("Nenhuma alteração foi efetuada.");
         }
     }
+    public static void eliminaDespesa(Utilizador utilizador) throws IOException, InterruptedException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean repeat = false;
+        Thread.sleep(200);
+        if(utilizador.getDespesas() == null || utilizador.getDespesas().isEmpty()){
+            System.out.println("\nNao tem nenhuma despesa\n");
+            Cliente.lastCommand ="";
+            return;
+        }
+        System.out.println("Escolha o id da despesa que pretende eliminar");
+        String opcao = in.readLine().trim();
+        int opID;
+        while(true) {
+            opID = Integer.parseInt(opcao);
+            for(var d: utilizador.getDespesas()){
+                if(opID ==d.getIdDespesa()) {
+                    repeat = true;
+                    break;
+                }
+            }
+            if(repeat)
+                break;
+            System.out.println("Opcao invalida, escolha uma opcao valida ou escreva 'sair'");
+            opcao = in.readLine().trim();
+            if(opcao.equalsIgnoreCase("sair")) {
+                break;
+            }
+        }
+
+        Cliente.lastCommand ="";
+        if(opcao.equalsIgnoreCase("sair")) {
+            Cliente.valido = false;
+            return;
+        }
+
+        Cliente.comunicacao.setMensagem("Eliminar despesa com id " + opID);
+        Cliente.valido = true;
+    }
+    public static void editarDespesa(Utilizador utilizador) throws InterruptedException, IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean repeat = false;
+        Thread.sleep(200);
+        if(utilizador.getDespesas() == null || utilizador.getDespesas().isEmpty()){
+            System.out.println("\nNao tem nenhuma despesa\n");
+            Cliente.lastCommand ="";
+            return;
+        }
+
+        System.out.println("Escolha o id da despesa que pretende editar");
+        String opcao = in.readLine().trim();
+        int opID;
+        while(true) {
+            opID = Integer.parseInt(opcao);
+            for(var d: utilizador.getDespesas()){
+                if(opID ==d.getIdDespesa()) {
+                    repeat = true;
+                    break;
+                }
+            }
+            if(repeat)
+                break;
+            System.out.println("Opcao invalida, escolha uma opcao valida ou escreva 'sair'");
+            opcao = in.readLine().trim();
+            if(opcao.equalsIgnoreCase("sair")) {
+                Cliente.valido = false;
+                return;
+            }
+        }
+        if (Cliente.comunicacao.getDespesa() == null) {
+            Cliente.comunicacao.setDespesa(new ArrayList<>());
+        }
+        if (Cliente.comunicacao.getDespesa().isEmpty()) {
+            Cliente.comunicacao.getDespesa().add(new Despesas());
+        }
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy"); // Define o formato da data
+            System.out.print("Insira o novo valor da despesa: ");
+            String input = in.readLine();
+            double valor = Double.parseDouble(input);
+            Cliente.comunicacao.getDespesa().getFirst().setValor(valor);
+            System.out.print("Nova descricao: ");
+            Cliente.comunicacao.getDespesa().getFirst().setDescricao(in.readLine());
+            System.out.print("Nova data (formato: dd-MM-yyyy): ");
+            String dataInput = in.readLine();
+            System.out.println(dataInput);
+            System.out.println(dateFormat.parse(dataInput));
+            Cliente.comunicacao.getDespesa().getFirst().setData(new java.sql.Date(dateFormat.parse(dataInput).getTime()));
+            String dataFormatada = dateFormat.format(Cliente.comunicacao.getDespesa().getFirst().getData());
+            System.out.println("Data inserida: " + dataFormatada);
+        } catch (IOException e) {
+            System.out.println("Erro ao ler a entrada: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.out.println("Erro: entrada inválida. Por favor, insira um número válido.");
+        } catch (ParseException e) {
+            System.out.println("Erro: formato de data inválido. Use o formato dd-MM-yyyy.");
+        }
+
+        Cliente.lastCommand ="";
+        Cliente.comunicacao.setMensagem("Editar despesa com id " + opID);
+        Cliente.valido = true;
+    }
 
     public static void menuConvites(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -232,7 +332,10 @@ public class Funcoes {
                           4. Nova despesa
                           5. Ver gastos totais
                           6. Ver historico de despesas
-                          7. Sair do grupo
+                          7. Exportar despesas (csv)
+                          8. Editar despesa
+                          9. Eliminar despesa
+                          10. Sair do grupo
                           0. Sair
                         %n""", utilizador.getGrupoAtual().getNome());
                 System.out.print("Opção: ");
@@ -262,15 +365,12 @@ public class Funcoes {
                         running=false;
                         break;
                     case "4":
-
                         if (Cliente.comunicacao.getDespesa() == null) {
                             Cliente.comunicacao.setDespesa(new ArrayList<>());
                         }
-
                         if (Cliente.comunicacao.getDespesa().isEmpty()) {
                             Cliente.comunicacao.getDespesa().add(new Despesas());
                         }
-
                         Cliente.comunicacao.setMensagem("Inserir despesa");
                         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy"); // Define o formato da data
                         while(true) {
@@ -297,20 +397,41 @@ public class Funcoes {
                                 System.out.println("Erro: formato de data inválido. Use o formato dd-MM-yyyy.");
                             }
                         }
+                        Cliente.lastCommand="Nova despesa";
                         Cliente.valido=true;
                         running=false;
                         break;
                     case "5":
                         Cliente.comunicacao.setMensagem("Total gastos");
+                        Cliente.lastCommand="Total gastos";
                         Cliente.valido=true;
                         running=false;
                         break;
                     case "6":
                         Cliente.comunicacao.setMensagem("Historio despesas");
+                        Cliente.lastCommand="Historio despesas";
                         Cliente.valido=true;
                         running=false;
                         break;
                     case "7":
+                        Cliente.comunicacao.setMensagem("Exportar csv");
+                        Cliente.lastCommand="Exportar csv";
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "8":
+                        Cliente.comunicacao.setMensagem("Editar despesa");
+                        Cliente.lastCommand="Editar despesa";
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "9":
+                        Cliente.comunicacao.setMensagem("Eliminar despesa");
+                        Cliente.lastCommand="Eliminar despesa";
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "10":
                         Cliente.comunicacao.setMensagem("Sair grupo");
                         Cliente.valido=true;
                         running=false;
@@ -392,15 +513,30 @@ public class Funcoes {
         }
     }
 
-    public static void menuUtilizadoresComLogin(Utilizador utilizador){
+    public static void menuUtilizadoresComLogin(Utilizador utilizador) throws IOException, InterruptedException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
         if(Cliente.lastCommand.equalsIgnoreCase("Ver convites")){
             menuConvites(utilizador);
         } else if(Cliente.lastCommand.equalsIgnoreCase("Escolher grupo")) {
             menuGrupoAtual(utilizador);
-        }
-        else {
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Enviar convite grupo")) {
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Eliminar despesa")){
+            eliminaDespesa(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Mudar nome grupo")){
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Nova despesa")){
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Total gastos")){
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Historio despesas")){
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Exportar csv")){
+            menuGrupoAtual(utilizador);
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Editar despesa")){
+            editarDespesa(utilizador);
+        } else {
             System.out.println("""
                     O que pretende fazer?
                       1. Logout

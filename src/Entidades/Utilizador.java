@@ -14,7 +14,7 @@ public class Utilizador implements Serializable {
     private List<Grupo> grupos;
     private List<Convite> convites;
     private Grupo grupo_atual;
-    private Despesas despesas;
+    private List<Despesas> despesas;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
@@ -24,11 +24,12 @@ public class Utilizador implements Serializable {
         this.ativo = 0;
         this.grupos = new ArrayList<>();
         this.grupo_atual = new Grupo();
-        this.despesas = new Despesas();
+        this.despesas = new ArrayList<>();
     }
     public Utilizador() {
         this.grupos = new ArrayList<>();
         this.grupo_atual = new Grupo();
+        this.despesas = new ArrayList<>();
     }
 
     public String getNome() {return nome;}
@@ -90,6 +91,10 @@ public class Utilizador implements Serializable {
     public void removeGrupo(Grupo grupo) {
         this.grupos.remove(grupo);
     }
+
+    public List<Despesas> getDespesas() {return despesas;}
+    public void setDespesas(List<Despesas> despesas) {this.despesas = despesas;}
+
     @Override
     public String toString() {
         return  "Utilizador{" +
