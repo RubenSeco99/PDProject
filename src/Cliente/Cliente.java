@@ -48,18 +48,18 @@ class processServerRequest implements Runnable{
                     System.out.println("Lista de Grupos pertencentes: ");
                     for(var g:response.getUtilizador().getGrupos())
                         System.out.println("Nome: "+g.getNome());
-                }else if(response.getMensagem().equalsIgnoreCase("Historio de despesas")){
+                }else if(response.getMensagem().equalsIgnoreCase("Historio de despesas") || response.getMensagem().equalsIgnoreCase("Sucesso, escolha a despesa por id") || response.getMensagem().equalsIgnoreCase("Sucesso, escolha a despesa por id para edicao")){
+                    Cliente.utilizadorUpdate.setDespesas(response.getDespesa());
                     for(var d: response.getDespesa()){
                         System.out.println(d.toString());
                     }
                 }
-
                 if(response.getMensagem().equalsIgnoreCase("Servidor em baixo")){
                     System.out.println("\nServidor em baixo, clique em alguma tecla para sair\n");
                     Cliente.EXIT = true;
                     Cliente.valido = false;
                 }else{
-                    System.out.println("\nResponse: " + response);
+                    System.out.println("\n"+response);
                     System.out.println("> ");
                 }
             }
@@ -129,6 +129,7 @@ public class Cliente {
                         Oout.writeObject(comunicacao);
                         Oout.flush();
                         Oout.reset();
+                        valido = false;
                     }
                     if(EXIT) {
                         serverRequest.terminate();

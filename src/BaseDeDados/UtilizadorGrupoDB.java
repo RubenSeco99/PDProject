@@ -157,6 +157,7 @@ public class UtilizadorGrupoDB {
             }
         } catch (SQLException e) {
             System.out.println("Erro ao selecionar utilizadores por grupo: " + e.getMessage());
+            return null;
         }
         return utilizadores;
     }

@@ -7,6 +7,7 @@ import Entidades.Despesas;
 import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
+import Uteis.FuncoesServidor;
 import java.io.*;
 import java.net.*;
 import java.sql.Date;
@@ -120,6 +121,7 @@ class processaClienteThread implements Runnable {
     private UtilizadorGrupoDB utilizadorGrupoDB;
     private DespesaDB despesaDB;
     private DespesaPagadoresDB despesaPagadoresDB;
+    private PagamentoDB pagamentoDB;
     private boolean conectado;
     private boolean EXIT = false;
     List <notificaThread> notificaThreads;
@@ -135,7 +137,7 @@ class processaClienteThread implements Runnable {
         this.conviteDB=new ConviteDB(connection);
         this.despesaDB=new DespesaDB(connection);
         this.despesaPagadoresDB= new DespesaPagadoresDB(connection);
-        //new objeto convite
+        this.pagamentoDB = new PagamentoDB(connection);
         this.notificaThreads = clienteSockets;
         this.lock = lock;
     }
@@ -416,9 +418,6 @@ class processaClienteThread implements Runnable {
                                 //apagar convite
                                 Convite convite = pedidoCliente.getUtilizador().getConvitePorEstado("Aceite");
                                 utilizadorGrupoDB.insertUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),convite.getNomeGrupo());
-                                synchronized (lock) {
-                                    lock.notify();//assinalar thread
-                                }
                                 conviteDB.removeConvite(convite.getDestinatario(),convite.getNomeGrupo());
                                 pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
                                 respostaSaida=pedidoCliente;
@@ -434,9 +433,6 @@ class processaClienteThread implements Runnable {
                                 //enviar notificacao ao remetente
                                 //apagar convite
                                 Convite convite = pedidoCliente.getUtilizador().getConvitePorEstado("Rejeitado");
-                                synchronized (lock) {
-                                    lock.notify();//assinalar thread
-                                }
                                 conviteDB.removeConvite(convite.getDestinatario(),convite.getNomeGrupo());
                                 pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
                                 respostaSaida=pedidoCliente;
@@ -452,7 +448,7 @@ class processaClienteThread implements Runnable {
                                 List<String> emails = utilizadorGrupoDB.selectEmailsDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(emails != null){
                                     double valor = pedidoCliente.getDespesa().getFirst().getValor() / emails.size();
-                                    if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente")){
+                                    if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente", pedidoCliente.getUtilizador().getEmail())){
                                         System.out.println("Despesa inserida com sucesso");
                                         respostaSaida.setMensagem("Despesa inserida com sucesso");
                                     }else{
@@ -484,9 +480,88 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Erro ao puxar o historio de despesas");
                             }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Exportar csv")){
+                            respostaSaida = pedidoCliente;
+                            ArrayList<Despesas> despesaCsv = despesaDB.getDespesasPorNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if(despesaCsv !=null){
+                                despesaCsv = despesaPagadoresDB.preencherUtilizadoresPartilhados(despesaCsv);
+                                if(despesaCsv != null){
+                                    List<Utilizador> utilizadoresGrupo = utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                                    if(utilizadoresGrupo != null){
+                                        String caminhoFicheiroCSV = "src/Servidor/despesas.csv";
+                                        FuncoesServidor.exportarDespesasParaCSV(despesaCsv, pedidoCliente.getUtilizador().getGrupoAtual().getNome(), utilizadoresGrupo, caminhoFicheiroCSV);
+                                        respostaSaida.setMensagem("CSV gerado com sucesso");
+                                    }else{
+                                        System.out.println("Erro a selecionar os utilizadores do grupo");
+                                        respostaSaida.setMensagem("Erro a selecionar os utilizadores do grupo");
+                                    }
+                                }else{
+                                    System.out.println("Erro ao selecionar os utilizadores com quem partilha despesa");
+                                    respostaSaida.setMensagem("Erro ao selecionar os utilizadores com quem partilha despesa");
+                                }
+                            }else{
+                                System.out.println("Erro a selecionar as despesas");
+                                respostaSaida.setMensagem("Erro ao selecionar as despesas");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Eliminar despesa")){
+                            respostaSaida = pedidoCliente;
+                            ArrayList<Despesas> despesas = despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if(despesas != null){
+                                respostaSaida.setDespesa(despesas);
+                                respostaSaida.setMensagem("Sucesso, escolha a despesa por id");
+                            }else{
+                                System.out.println("Erro ao selecionar as despesas");
+                                respostaSaida.setMensagem("Erro ao selecionar as despesas");
+                            }
+                        }else if(pedidoCliente.getMensagem().contains("Eliminar despesa com id")){
+                            respostaSaida = pedidoCliente;
+                            String mensagem = pedidoCliente.getMensagem();
+                            String[] partes = mensagem.split(" ");
+                            int id = Integer.parseInt(partes[partes.length - 1]);
+                            if(despesaDB.eliminarDespesaPorId(id)){
+                                if(despesaPagadoresDB.eliminarDespesasPagadoresPorIdDespesa(id)) {
+                                    respostaSaida.setMensagem("Sucesso a eliminar uma despesa");
+                                }else{
+                                    System.out.println("Erro ao eliminar despesa com id nos pagadores");
+                                    respostaSaida.setMensagem("Erro a eliminar a despesa nos pagadores");
+                                }
+                            }else{
+                                System.out.println("Erro ao eliminar despesa com id");
+                                respostaSaida.setMensagem("Erro a eliminar a despesa");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar despesa")){
+                            respostaSaida = pedidoCliente;
+                            ArrayList<Despesas> despesas = despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if(despesas != null){
+                                respostaSaida.setDespesa(despesas);
+                                if(despesas.isEmpty()){
+                                    respostaSaida.setMensagem("Nao tem despesas");
+                                }else{
+                                    respostaSaida.setMensagem("Sucesso, escolha a despesa por id para edicao");
+                                }
+                            }else{
+                                System.out.println("Erro ao selecionar as despesas para editar");
+                                respostaSaida.setMensagem("Erro ao selecionar as despesas para editar");
+                            }
+                        }else if(pedidoCliente.getMensagem().contains("Editar despesa com id")){
+                            respostaSaida = pedidoCliente;
+                            String mensagem = pedidoCliente.getMensagem();
+                            String[] partes = mensagem.split(" ");
+                            int id = Integer.parseInt(partes[partes.length - 1]);
+                            if(despesaDB.atualizaDespesa(id, pedidoCliente.getDespesa().getFirst().getDescricao(),pedidoCliente.getDespesa().getFirst().getValor(),pedidoCliente.getDespesa().getFirst().getData())){
+                                if(despesaPagadoresDB.atualizarValorDivida(id,pedidoCliente.getDespesa().getFirst().getValor())) {
+                                    respostaSaida.setMensagem("Sucesso a editar dados da despesa");
+                                }else{
+                                    respostaSaida.setMensagem("Insucesso a atualizar os valores em divida dos membros");
+                                }
+                            }else{
+                                respostaSaida.setMensagem("Insucesso a editar os dados da despesa");
+                            }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")){
+                            respostaSaida = pedidoCliente;
+
                         }
                     }
-
                     Oout.writeObject(respostaSaida);
                     Oout.flush();
 
@@ -553,8 +628,8 @@ class processaClienteThread implements Runnable {
     }
 }
 
-class heartbeats implements Runnable{
-    //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
+class heardbeats implements Runnable{
+    //THREAD PARA EMITIR heardBEATS DE 10 EM 10 SEGUNDOS
     static final int PORTOBACKUPUDP = 4444;
 
     @Override
@@ -562,7 +637,7 @@ class heartbeats implements Runnable{
         try(MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
             DatagramPacket dgram;
             InetAddress groupAdress;
-            groupAdress = InetAddress.getByName(" 230.44.44.44");
+            groupAdress = InetAddress.getByName("230.44.44.44");
             NetworkInterface nif;
             try {
                 nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //e.g., 127.0.0.1, 192.168.10.1, ...
@@ -592,17 +667,89 @@ class heartbeats implements Runnable{
         }
     }
 }
+//criar thread para atender servidores bkup
+//⬆️⬆️⬆️ primeiro enviar copia integral da bd fazer envio do BaseDados.db(ficheiro)
+//
 
+//no servidor bkup existem duas threads, uma para receber heardBeats(main) e outra para receber informação tcp da bd (enviar as query's)
+class serverBackupDBUpdates implements Runnable{
+
+    private final Object lock;//para a thread ser assinalada
+    public serverBackupDBUpdates(Socket clientSocket, Object lock){
+        this.lock=lock;
+    }
+    @Override
+    public void run() {
+        try {
+            synchronized (lock){
+                while(true){
+                    lock.wait();
+                    //espera a thread ser assinalada para enviar a query para o servidor de backup
+                }
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }    }
+}
 class conectaServidoresBackup implements Runnable{
     //THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
     static final int PORTOBACKUPTCP = 5001;
-
+    private String DBUrl="jdbc:sqlite:";
+    private String receivedMsg;
+    static final String BKUP_SERVER_REQUEST = "BKUPCONNECT";
+    int packetSize = 1024;
+    int offset = 0;
+    File dbFile = new File(DBUrl);
+    public conectaServidoresBackup(String DBPATH){
+        this.DBUrl+=DBPATH;
+    }
     @Override
     public void run(){
+
+        Object lock = new Object();
+        Object baseDeDados= new Object();
         try(ServerSocket socketBackup =  new ServerSocket(PORTOBACKUPTCP)) {
+            //mesma logica clt multi thread quando recebe ligação cria thread para atender esse servidor bkup
+            while (true) {
+                try (Socket clientSocket = socketBackup.accept()) {
+                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                    receivedMsg=(String)in.readObject();
+                    System.out.println("Recebido \"" + receivedMsg + "\" de " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+                    if (!receivedMsg.equalsIgnoreCase(BKUP_SERVER_REQUEST)) {
+                        continue;
+                    }
+                    //TODO
+                    //criar metodo para obter todos os dados da base de dados
+                    //baseDeDados= metodoObterDados();
 
 
 
+                    byte[] data;
+                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                         ObjectOutputStream oos = new ObjectOutputStream(baos))
+                    {
+                        oos.writeObject(baseDeDados);
+                        data=baos.toByteArray();
+                        //sai daqui serializado
+                    }catch (IOException e) {
+                        System.out.println("Erro ao enviar os dados em blocos: " + e.getMessage());
+                    }
+                    /*enviar aos bocados a base de dados
+                    while (offset < data.length) {
+                        int remaining = Math.min(packetSize, data.length - offset);
+                        bufferedOut.write(data, offset, remaining);
+                        bufferedOut.flush();
+                        offset += remaining;
+                    }
+                     */
+                    //lançar thread para ser tratar de enviar aos servidores de backup as novas querys
+                    Thread serverBackupDBUpdates = new Thread(new serverBackupDBUpdates(clientSocket,lock));
+                    serverBackupDBUpdates.setDaemon(true);
+                    serverBackupDBUpdates.start();
+                } catch (ClassNotFoundException e) {
+                    System.out.println("O objecto recebido não é do tipo esperado:\n\t"+e);
+                }
+            }
         }catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo.");
         } catch (SocketException e) {
@@ -617,6 +764,7 @@ public class Servidor {
     public static String EMAILSEND;
     public static String NOMEGRUPO;
     public static String EMAILREMETENTE;
+    public static String queryBackupServer;
     public static volatile boolean encerraServidor = false;
 
     public static void main(String[] args) throws IOException {
@@ -641,6 +789,13 @@ public class Servidor {
             Thread encerraServidorTh = new Thread(new encerraServerThread(clienteSockets, lock, serverSocket));
             encerraServidorTh.setDaemon(true);
             encerraServidorTh.start();
+            Thread heardBeats = new Thread(new heardbeats());
+            heardBeats.setDaemon(true);
+            heardBeats.start();
+            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup(DBPATH));
+            conectaServidoresBackup.setDaemon(true);
+            conectaServidoresBackup.start();
+
 
             System.out.println("Server iniciado...\n");
 

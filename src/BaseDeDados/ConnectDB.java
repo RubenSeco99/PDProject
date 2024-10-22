@@ -68,7 +68,7 @@ public class ConnectDB {
             String tabelaDespesaPagadores = "CREATE TABLE IF NOT EXISTS Despesa_Pagadores ("
                     + "despesa_id INTEGER NOT NULL, "
                     + "utilizador_email TEXT NOT NULL, "
-                    + "valor_divida REAL NOT NULL, "
+                    + "valor_divida REAL NOT NULL CHECK (valor_divida >= 0), "
                     + "estado_pagamento TEXT NOT NULL CHECK (estado_pagamento IN ('Pago', 'Pendente')), "
                     + "FOREIGN KEY (despesa_id) REFERENCES Despesa(id) ON DELETE CASCADE, "
                     + "FOREIGN KEY (utilizador_email) REFERENCES Utilizador(email) ON DELETE CASCADE, "
@@ -76,20 +76,20 @@ public class ConnectDB {
             stmt.executeUpdate(tabelaDespesaPagadores);
 
             String tabelaPagamento = "CREATE TABLE IF NOT EXISTS Pagamento ("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    + "data TEXT NOT NULL, "
-                    + "valor REAL NOT NULL, "
-                    + "utilizador_pagador_id INTEGER NOT NULL, "
-                    + "utilizador_recebedor_id INTEGER NOT NULL, "
-                    + "FOREIGN KEY (utilizador_pagador_id) REFERENCES Utilizador(id) ON DELETE CASCADE, "
-                    + "FOREIGN KEY (utilizador_recebedor_id) REFERENCES Utilizador(id) ON DELETE CASCADE);";
+                    + "id_pagamento INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "quem_pagou TEXT NOT NULL, "
+                    + "quem_recebeu TEXT NOT NULL, "
+                    + "valor_pagamento REAL NOT NULL CHECK (valor_pagamento > 0),\n "
+                    + "data_pagamento TEXT NOT NULL, "
+                    + "grupo_nome TEXT NOT NULL, "
+                    + "FOREIGN KEY (quem_pagou) REFERENCES Utilizador(email) ON DELETE CASCADE, "
+                    + "FOREIGN KEY (quem_recebeu) REFERENCES Utilizador(email) ON DELETE CASCADE, "
+                    + "FOREIGN KEY (grupo_nome) REFERENCES Grupo(nome) ON DELETE CASCADE);";
             stmt.executeUpdate(tabelaPagamento);
 
             String tabelaVersao = "CREATE TABLE IF NOT EXISTS Versao ("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + "versao_numero INTEGER NOT NULL);";  // Número sequencial da versão
             stmt.executeUpdate(tabelaVersao);
-
 
             System.out.println("Todas as tabelas foram criadas com sucesso!");
 
