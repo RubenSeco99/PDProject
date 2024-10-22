@@ -8,6 +8,8 @@ import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 import Uteis.FuncoesServidor;
+import Uteis.ServerBackUpSupport;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -627,8 +629,8 @@ class processaClienteThread implements Runnable {
     }
 }
 
-class heardbeats implements Runnable{
-    //THREAD PARA EMITIR heardBEATS DE 10 EM 10 SEGUNDOS
+class heartBeats implements Runnable{
+    //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
     static final int PORTOBACKUPUDP = 4444;
 
     @Override
@@ -639,18 +641,20 @@ class heardbeats implements Runnable{
             groupAdress = InetAddress.getByName("230.44.44.44");
             NetworkInterface nif;
             try {
-                nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //e.g., 127.0.0.1, 192.168.10.1, ...
+                nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //230.44.44.44
             } catch (SocketException | NullPointerException | UnknownHostException | SecurityException ex) {
-                nif = NetworkInterface.getByName("wlan0"); //e.g., lo, eth0, wlan0, en0, ...
+                nif = NetworkInterface.getByName("wlan0");
             }
 
             multiSocket.joinGroup(new InetSocketAddress(groupAdress, PORTOBACKUPUDP),nif);
-            String messagePort = "5001";
+            ServerBackUpSupport messageBackUp = new ServerBackUpSupport(5001);  //PREENCHE LOGO O PORTO PARA FAZER HEARTBEATS
+
             while(true){
                 Thread.sleep(10000);
+                //Colocar aqui a versao => messageBackUp.setVersao();
                 try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
                      ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
-                    Oout.writeObject(messagePort);
+                    Oout.writeObject(messageBackUp);
                     dgram = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
                 }
                 multiSocket.send(dgram);
@@ -666,95 +670,61 @@ class heardbeats implements Runnable{
         }
     }
 }
-//criar thread para atender servidores bkup
-//⬆️⬆️⬆️ primeiro enviar copia integral da bd fazer envio do BaseDados.db(ficheiro)
-//
 
-//no servidor bkup existem duas threads, uma para receber heardBeats(main) e outra para receber informação tcp da bd (enviar as query's)
-class serverBackupDBUpdates implements Runnable{
+class conectaServidoresBackup implements Runnable {
+    // THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
+    private static final int PORTOBACKUPTCP = 5001;
+    private final File databaseFile = new File("./src/BaseDeDados/BaseDados.db");
+    public static final int MAX_SIZE = 4000;
 
-    private final Object lock;//para a thread ser assinalada
-    public serverBackupDBUpdates(Socket clientSocket, Object lock){
-        this.lock=lock;
-    }
     @Override
     public void run() {
-        try {
-            synchronized (lock){
-                while(true){
-                    lock.wait();
-                    //espera a thread ser assinalada para enviar a query para o servidor de backup
-                }
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }    }
-}
-class conectaServidoresBackup implements Runnable{
-    //THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
-    static final int PORTOBACKUPTCP = 5001;
-    private String DBUrl="jdbc:sqlite:";
-    private String receivedMsg;
-    static final String BKUP_SERVER_REQUEST = "BKUPCONNECT";
-    int packetSize = 1024;
-    int offset = 0;
-    File dbFile = new File(DBUrl);
-    public conectaServidoresBackup(String DBPATH){
-        this.DBUrl+=DBPATH;
-    }
-    @Override
-    public void run(){
+        byte[] fileChunk = new byte[MAX_SIZE];
+        int nbytes;
 
-        Object lock = new Object();
-        Object baseDeDados= new Object();
-        try(ServerSocket socketBackup =  new ServerSocket(PORTOBACKUPTCP)) {
-            //mesma logica clt multi thread quando recebe ligação cria thread para atender esse servidor bkup
+        // Validar o ficheiro da base de dados
+        if (!databaseFile.exists()) {
+            System.out.println("O ficheiro " + databaseFile.getAbsolutePath() + " não existe!");
+            return;
+        }
+
+        if (!databaseFile.canRead()) {
+            System.out.println("Sem permissões de leitura no ficheiro " + databaseFile.getAbsolutePath() + "!");
+            return;
+        }
+
+        try (ServerSocket socketBackup = new ServerSocket(PORTOBACKUPTCP)) {
+            System.out.println("Servidor backup à escuta no porto " + PORTOBACKUPTCP + "...");
+
             while (true) {
-                try (Socket clientSocket = socketBackup.accept()) {
-                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                    receivedMsg=(String)in.readObject();
-                    System.out.println("Recebido \"" + receivedMsg + "\" de " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
-                    if (!receivedMsg.equalsIgnoreCase(BKUP_SERVER_REQUEST)) {
-                        continue;
-                    }
-                    //TODO
-                    //criar metodo para obter todos os dados da base de dados
-                    //baseDeDados= metodoObterDados();
+                try {
+                    Socket backupServerSocket = socketBackup.accept();
+                    System.out.println("Conexão estabelecida com o servidor backup: " + backupServerSocket.getInetAddress().getHostAddress());
 
+                    //VAI LER O FICHEIRO DA BASE DE DADOS E ENVIA POR CHUNKS
+                    try (FileInputStream fileInputStream = new FileInputStream(databaseFile)) {
+                        OutputStream out = backupServerSocket.getOutputStream();
 
+                        do {
+                            nbytes = fileInputStream.read(fileChunk);
+                            if (nbytes != -1) {
+                                out.write(fileChunk, 0, nbytes);
+                                out.flush();
+                            }
+                        } while (nbytes > 0);
 
-                    byte[] data;
-                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                         ObjectOutputStream oos = new ObjectOutputStream(baos))
-                    {
-                        oos.writeObject(baseDeDados);
-                        data=baos.toByteArray();
-                        //sai daqui serializado
-                    }catch (IOException e) {
-                        System.out.println("Erro ao enviar os dados em blocos: " + e.getMessage());
+                        System.out.println("Transferência concluída para o servidor backup.");
+                    } catch (IOException e) {
+                        System.out.println("Erro ao ler ou enviar o ficheiro: " + e.getMessage());
                     }
-                    /*enviar aos bocados a base de dados
-                    while (offset < data.length) {
-                        int remaining = Math.min(packetSize, data.length - offset);
-                        bufferedOut.write(data, offset, remaining);
-                        bufferedOut.flush();
-                        offset += remaining;
-                    }
-                     */
-                    //lançar thread para ser tratar de enviar aos servidores de backup as novas querys
-                    Thread serverBackupDBUpdates = new Thread(new serverBackupDBUpdates(clientSocket,lock));
-                    serverBackupDBUpdates.setDaemon(true);
-                    serverBackupDBUpdates.start();
-                } catch (ClassNotFoundException e) {
-                    System.out.println("O objecto recebido não é do tipo esperado:\n\t"+e);
+                } catch (SocketTimeoutException e) {
+                    System.out.println("Tempo esgotado: o servidor de backup não respondeu.");
+                } catch (IOException e) {
+                    System.out.println("Erro de I/O ao lidar com o servidor de backup: " + e.getMessage());
                 }
             }
-        }catch (NumberFormatException e) {
-            System.out.println("O porto de escuta deve ser um inteiro positivo.");
-        } catch (SocketException e) {
-            System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
         } catch (IOException e) {
-            System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
+            System.out.println("Erro ao criar o ServerSocket: " + e.getMessage());
         }
     }
 }
@@ -785,13 +755,16 @@ public class Servidor {
             Thread notifica = new Thread(new notificaCliente(clienteSockets, lock));
             notifica.setDaemon(true);
             notifica.start();
+
             Thread encerraServidorTh = new Thread(new encerraServerThread(clienteSockets, lock, serverSocket));
             encerraServidorTh.setDaemon(true);
             encerraServidorTh.start();
-            Thread heardBeats = new Thread(new heardbeats());
-            heardBeats.setDaemon(true);
-            heardBeats.start();
-            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup(DBPATH));
+
+            Thread heartbeats = new Thread(new heartBeats());
+            heartbeats.setDaemon(true);
+            heartbeats.start();
+
+            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup());
             conectaServidoresBackup.setDaemon(true);
             conectaServidoresBackup.start();
 
