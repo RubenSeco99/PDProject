@@ -2,10 +2,7 @@ package Servidor;
 
 import BaseDeDados.*;
 import Cliente.Comunicacao;
-import Entidades.Convite;
-import Entidades.Despesas;
-import Entidades.Grupo;
-import Entidades.Utilizador;
+import Entidades.*;
 import Uteis.Funcoes;
 import Uteis.FuncoesServidor;
 import ServidorBackup.ServerBackUpSupport;
@@ -561,6 +558,20 @@ class processaClienteThread implements Runnable {
                             }
                         } else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")) {
                             respostaSaida = pedidoCliente;
+                            ArrayList<Divida> dividas = despesaPagadoresDB.getDividasPorEmail(pedidoCliente.getUtilizador().getEmail());
+                            if(dividas != null){
+                                respostaSaida.setDividas(dividas);
+                                if(dividas.isEmpty()){
+                                    respostaSaida.setMensagem("Nao tem dividas");
+                                }else{
+                                    respostaSaida.setMensagem("Sucesso, escolha a divida por id para efetuar pagamento");
+                                }
+                            }else{
+                                System.out.println("Erro ao selecionar as despesas para efetuar pagamento");
+                                respostaSaida.setMensagem("Erro ao selecionar as despesas para efetuar pagamento");
+                            }
+                        } else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento com id")) {
+                            respostaSaida = pedidoCliente;
                             int idDespesa = pedidoCliente.getUtilizador().getPagamentoAtual().getIdDespesa();
                             double valorDivida = despesaPagadoresDB.getDividaPorId(idDespesa, pedidoCliente.getUtilizador().getEmail());
                             double valorFinal = valorDivida - pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento();
@@ -569,7 +580,7 @@ class processaClienteThread implements Runnable {
                                 if(despesaPagadoresDB.atualizarEstadoDivida(idDespesa, pedidoCliente.getUtilizador().getEmail(), "Pago")) {
                                     if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
                                         pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
-                                                pedidoCliente.getUtilizador().getEmail(),
+                                                despesaDB.getDonoDespesa(idDespesa),
                                                 pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
                                                 pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
                                         respostaSaida.setMensagem("Pagamento completo com sucesso");
@@ -582,7 +593,7 @@ class processaClienteThread implements Runnable {
                             } else {
                                 if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
                                     pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
-                                            pedidoCliente.getUtilizador().getEmail(),
+                                            despesaDB.getDonoDespesa(idDespesa),
                                             pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
                                             pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
                                     respostaSaida.setMensagem("Pagamento efetuado com sucesso");

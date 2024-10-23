@@ -16,6 +16,7 @@ public class DespesaDB {
     //metodos criar despesa
     //metodo apagar despesa
     //ver despesa (valores despesa vao ter de ir para a tabela despesapagadores ...)
+
     public int inserirDespesa(String descricao, double valor, Date data, String grupoNome, String criadorEmail) {
         String sql = "INSERT INTO Despesa (descricao, valor, data, grupo_nome, criador_email) VALUES (?, ?, ?, ?, ?)";
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -178,5 +179,19 @@ public class DespesaDB {
             System.out.println("Erro ao atualizar despesa: " + e.getMessage());
             return false;
         }
+    }
+
+    public String getDonoDespesa(int idDespesa) {
+        String sql = "SELECT criador_email FROM Despesa WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, idDespesa);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("criador_email");
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao obter dono da despesa: " + e.getMessage());
+        }
+        return null;
     }
 }

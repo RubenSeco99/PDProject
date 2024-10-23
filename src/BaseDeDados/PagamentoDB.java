@@ -18,7 +18,8 @@ public class PagamentoDB {
 
         // Criar uma data formatada da data atual do sistema
         String dataFormatada = dateFormat.format(new java.util.Date());
-
+        System.out.println(quemRecebeu);
+        System.out.println(quemPagou);
         try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, quemPagou);
             pstmt.setString(2, quemRecebeu);

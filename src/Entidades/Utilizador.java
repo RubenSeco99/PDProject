@@ -16,6 +16,7 @@ public class Utilizador implements Serializable {
     private Grupo grupo_atual;
     private Pagamento pagamento_atual;
     private List<Despesas> despesas;
+    private List<Divida> dividas;
 
     public Utilizador(String nome, String password, int telefone, String email) {
         this.nome = nome;
@@ -27,6 +28,7 @@ public class Utilizador implements Serializable {
         this.grupo_atual = new Grupo();
         this.pagamento_atual = new Pagamento();
         this.despesas = new ArrayList<>();
+        this.dividas = new ArrayList<>();
     }
     public Utilizador() {
         this.grupos = new ArrayList<>();
@@ -98,6 +100,9 @@ public class Utilizador implements Serializable {
 
     public List<Despesas> getDespesas() {return despesas;}
     public void setDespesas(List<Despesas> despesas) {this.despesas = despesas;}
+
+    public List<Divida> getDividas() {return dividas;}
+    public void setDividas(List<Divida> dividas) {this.dividas = dividas;}
 
     @Override
     public String toString() {

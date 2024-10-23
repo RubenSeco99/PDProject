@@ -3,10 +3,7 @@ package Cliente;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import Entidades.Convite;
-import Entidades.Despesas;
-import Entidades.Grupo;
-import Entidades.Utilizador;
+import Entidades.*;
 
 
 public class Comunicacao implements Serializable {
@@ -16,6 +13,7 @@ public class Comunicacao implements Serializable {
     private ArrayList<Grupo> grupos;
     private ArrayList<Convite> convites;
     private ArrayList<Despesas> despesa;
+    private ArrayList<Divida> dividas;
 
 
     public Comunicacao() {
@@ -50,8 +48,17 @@ public class Comunicacao implements Serializable {
         return despesa;
     }
 
+    public ArrayList<Divida> getDividas() {
+        return dividas;
+    }
+
+
     public void setDespesa(ArrayList<Despesas> despesa) {
         this.despesa = despesa;
+    }
+
+    public void setDividas(ArrayList<Divida> dividas) {
+        this.dividas = dividas;
     }
 
     @Override
@@ -65,4 +72,5 @@ public class Comunicacao implements Serializable {
         }
         return result;
     }
+
 }

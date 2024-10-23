@@ -53,6 +53,11 @@ class processServerRequest implements Runnable{
                     for(var d: response.getDespesa()){
                         System.out.println(d.toString());
                     }
+                } else if(response.getMensagem().equalsIgnoreCase("Sucesso, escolha a divida por id para efetuar pagamento")) {
+                    Cliente.utilizadorUpdate.setDividas(response.getDividas());
+                    for(var d: response.getDividas()){
+                        System.out.println(d.toString());
+                    }
                 }
                 if(response.getMensagem().equalsIgnoreCase("Servidor em baixo")){
                     System.out.println("\nServidor em baixo, clique em alguma tecla para sair\n");

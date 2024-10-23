@@ -1,6 +1,7 @@
 package BaseDeDados;
 
 import Entidades.Despesas;
+import Entidades.Divida;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -184,6 +185,29 @@ public class DespesaPagadoresDB {
             System.out.println("Erro ao atualizar estado da dívida: " + e.getMessage());
             return false;
         }
+    }
+
+    public ArrayList<Divida> getDividasPorEmail(String email) {
+        String sql = "SELECT * FROM Despesa_Pagadores WHERE utilizador_email = ?";
+        ArrayList<Divida> dividas = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Divida divida = new Divida();
+                    divida.setIdDespesa(rs.getInt("despesa_id"));
+                    divida.setUtilizadorEmail(rs.getString("utilizador_email"));
+                    divida.setValorDivida(rs.getDouble("valor_divida"));
+                    divida.setEstadoPagamento(rs.getString("estado_pagamento"));
+                    dividas.add(divida);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao obter dívidas por email: " + e.getMessage());
+        }
+
+        return dividas;
     }
 
 }

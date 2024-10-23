@@ -248,6 +248,55 @@ public class Funcoes {
         Cliente.valido = true;
     }
 
+    public static void fazerPagamento(Utilizador utilizador) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        boolean repeat = false;
+        Pagamento pagamento = new Pagamento();
+        System.out.print("Indique o id da divida que deseja pagar: ");
+        int idDespesa = Integer.parseInt(in.readLine());
+
+        if(utilizador.getDividas() == null || utilizador.getDividas().isEmpty()){
+            System.out.println("\nNao tem nenhuma divida\n");
+            Cliente.lastCommand ="";
+            return;
+        }
+
+        while(true) {
+            for(var d: utilizador.getDividas()){
+                if(idDespesa ==d.getIdDivida()) {
+                    repeat = true;
+                    break;
+                }
+            }
+            if(repeat)
+                break;
+            System.out.println("Opcao invalida, escolha uma opcao valida ou escreva 'sair'");
+            String opcao = in.readLine().trim();
+            if(opcao.equalsIgnoreCase("sair")) {
+                Cliente.valido = false;
+                return;
+            }
+        }
+
+        pagamento.setIdDespesa(idDespesa);
+        System.out.print("Indique o valor que deseja pagar: ");
+        double valor = Double.parseDouble(in.readLine());
+        if(valor <= 0){
+            System.out.println("Valor inválido. Insira um valor positivo.");
+            Cliente.valido = false;
+            return;
+        } else {
+            pagamento.setValorPagamento(valor);
+
+        }
+        pagamento.setGrupoNome(utilizador.getGrupoAtual().getNome());
+        utilizador.setPagamentoAtual(pagamento);
+
+        Cliente.lastCommand ="";
+        Cliente.comunicacao.setMensagem("Fazer pagamento com id");
+        Cliente.valido = true;
+    }
+
     public static void menuConvites(Utilizador utilizador) {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         Cliente.valido = false;
@@ -433,13 +482,6 @@ public class Funcoes {
                         running=false;
                         break;
                     case "10":
-                        Pagamento pagamento = new Pagamento();
-                        System.out.print("Indique o id da despesa que deseja pagar: ");
-                        pagamento.setIdDespesa(Integer.parseInt(in.readLine()));
-                        System.out.print("Indique o valor que deseja pagar: ");
-                        pagamento.setValorPagamento(Double.parseDouble(in.readLine()));
-                        pagamento.setGrupoNome(utilizador.getGrupoAtual().getNome());
-                        utilizador.setPagamentoAtual(pagamento);
                         Cliente.comunicacao.setMensagem("Fazer pagamento");
                         Cliente.lastCommand="Fazer pagamento";
                         Cliente.valido=true;
@@ -537,7 +579,7 @@ public class Funcoes {
         } else if(Cliente.lastCommand.equalsIgnoreCase("Enviar convite grupo")) {
             menuGrupoAtual(utilizador);
         } else if(Cliente.lastCommand.equalsIgnoreCase("Fazer pagamento")) {
-            menuGrupoAtual(utilizador);
+            fazerPagamento(utilizador);
         }  else if(Cliente.lastCommand.equalsIgnoreCase("Eliminar despesa")){
             eliminaDespesa(utilizador);
         } else if(Cliente.lastCommand.equalsIgnoreCase("Mudar nome grupo")){
