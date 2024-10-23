@@ -8,11 +8,10 @@ import Entidades.Grupo;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 import Uteis.FuncoesServidor;
-import Uteis.ServerBackUpSupport;
+import ServidorBackup.ServerBackUpSupport;
 
 import java.io.*;
 import java.net.*;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -686,6 +685,7 @@ class heartBeats implements Runnable{
                      ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
                     Oout.writeObject(messageBackUp);
                     dgram = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
+                    System.out.println("ENVIEI HEARTBEAT");
                 }
                 multiSocket.send(dgram);
             }

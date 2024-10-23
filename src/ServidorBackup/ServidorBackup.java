@@ -1,7 +1,5 @@
 package ServidorBackup;
 
-import Uteis.ServerBackUpSupport;
-
 import java.io.*;
 import java.net.*;
 
@@ -31,12 +29,12 @@ public class ServidorBackup {
             System.out.println("A directoria " + localDB + " nao existe!");
             return;
         }
-        // [PT] Verificar se a directoria é mesmo uma directoria
+
         if (!localDB.isDirectory()) {
             System.out.println("O caminho " + localDB + " nao se refere a uma directoria!");
             return;
         }
-        // [PT] Verificar se temos acesso de escrita na directoria
+
         if (!localDB.canWrite()) {
             System.out.println("Sem permissoes de escrita na directoria " + localDB);
             return;
@@ -46,6 +44,7 @@ public class ServidorBackup {
         Object received;
 
         try (MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
+            multiSocket.setSoTimeout(TIMEOUT);
             InetAddress groupAddress = InetAddress.getByName("230.44.44.44");
             NetworkInterface nif;
             try {
@@ -92,6 +91,34 @@ public class ServidorBackup {
                     }
 
                     System.out.println("Transferencia concluida (numero de blocos: " + contador + ")");
+                    multiSocket.leaveGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
+                    multiSocket.joinGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
+                    while (true) {
+                        // Recrie o DatagramPacket a cada iteração para evitar problemas de reutilização
+                        DatagramPacket receivedHeartBeat = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
+                        try {
+                            // Recebe o heartbeat UDP
+                            multiSocket.receive(receivedHeartBeat);
+
+                            try (ObjectInputStream Oinput = new ObjectInputStream(new ByteArrayInputStream(receivedHeartBeat.getData()))) {
+                                received = Oinput.readObject();
+
+                                if (received instanceof ServerBackUpSupport) {
+                                    serverSupport = (ServerBackUpSupport) received;
+                                }
+                                System.out.println("Porto recebido: " + serverSupport.getPortoTCP());
+                            } catch (ClassNotFoundException e) {
+                                System.out.println("Mensagem recebida de tipo inesperado! " + e);
+                            } catch (IOException e) {
+                                System.out.println("Impossibilidade de aceder ao conteudo da mensagem recebida! " + e);
+                            }
+                        } catch (SocketTimeoutException e) {
+                            System.out.println("Timeout ao receber heartbeat, esperando o proximo...");
+                        } catch (IOException e) {
+                            System.out.println("Erro ao receber o heartbeat via UDP: " + e);
+                            break; // Opcional: Se um erro grave ocorrer, você pode querer sair do loop.
+                        }
+                    }
 
                 } catch (UnknownHostException e) {
                 System.out.println("Destino desconhecido:\n\t" + e);
@@ -113,27 +140,6 @@ public class ServidorBackup {
             } catch (Exception e) {
                 System.out.println();
                 System.out.println("Excepcao: " + e);
-            }
-
-
-            byte[] buffer = new byte[MAX_SIZE];
-            while (true) {
-                multiSocket.setSoTimeout(TIMEOUT);
-                try {
-                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                    multiSocket.receive(packet);
-
-                    try (ByteArrayInputStream Bin = new ByteArrayInputStream(packet.getData());
-                         ObjectInputStream Oin = new ObjectInputStream(Bin)) {
-                        String receivedMessage = (String) Oin.readObject();
-                        System.out.println("Heartbeat recebido da porta: " + receivedMessage);
-                    } catch (ClassNotFoundException e) {
-                        System.out.println("Erro ao desserializar o objeto: " + e);
-                    }
-                } catch (SocketTimeoutException e) {
-                    System.out.println("Nenhum heartbeat recebido nos ultimos 30 segundos. A fechar o servidor backup...");
-                    break;
-                }
             }
         } catch (SocketException e) {
             System.out.println("Ocorreu um erro no socket UDP:\n\t" + e);
