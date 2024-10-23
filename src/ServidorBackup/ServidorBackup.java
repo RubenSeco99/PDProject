@@ -19,6 +19,7 @@ public class ServidorBackup {
         fileName = "BaseDadosBackup.db";
         File localDB = new File(localFilePath);
         FileOutputStream localFileOutputStream = null;
+        DatagramPacket receivedPacket;
 
         if (localDB.listFiles() != null && localDB.listFiles().length > 0) {
             System.out.println("A directoria " + localDB + " nao está vazia!");
@@ -44,7 +45,6 @@ public class ServidorBackup {
         Object received;
 
         try (MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
-            multiSocket.setSoTimeout(TIMEOUT);
             InetAddress groupAddress = InetAddress.getByName("230.44.44.44");
             NetworkInterface nif;
             try {
@@ -54,7 +54,7 @@ public class ServidorBackup {
             }
 
             multiSocket.joinGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
-            DatagramPacket receivedPacket = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
+            receivedPacket = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
             multiSocket.receive(receivedPacket);
             try(ObjectInputStream oin = new ObjectInputStream(new ByteArrayInputStream(receivedPacket.getData()))) {
                 received = oin.readObject();
@@ -87,39 +87,35 @@ public class ServidorBackup {
                     while ((bytesRead = reader.read(buffer)) > 0) {  // Lê blocos de dados do servidor
                         System.out.println("Bloco lido");
                         localFileOutputStream.write(buffer, 0, bytesRead);  // Escreve no ficheiro local
-                        contador++;  // Contador de blocos
+                        contador++;
                     }
 
                     System.out.println("Transferencia concluida (numero de blocos: " + contador + ")");
-                    multiSocket.leaveGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
-                    multiSocket.joinGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
-                    while (true) {
-                        // Recrie o DatagramPacket a cada iteração para evitar problemas de reutilização
-                        DatagramPacket receivedHeartBeat = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
-                        try {
-                            // Recebe o heartbeat UDP
-                            multiSocket.receive(receivedHeartBeat);
+                    multiSocket.setSoTimeout(TIMEOUT);
 
-                            try (ObjectInputStream Oinput = new ObjectInputStream(new ByteArrayInputStream(receivedHeartBeat.getData()))) {
-                                received = Oinput.readObject();
+                    try {
+                        while (true) {
+                            receivedPacket = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
+                            multiSocket.receive(receivedPacket);
+
+                            try (ObjectInputStream Oin = new ObjectInputStream(new ByteArrayInputStream(receivedPacket.getData()))) {
+                                received = Oin.readObject();
 
                                 if (received instanceof ServerBackUpSupport) {
                                     serverSupport = (ServerBackUpSupport) received;
+                                    System.out.println("Porto recebido: " + serverSupport.getPortoTCP());
                                 }
-                                System.out.println("Porto recebido: " + serverSupport.getPortoTCP());
                             } catch (ClassNotFoundException e) {
                                 System.out.println("Mensagem recebida de tipo inesperado! " + e);
                             } catch (IOException e) {
                                 System.out.println("Impossibilidade de aceder ao conteudo da mensagem recebida! " + e);
                             }
-                        } catch (SocketTimeoutException e) {
-                            System.out.println("Timeout ao receber heartbeat, esperando o proximo...");
-                        } catch (IOException e) {
-                            System.out.println("Erro ao receber o heartbeat via UDP: " + e);
-                            break; // Opcional: Se um erro grave ocorrer, você pode querer sair do loop.
                         }
+                    } catch (SocketTimeoutException e) {
+                        System.out.println("Timeout ao receber heartbeat, esperando o proximo...");
+                    } catch (IOException e) {
+                        System.out.println("Erro ao receber o heartbeat via UDP: " + e);
                     }
-
                 } catch (UnknownHostException e) {
                 System.out.println("Destino desconhecido:\n\t" + e);
                 } catch (NumberFormatException e) {

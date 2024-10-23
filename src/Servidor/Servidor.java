@@ -687,10 +687,11 @@ class heartBeats implements Runnable{
             }
 
             multiSocket.joinGroup(new InetSocketAddress(groupAdress, PORTOBACKUPUDP),nif);
-            ServerBackUpSupport messageBackUp = new ServerBackUpSupport(5001);  //PREENCHE LOGO O PORTO PARA FAZER HEARTBEATS
+             //PREENCHE LOGO O PORTO PARA FAZER HEARTBEATS
 
             while(true){
                 Thread.sleep(10000);
+                ServerBackUpSupport messageBackUp = new ServerBackUpSupport(5001);
                 //Colocar aqui a versao => messageBackUp.setVersao();
                 try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
                      ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
@@ -753,7 +754,7 @@ class conectaServidoresBackup implements Runnable {
                                 out.flush();
                             }
                         } while (nbytes > 0);
-
+                            out.close();
                         System.out.println("Transferência concluída para o servidor backup.");
                     } catch (IOException e) {
                         System.out.println("Erro ao ler ou enviar o ficheiro: " + e.getMessage());
