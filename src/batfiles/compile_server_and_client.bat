@@ -24,3 +24,4 @@ start cmd /k "java -cp bin ServidorBackup.ServidorBackup src/BaseDeDadosBackUp"
 
 rem Pausar o terminal original para ver mensagens de erro ou saída
 pause
+w

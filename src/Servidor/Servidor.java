@@ -452,6 +452,7 @@ class processaClienteThread implements Runnable {
                                     double valor = pedidoCliente.getDespesa().getFirst().getValor() / emails.size();
                                     if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente", pedidoCliente.getUtilizador().getEmail())){
                                         System.out.println("Despesa inserida com sucesso");
+                                        System.out.println("Despesa inserida com sucesso");
                                         respostaSaida.setMensagem("Despesa inserida com sucesso");
                                     }else{
                                         respostaSaida.setMensagem("Erro a distribuir a despesa pelos membros do grupo");
@@ -545,7 +546,7 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro ao selecionar as despesas para editar");
                                 respostaSaida.setMensagem("Erro ao selecionar as despesas para editar");
                             }
-                        }else if(pedidoCliente.getMensagem().contains("Editar despesa com id")){
+                        } else if(pedidoCliente.getMensagem().contains("Editar despesa com id")){
                             respostaSaida = pedidoCliente;
                             String mensagem = pedidoCliente.getMensagem();
                             String[] partes = mensagem.split(" ");
@@ -559,9 +560,37 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Insucesso a editar os dados da despesa");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")){
+                        } else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")) {
                             respostaSaida = pedidoCliente;
-
+                            int idDespesa = pedidoCliente.getUtilizador().getPagamentoAtual().getIdDespesa();
+                            double valorDivida = despesaPagadoresDB.getDividaPorId(idDespesa, pedidoCliente.getUtilizador().getEmail());
+                            double valorFinal = valorDivida - pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento();
+                            if(valorFinal <= 0) {
+                                valorFinal = 0;
+                                if(despesaPagadoresDB.atualizarEstadoDivida(idDespesa, pedidoCliente.getUtilizador().getEmail(), "Pago")) {
+                                    if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
+                                        pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
+                                                pedidoCliente.getUtilizador().getEmail(),
+                                                pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
+                                                pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
+                                        respostaSaida.setMensagem("Pagamento completo com sucesso");
+                                    } else {
+                                        respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                    }
+                                } else {
+                                    respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                }
+                            } else {
+                                if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
+                                    pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
+                                            pedidoCliente.getUtilizador().getEmail(),
+                                            pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
+                                            pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
+                                    respostaSaida.setMensagem("Pagamento efetuado com sucesso");
+                                } else {
+                                    respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                }
+                            }
                         }
                     }
                     Oout.writeObject(respostaSaida);

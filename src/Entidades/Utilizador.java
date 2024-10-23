@@ -14,6 +14,7 @@ public class Utilizador implements Serializable {
     private List<Grupo> grupos;
     private List<Convite> convites;
     private Grupo grupo_atual;
+    private Pagamento pagamento_atual;
     private List<Despesas> despesas;
 
     public Utilizador(String nome, String password, int telefone, String email) {
@@ -24,6 +25,7 @@ public class Utilizador implements Serializable {
         this.ativo = 0;
         this.grupos = new ArrayList<>();
         this.grupo_atual = new Grupo();
+        this.pagamento_atual = new Pagamento();
         this.despesas = new ArrayList<>();
     }
     public Utilizador() {
@@ -46,6 +48,8 @@ public class Utilizador implements Serializable {
     public void setGrupos(List<Grupo> grupos) { this.grupos = grupos; }
     public List<Convite> getConvites() {return convites;}
     public Grupo getGrupoAtual() {return grupo_atual;}
+    public Pagamento getPagamentoAtual() {return pagamento_atual;}
+    public void setPagamentoAtual(Pagamento pagamento_atual) {this.pagamento_atual = pagamento_atual;}
     public boolean checkConviteExiste(String nome){
         for(var convite:this.getConvites())
             if(convite.getNomeGrupo().equalsIgnoreCase(nome)) {

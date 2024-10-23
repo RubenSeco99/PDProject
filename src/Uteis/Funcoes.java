@@ -335,7 +335,8 @@ public class Funcoes {
                           7. Exportar despesas (csv)
                           8. Editar despesa
                           9. Eliminar despesa
-                          10. Sair do grupo
+                          10. Fazer pagamento
+                          11. Sair do grupo
                           0. Sair
                         %n""", utilizador.getGrupoAtual().getNome());
                 System.out.print("Opção: ");
@@ -432,6 +433,19 @@ public class Funcoes {
                         running=false;
                         break;
                     case "10":
+                        Pagamento pagamento = new Pagamento();
+                        System.out.print("Indique o id da despesa que deseja pagar: ");
+                        pagamento.setIdDespesa(Integer.parseInt(in.readLine()));
+                        System.out.print("Indique o valor que deseja pagar: ");
+                        pagamento.setValorPagamento(Double.parseDouble(in.readLine()));
+                        pagamento.setGrupoNome(utilizador.getGrupoAtual().getNome());
+                        utilizador.setPagamentoAtual(pagamento);
+                        Cliente.comunicacao.setMensagem("Fazer pagamento");
+                        Cliente.lastCommand="Fazer pagamento";
+                        Cliente.valido=true;
+                        running=false;
+                        break;
+                    case "11":
                         Cliente.comunicacao.setMensagem("Sair grupo");
                         Cliente.valido=true;
                         running=false;
@@ -522,7 +536,9 @@ public class Funcoes {
             menuGrupoAtual(utilizador);
         } else if(Cliente.lastCommand.equalsIgnoreCase("Enviar convite grupo")) {
             menuGrupoAtual(utilizador);
-        } else if(Cliente.lastCommand.equalsIgnoreCase("Eliminar despesa")){
+        } else if(Cliente.lastCommand.equalsIgnoreCase("Fazer pagamento")) {
+            menuGrupoAtual(utilizador);
+        }  else if(Cliente.lastCommand.equalsIgnoreCase("Eliminar despesa")){
             eliminaDespesa(utilizador);
         } else if(Cliente.lastCommand.equalsIgnoreCase("Mudar nome grupo")){
             menuGrupoAtual(utilizador);

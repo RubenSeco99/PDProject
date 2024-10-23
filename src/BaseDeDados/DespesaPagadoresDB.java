@@ -140,5 +140,50 @@ public class DespesaPagadoresDB {
         }
     }
 
+    public boolean atualizarValorDespesa(int idDespesa, double novoValor, String emailQuemPagou) {
+        String sql = "UPDATE Despesa_Pagadores SET valor_divida = ? WHERE despesa_id = ? AND utilizador_email = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setDouble(1, novoValor);
+            pstmt.setInt(2, idDespesa);
+            pstmt.setString(3, emailQuemPagou);
+
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println("Valor da despesa atualizado com sucesso.");
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao atualizar valor da despesa: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Double getDividaPorId(int idDespesa, String email) {
+        String sql = "SELECT valor_divida FROM Despesa_Pagadores WHERE despesa_id = ? AND utilizador_email = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, idDespesa);
+            pstmt.setString(2, email);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("valor_divida");
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao obter valor da dívida: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean atualizarEstadoDivida(int idDespesa, String email, String estado) {
+        String sql = "UPDATE Despesa_Pagadores SET estado_pagamento = ? WHERE despesa_id = ? AND utilizador_email = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, estado);
+            pstmt.setInt(2, idDespesa);
+            pstmt.setString(3, email);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Erro ao atualizar estado da dívida: " + e.getMessage());
+            return false;
+        }
+    }
 
 }

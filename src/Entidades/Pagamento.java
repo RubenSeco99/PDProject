@@ -1,13 +1,16 @@
 package Entidades;
 
+import java.io.Serializable;
 import java.sql.Date;
 
-public class Pagamento {
+public class Pagamento implements Serializable {
 
     private String quemPagou;
     private String quemRecebeu;
     private double valorPagamento;
     private java.sql.Date dataPagamento;
+    private String grupoNome;
+    private int idDespesa;
 
     public Pagamento() {}
 
@@ -19,4 +22,8 @@ public class Pagamento {
     public void setValorPagamento(double valorPagamento) {this.valorPagamento = valorPagamento;}
     public Date getDataPagamento() {return dataPagamento;}
     public void setDataPagamento(Date dataPagamento) {this.dataPagamento = dataPagamento;}
+    public int getIdDespesa() {return idDespesa;}
+    public void setIdDespesa(int idDespesa) {this.idDespesa = idDespesa;}
+    public String getGrupoNome() {return grupoNome;}
+    public void setGrupoNome(String grupoNome) {this.grupoNome = grupoNome;}
 }
