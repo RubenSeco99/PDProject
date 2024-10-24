@@ -124,8 +124,9 @@ class processaClienteThread implements Runnable {
     private boolean EXIT = false;
     List <notificaThread> notificaThreads;
     private final Object lock;
+    private ServerBackUpSupport messageSBS;
 
-    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection, List<notificaThread> clienteSockets, Object lock) {
+    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection, List<notificaThread> clienteSockets, Object lock, ServerBackUpSupport messageSBS) {
         this.clienteSocket = clienteSocket;
         this.connection =  connection;
         this.running = true;
@@ -138,6 +139,7 @@ class processaClienteThread implements Runnable {
         this.pagamentoDB = new PagamentoDB(connection);
         this.notificaThreads = clienteSockets;
         this.lock = lock;
+        this.messageSBS = messageSBS;
     }
 
     @Override
@@ -672,6 +674,11 @@ class processaClienteThread implements Runnable {
 class heartBeats implements Runnable{
     //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
     static final int PORTOBACKUPUDP = 4444;
+    ServerBackUpSupport messageSBS;
+
+    public heartBeats(ServerBackUpSupport messageSBS) {
+        this.messageSBS = messageSBS;
+    }
 
     @Override
     public void run(){
@@ -687,15 +694,13 @@ class heartBeats implements Runnable{
             }
 
             multiSocket.joinGroup(new InetSocketAddress(groupAdress, PORTOBACKUPUDP),nif);
-             //PREENCHE LOGO O PORTO PARA FAZER HEARTBEATS
 
             while(true){
                 Thread.sleep(10000);
-                ServerBackUpSupport messageBackUp = new ServerBackUpSupport(5001);
                 //Colocar aqui a versao => messageBackUp.setVersao();
                 try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
                      ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
-                    Oout.writeObject(messageBackUp);
+                    Oout.writeObject(messageSBS);
                     dgram = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
                     System.out.println("ENVIEI HEARTBEAT");
                 }
@@ -775,7 +780,6 @@ public class Servidor {
     public static String EMAILSEND;
     public static String NOMEGRUPO;
     public static String EMAILREMETENTE;
-    public static String queryBackupServer;
     public static volatile boolean encerraServidor = false;
 
     public static void main(String[] args) throws IOException {
@@ -788,7 +792,7 @@ public class Servidor {
         int servicePort = Integer.parseInt(args[0]);
         final String DBPATH = args[1];
         java.sql.Connection connection = ConnectDB.criarBaseDeDados(DBPATH);
-
+        ServerBackUpSupport messageSBS = new ServerBackUpSupport(5001);
         List<notificaThread> clienteSockets = Collections.synchronizedList(new ArrayList<>());
         Object lock = new Object();
 
@@ -802,7 +806,7 @@ public class Servidor {
             encerraServidorTh.setDaemon(true);
             encerraServidorTh.start();
 
-            Thread heartbeats = new Thread(new heartBeats());
+            Thread heartbeats = new Thread(new heartBeats(messageSBS));
             heartbeats.setDaemon(true);
             heartbeats.start();
 
@@ -818,7 +822,7 @@ public class Servidor {
                     break;
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets, lock));
+                    Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets, lock, messageSBS));
                     td.setDaemon(true);
                     td.start();
                 }catch (IOException e){

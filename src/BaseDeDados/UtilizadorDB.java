@@ -7,6 +7,7 @@ import java.util.List;
 
 public class UtilizadorDB {
     private final Connection connection;
+    private String querySBS;
     public UtilizadorDB(Connection connection) {
         this.connection = connection;
     }
