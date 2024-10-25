@@ -8,9 +8,12 @@ import java.util.List;
 
 public class UtilizadorGrupoDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
     public UtilizadorGrupoDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
+
     public boolean insertUtilizadorGrupo(String utilizadorEmail, String nomeGrupo) {
         try {
             String queryInsert = "INSERT INTO Utilizador_Grupo (utilizador_email, grupo_nome) VALUES (?, ?)";
@@ -18,6 +21,7 @@ public class UtilizadorGrupoDB {
             preparedStatementInsert.setString(1, utilizadorEmail); // Email do utilizador
             preparedStatementInsert.setString(2, nomeGrupo); // Nome do grupo
             preparedStatementInsert.executeUpdate();
+            versaoDB.incrementarVersao();
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir utilizador no grupo: " + e.getMessage());
@@ -28,16 +32,12 @@ public class UtilizadorGrupoDB {
         String queryDelete = "DELETE FROM Utilizador_Grupo WHERE utilizador_email = ? AND grupo_nome = ?";
 
         try (PreparedStatement preparedStatementDelete = connection.prepareStatement(queryDelete)) {
-            // Definir os parâmetros do preparedStatement
             preparedStatementDelete.setString(1, email);
             preparedStatementDelete.setString(2, grupoNome);
-
-            // Execute a instrução de DELETE
             int rowsAffected = preparedStatementDelete.executeUpdate();
-
-            // Verificar se algum registro foi afetado
             if (rowsAffected > 0) {
                 System.out.println("Utilizador com email: " + email + " removido do grupo: " + grupoNome);
+                versaoDB.incrementarVersao();
                 return true;
             } else {
                 System.out.println("Nenhum utilizador encontrado com o email: " + email + " no grupo: " + grupoNome);
@@ -48,7 +48,6 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
-
     public boolean removeTodosUtilizadoresDoGrupo(String grupoNome) {
         boolean sucesso = true;
         try {
@@ -68,7 +67,8 @@ public class UtilizadorGrupoDB {
             System.out.println("Erro ao remover utilizadores do grupo: " + e.getMessage());
             sucesso = false;
         }
-        return sucesso; // Retorna true se todos forem removidos com sucesso, false se houver falhas
+        versaoDB.incrementarVersao();
+        return sucesso;
     }
     public boolean updateNomeGrupo(String nomeAtual,String nomeNovo) {
         try {
@@ -78,8 +78,10 @@ public class UtilizadorGrupoDB {
             preparedStatement.setString(2,nomeAtual);
             int rowsUpdated = preparedStatement.executeUpdate();
 
-            if(rowsUpdated>0)
+            if(rowsUpdated>0) {
+                versaoDB.incrementarVersao();
                 return true;
+            }
 
         } catch (SQLException e) {
             System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
@@ -140,7 +142,6 @@ public class UtilizadorGrupoDB {
         }
         return grupos;
     }
-
     public List<Utilizador> selectUtilizadoresPorGrupo(String grupoNome) {
         List<Utilizador> utilizadores = new ArrayList<>();
         try {
@@ -161,5 +162,4 @@ public class UtilizadorGrupoDB {
         }
         return utilizadores;
     }
-
 }

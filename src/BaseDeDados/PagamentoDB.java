@@ -8,15 +8,16 @@ import Entidades.Pagamento;
 
 public class PagamentoDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
     public PagamentoDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
 
     public boolean inserirPagamento(String quemPagou, String quemRecebeu, double valorPagamento, String grupoNome) {
         String sql = "INSERT INTO Pagamento (quem_pagou, quem_recebeu, valor_pagamento, data_pagamento, grupo_nome) VALUES (?, ?, ?, ?, ?)";
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
-        // Criar uma data formatada da data atual do sistema
         String dataFormatada = dateFormat.format(new java.util.Date());
         System.out.println(quemRecebeu);
         System.out.println(quemPagou);
@@ -29,6 +30,7 @@ public class PagamentoDB {
 
             int rowsInserted = pstmt.executeUpdate();
             if (rowsInserted > 0) {
+                versaoDB.incrementarVersao();
                 System.out.println("Pagamento inserido com sucesso!");
                 return true;
             }
@@ -37,6 +39,4 @@ public class PagamentoDB {
         }
         return false;
     }
-
-
 }

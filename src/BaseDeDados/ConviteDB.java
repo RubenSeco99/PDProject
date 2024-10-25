@@ -8,9 +8,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 public class ConviteDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
     public ConviteDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
+
     public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
     ArrayList<Convite> convites = new ArrayList<>();
     try {
@@ -42,8 +45,10 @@ public class ConviteDB {
             preparedStatement.setString(2,nomeAtual);
             int rowsUpdated = preparedStatement.executeUpdate();
 
-            if(rowsUpdated>0)
+            if(rowsUpdated>0) {
+                versaoDB.incrementarVersao();
                 return true;
+            }
 
         } catch (SQLException e) {
             System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
@@ -61,6 +66,7 @@ public class ConviteDB {
 
             if (rowsDeleted > 0) {
                 System.out.println("Convite removido com sucesso.");
+                versaoDB.incrementarVersao();
                 return true;
             } else {
                 System.out.println("Nenhum convite encontrado para ser removido.");
@@ -95,10 +101,12 @@ public class ConviteDB {
             preparedStatement.setString(2, convite.getRemetente());
             preparedStatement.setString(3, convite.getDestinatario());
             preparedStatement.executeUpdate();
+            versaoDB.incrementarVersao();
         } catch (SQLException e) {
             System.out.println("Erro ao inserir convite: " + e.getMessage());
         }
     }
+
     public boolean removeTodosConvitesPorGrupo(String nomeGrupo) {
         try {
             String queryDelete = "DELETE FROM Convites_Grupo WHERE nome_grupo = ?";
@@ -118,6 +126,7 @@ public class ConviteDB {
         }
         return false;
     }
+
     public boolean checkConviteExistanceByGrupo(String nomeGrupo) {
         try {
             String query = "SELECT COUNT(*) FROM Convites_Grupo WHERE nome_grupo = ?";

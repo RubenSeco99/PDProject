@@ -88,8 +88,15 @@ public class ConnectDB {
             stmt.executeUpdate(tabelaPagamento);
 
             String tabelaVersao = "CREATE TABLE IF NOT EXISTS Versao ("
-                    + "versao_numero INTEGER NOT NULL);";  // Número sequencial da versão
+                    + "versao_numero INTEGER NOT NULL);";
             stmt.executeUpdate(tabelaVersao);
+
+            String verificaVazio = "SELECT COUNT(*) FROM Versao";
+            ResultSet resultSet = stmt.executeQuery(verificaVazio);
+            if (resultSet.next() && resultSet.getInt(1) == 0) {
+                String inserirValorInicial = "INSERT INTO Versao (versao_numero) VALUES (1)";
+                stmt.executeUpdate(inserirValorInicial);
+            }
 
             System.out.println("Todas as tabelas foram criadas com sucesso!");
 

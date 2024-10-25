@@ -5,9 +5,13 @@ import java.sql.*;
 
 public class GrupoDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
+
     public GrupoDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
+
     private boolean verificaNomeGrupo(String nome) throws SQLException {
         String query = "SELECT * FROM Grupo WHERE nome = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -15,6 +19,7 @@ public class GrupoDB {
         ResultSet resultSet = preparedStatement.executeQuery();
         return resultSet.next(); // Retorna true se já existir grupo com este nome
     }
+
     public boolean insertGrupo(Grupo grupo, String criadorEmail) {
         try {
             if (verificaNomeGrupo(grupo.getNome())) {
@@ -34,6 +39,7 @@ public class GrupoDB {
                 int grupoId = generatedKeys.getInt(1);
                 System.out.println("Grupo inserido com sucesso. ID: " + grupoId);
             }
+            versaoDB.incrementarVersao();
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir grupo: " + e.getMessage());
@@ -41,23 +47,6 @@ public class GrupoDB {
         }
     }
 
-    public Grupo selectGrupo(String nome) {
-        try {
-            String query = "SELECT * FROM Grupo WHERE nome = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, nome);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                Grupo grupo = new Grupo();
-                grupo.setId(resultSet.getInt("id"));
-                grupo.setNome(resultSet.getString("nome"));
-                return grupo;
-            }
-        } catch (SQLException e) {
-            System.out.println("Erro ao selecionar grupo: " + e.getMessage());
-        }
-        return null;
-    }
     public boolean updateNomeGrupo(String nomeAtual, String nomeNovo) {
         try {
             if (verificaNomeGrupo(nomeNovo) && !nomeAtual.equals(nomeNovo)) {
@@ -70,12 +59,14 @@ public class GrupoDB {
             preparedStatement.setString(1, nomeNovo);
             preparedStatement.setString(2, nomeAtual);
             preparedStatement.executeUpdate();
+            versaoDB.incrementarVersao();
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar o nome do grupo: " + e.getMessage());
             return false;
         }
     }
+
     public boolean deleteGrupo(String nomeGrupo) {
         try {
             String deleteGrupo = "DELETE FROM Grupo WHERE nome = ?";
@@ -84,6 +75,7 @@ public class GrupoDB {
             int rowsAffected = preparedStatementGrupo.executeUpdate();
             if (rowsAffected > 0) {
                 System.out.println("Grupo '" + nomeGrupo + "' removido com sucesso.");
+                versaoDB.incrementarVersao();
                 return true;
             } else {
                 System.out.println("Erro: Grupo não encontrado.");
@@ -95,5 +87,4 @@ public class GrupoDB {
             return false;
         }
     }
-
 }

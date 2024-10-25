@@ -10,12 +10,11 @@ import java.util.List;
 
 public class DespesaDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
     public DespesaDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
-    //metodos criar despesa
-    //metodo apagar despesa
-    //ver despesa (valores despesa vao ter de ir para a tabela despesapagadores ...)
 
     public int inserirDespesa(String descricao, double valor, Date data, String grupoNome, String criadorEmail) {
         String sql = "INSERT INTO Despesa (descricao, valor, data, grupo_nome, criador_email) VALUES (?, ?, ?, ?, ?)";
@@ -35,6 +34,7 @@ public class DespesaDB {
                     if (generatedKeys.next()) {
                         int despesaId = generatedKeys.getInt(1); // Obtém o ID gerado
                         System.out.println("Despesa inserida com sucesso! ID da despesa: " + despesaId);
+                        versaoDB.incrementarVersao();
                         return despesaId; // Retorna o ID gerado da despesa
                     }
                 }
@@ -154,6 +154,7 @@ public class DespesaDB {
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, idDespesa);
             int rowsAffected = pstmt.executeUpdate();
+            versaoDB.incrementarVersao();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao eliminar despesa: " + e.getMessage());
@@ -172,8 +173,8 @@ public class DespesaDB {
             pstmt.setDouble(2, novoValor);
             pstmt.setString(3, dataFormatada);
             pstmt.setInt(4, idDespesa);
-
             int rowsAffected = pstmt.executeUpdate();
+            versaoDB.incrementarVersao();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar despesa: " + e.getMessage());

@@ -8,8 +8,10 @@ import java.util.List;
 public class UtilizadorDB {
     private final Connection connection;
     private String querySBS;
+    private VersaoDB versaoDB;
     public UtilizadorDB(Connection connection) {
         this.connection = connection;
+        this.versaoDB = new VersaoDB(connection);
     }
     public void insertUtilizador(Utilizador utilizador){
         try {
@@ -21,6 +23,7 @@ public class UtilizadorDB {
             preparedStatement.setString(4, utilizador.getEmail());
             preparedStatement.setInt(5, utilizador.getAtivo());
             preparedStatement.executeUpdate();
+            versaoDB.incrementarVersao();
         } catch (SQLException e) {
             System.out.println("Erro ao inserir utilizador: " + e.getMessage());
         }
@@ -97,6 +100,7 @@ public class UtilizadorDB {
             preparedStatement.setInt(4, utilizador.getAtivo());
             preparedStatement.setString(5, utilizador.getEmail());
             preparedStatement.executeUpdate();
+            versaoDB.incrementarVersao();
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar utilizador: " + e.getMessage());
         }

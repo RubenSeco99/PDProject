@@ -12,8 +12,10 @@ import java.util.List;
 
 public class DespesaPagadoresDB {
     private final Connection connection;
+    private VersaoDB versaoDB;
     public DespesaPagadoresDB(Connection connection) {
         this.connection = connection;
+        versaoDB = new VersaoDB(connection);
     }
 
     public boolean inserirDespesaPagadores(int despesaId, List<String> emails, double valorDivida, String estadoPagamento, String pagador) {
@@ -29,7 +31,7 @@ public class DespesaPagadoresDB {
                 }else{
                     pstmt.setString(4, estadoPagamento);
                 }
-                pstmt.addBatch(); // Adiciona a inserção ao lote (batch)
+                pstmt.addBatch();
             }
 
             int[] results = pstmt.executeBatch(); // Executa todas as inserções em lote
@@ -40,6 +42,7 @@ public class DespesaPagadoresDB {
                 }
             }
             System.out.println("Todos os pagadores foram inseridos com sucesso.");
+            versaoDB.incrementarVersao();
             return true; // Inserções bem-sucedidas
         } catch (SQLException e) {
             System.out.println("Erro ao inserir pagadores na tabela Despesa_Pagadores: " + e.getMessage());
@@ -95,7 +98,8 @@ public class DespesaPagadoresDB {
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, despesaId);
             int rowsAffected = pstmt.executeUpdate();
-            return rowsAffected > 0; //
+            versaoDB.incrementarVersao();
+            return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao eliminar despesas pagadores: " + e.getMessage());
             return false;
@@ -107,7 +111,6 @@ public class DespesaPagadoresDB {
         String atualizarDividaSql = "UPDATE Despesa_Pagadores SET valor_divida = ? WHERE despesa_id = ?";
 
         try {
-            // Passo 1: Contar o número de linhas associadas ao despesa_id
             int numeroLinhas = 0;
             try (PreparedStatement contarStmt = connection.prepareStatement(contarLinhasSql)) {
                 contarStmt.setInt(1, despesaId);
@@ -117,21 +120,17 @@ public class DespesaPagadoresDB {
                 }
             }
 
-            // Verificar se há linhas para evitar divisão por zero
             if (numeroLinhas == 0) {
                 System.out.println("Nenhuma linha encontrada para o despesa_id: " + despesaId);
                 return false;
             }
 
-            // Passo 2: Calcular o valor médio
             double valorPorLinha = novoValorTotal / numeroLinhas;
-
-            // Passo 3: Atualizar o valor_divida de cada linha
             try (PreparedStatement atualizarStmt = connection.prepareStatement(atualizarDividaSql)) {
                 atualizarStmt.setDouble(1, valorPorLinha);
                 atualizarStmt.setInt(2, despesaId);
                 int rowsAffected = atualizarStmt.executeUpdate();
-                // Verifica se alguma linha foi atualizada
+                versaoDB.incrementarVersao();
                 return rowsAffected > 0;
             }
 
@@ -151,6 +150,7 @@ public class DespesaPagadoresDB {
 
             int rowsAffected = pstmt.executeUpdate();
             System.out.println("Valor da despesa atualizado com sucesso.");
+            versaoDB.incrementarVersao();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar valor da despesa: " + e.getMessage());
@@ -180,6 +180,7 @@ public class DespesaPagadoresDB {
             pstmt.setInt(2, idDespesa);
             pstmt.setString(3, email);
             int rowsAffected = pstmt.executeUpdate();
+            versaoDB.incrementarVersao();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar estado da dívida: " + e.getMessage());

@@ -4,7 +4,7 @@ rem Navegar até a pasta src onde estão os arquivos Java
 cd..
 
 rem Compilar todos os arquivos .java e colocar os binários na pasta bin
-javac -d ../bin Cliente/*.java Servidor/*.java ServidorBackup/*.java
+javac -d ../bin Cliente/*.java Servidor/*.java
 
 rem Voltar para o diretório principal do projeto
 cd ..
@@ -18,10 +18,5 @@ ping -n 2 127.0.0.1 >null
 rem Abrir uma nova janela para iniciar o Cliente
 start cmd /k "java -cp bin Cliente.Cliente localhost 5000"
 
-ping -n 2 127.0.0.1 >null
-
-start cmd /k "java -cp bin ServidorBackup.ServidorBackup src/BaseDeDadosBackUp"
-
 rem Pausar o terminal original para ver mensagens de erro ou saída
 pause
-w
