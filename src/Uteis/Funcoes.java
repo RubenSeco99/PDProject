@@ -211,6 +211,7 @@ public class Funcoes {
             opcao = in.readLine().trim();
             if(opcao.equalsIgnoreCase("sair")) {
                 Cliente.valido = false;
+                Cliente.lastCommand = "";
                 return;
             }
         }
@@ -274,6 +275,7 @@ public class Funcoes {
             String opcao = in.readLine().trim();
             if(opcao.equalsIgnoreCase("sair")) {
                 Cliente.valido = false;
+                Cliente.lastCommand = "";
                 return;
             }
         }
@@ -630,6 +632,7 @@ public class Funcoes {
             }
         }
     }
+
     public static void menuUtilizadoresSemLogin(Utilizador utilizador){
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int op ;
@@ -666,6 +669,7 @@ public class Funcoes {
             throw new RuntimeException(e);
         }
     }
+
     public static void Menu(Utilizador utilizador) throws IOException, InterruptedException {
         Thread.sleep(150);
         if(!Cliente.registado){
