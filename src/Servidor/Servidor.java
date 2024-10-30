@@ -723,7 +723,6 @@ class conectaServidoresBackup implements Runnable {
                     //VAI LER O FICHEIRO DA BASE DE DADOS E ENVIA POR CHUNKS
                     try (FileInputStream fileInputStream = new FileInputStream(databaseFile)) {
                         OutputStream out = backupServerSocket.getOutputStream();
-
                         do {
                             nbytes = fileInputStream.read(fileChunk);
                             if (nbytes != -1) {

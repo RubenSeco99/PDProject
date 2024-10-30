@@ -45,8 +45,8 @@ public class DespesaPagadoresDB {
             }
 
             System.out.println("Todos os pagadores foram inseridos com sucesso.");
-            versaoDB.incrementarVersao();
             for (String email : emails) {
+                versaoDB.incrementarVersao();
                 String estadoPag = email.equalsIgnoreCase(pagador) ? "Pago" : estadoPagamento;
                 backupSupport.setQuery(sql);
                 backupSupport.setParametros(List.of(despesaId, email, valorDivida, estadoPag));

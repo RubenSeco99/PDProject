@@ -1,6 +1,5 @@
 package Cliente;
 
-import Entidades.Despesas;
 import Entidades.Utilizador;
 import Uteis.Funcoes;
 
@@ -106,8 +105,6 @@ public class Cliente {
 
         InetAddress serverAddr;
         int serverPort;
-
-        Despesas despesas;
 
         processServerRequest serverRequest;
         Thread td1;
