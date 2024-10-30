@@ -2,6 +2,7 @@ package BaseDeDados;
 
 import Entidades.Despesas;
 import Entidades.Divida;
+import ServidorBackup.ServerBackUpSupport;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,9 +14,12 @@ import java.util.List;
 public class DespesaPagadoresDB {
     private final Connection connection;
     private VersaoDB versaoDB;
-    public DespesaPagadoresDB(Connection connection) {
+    private final ServerBackUpSupport backupSupport;
+
+    public DespesaPagadoresDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     public boolean inserirDespesaPagadores(int despesaId, List<String> emails, double valorDivida, String estadoPagamento, String pagador) {
@@ -26,29 +30,37 @@ public class DespesaPagadoresDB {
                 pstmt.setInt(1, despesaId);
                 pstmt.setString(2, email);
                 pstmt.setDouble(3, valorDivida);
-                if(email.equalsIgnoreCase(pagador)){
-                    pstmt.setString(4, "Pago");
-                }else{
-                    pstmt.setString(4, estadoPagamento);
-                }
+                String estadoPag = email.equalsIgnoreCase(pagador) ? "Pago" : estadoPagamento;
+                pstmt.setString(4, estadoPag);
+
                 pstmt.addBatch();
             }
+            int[] results = pstmt.executeBatch(); // Executa o batch após o loop
 
-            int[] results = pstmt.executeBatch(); // Executa todas as inserções em lote
             for (int result : results) {
                 if (result == PreparedStatement.EXECUTE_FAILED) {
                     System.out.println("Erro ao inserir um dos pagadores.");
-                    return false; // Se alguma inserção falhar, retorna false
+                    return false;
                 }
             }
+
             System.out.println("Todos os pagadores foram inseridos com sucesso.");
             versaoDB.incrementarVersao();
-            return true; // Inserções bem-sucedidas
+            for (String email : emails) {
+                String estadoPag = email.equalsIgnoreCase(pagador) ? "Pago" : estadoPagamento;
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(despesaId, email, valorDivida, estadoPag));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+            }
+
+            return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir pagadores na tabela Despesa_Pagadores: " + e.getMessage());
-            return false; // Retorna false se houver uma falha
         }
+        return false;
     }
+
 
     public boolean temDespesasPendentes(String grupoNome) {
         String sql = "SELECT * FROM Despesa_Pagadores dp " +
@@ -98,12 +110,20 @@ public class DespesaPagadoresDB {
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, despesaId);
             int rowsAffected = pstmt.executeUpdate();
-            versaoDB.incrementarVersao();
-            return rowsAffected > 0;
+
+            if (rowsAffected > 0) {
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(despesaId));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao eliminar despesas pagadores: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public boolean atualizarValorDivida(int despesaId, double novoValorTotal) {
@@ -126,18 +146,25 @@ public class DespesaPagadoresDB {
             }
 
             double valorPorLinha = novoValorTotal / numeroLinhas;
+
             try (PreparedStatement atualizarStmt = connection.prepareStatement(atualizarDividaSql)) {
                 atualizarStmt.setDouble(1, valorPorLinha);
                 atualizarStmt.setInt(2, despesaId);
                 int rowsAffected = atualizarStmt.executeUpdate();
-                versaoDB.incrementarVersao();
-                return rowsAffected > 0;
+                if (rowsAffected > 0) {
+                    versaoDB.incrementarVersao();
+                    backupSupport.setQuery(atualizarDividaSql);
+                    backupSupport.setParametros(List.of(valorPorLinha, despesaId));
+                    backupSupport.setVersao(versaoDB.getVersao());
+                    backupSupport.sendMessageToBackUpServer();
+                    return true;
+                }
             }
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar valor da dívida: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public boolean atualizarValorDespesa(int idDespesa, double novoValor, String emailQuemPagou) {
@@ -150,12 +177,19 @@ public class DespesaPagadoresDB {
 
             int rowsAffected = pstmt.executeUpdate();
             System.out.println("Valor da despesa atualizado com sucesso.");
-            versaoDB.incrementarVersao();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(novoValor, idDespesa, emailQuemPagou));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar valor da despesa: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public Double getDividaPorId(int idDespesa, String email) {
@@ -180,12 +214,19 @@ public class DespesaPagadoresDB {
             pstmt.setInt(2, idDespesa);
             pstmt.setString(3, email);
             int rowsAffected = pstmt.executeUpdate();
-            versaoDB.incrementarVersao();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(estado, idDespesa, email));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar estado da dívida: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public ArrayList<Divida> getDividasPorEmail(String email) {

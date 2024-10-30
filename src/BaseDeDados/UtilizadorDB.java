@@ -1,18 +1,23 @@
 package BaseDeDados;
 
 import Entidades.Utilizador;
+import ServidorBackup.ServerBackUpSupport;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UtilizadorDB {
     private final Connection connection;
-    private String querySBS;
-    private VersaoDB versaoDB;
-    public UtilizadorDB(Connection connection) {
+    private final VersaoDB versaoDB;
+    private final ServerBackUpSupport backupSupport;
+
+    public UtilizadorDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;  // Objeto compartilhado para envio ao backup
     }
+
     public void insertUtilizador(Utilizador utilizador){
         try {
             String query = "INSERT INTO Utilizador (nome, password, telefone, email, ativo) VALUES (?, ?, ?, ?, ?)";
@@ -24,6 +29,12 @@ public class UtilizadorDB {
             preparedStatement.setInt(5, utilizador.getAtivo());
             preparedStatement.executeUpdate();
             versaoDB.incrementarVersao();
+
+            backupSupport.setQuery(query);
+            backupSupport.setParametros(List.of(utilizador.getNome(), utilizador.getPassword(), utilizador.getTelefone(), utilizador.getEmail(), utilizador.getAtivo()));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
         } catch (SQLException e) {
             System.out.println("Erro ao inserir utilizador: " + e.getMessage());
         }
@@ -101,8 +112,15 @@ public class UtilizadorDB {
             preparedStatement.setString(5, utilizador.getEmail());
             preparedStatement.executeUpdate();
             versaoDB.incrementarVersao();
+
+            backupSupport.setQuery(query);
+            backupSupport.setParametros(List.of(utilizador.getNome(), utilizador.getPassword(), utilizador.getTelefone(), utilizador.getAtivo(), utilizador.getEmail()));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar utilizador: " + e.getMessage());
         }
     }
+
 }

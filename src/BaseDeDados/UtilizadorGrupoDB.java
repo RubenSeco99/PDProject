@@ -1,6 +1,7 @@
 package BaseDeDados;
 import Entidades.Grupo;
 import Entidades.Utilizador;
+import ServidorBackup.ServerBackUpSupport;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -8,10 +9,13 @@ import java.util.List;
 
 public class UtilizadorGrupoDB {
     private final Connection connection;
-    private VersaoDB versaoDB;
-    public UtilizadorGrupoDB(Connection connection) {
+    private final VersaoDB versaoDB;
+    private final ServerBackUpSupport backupSupport;
+
+    public UtilizadorGrupoDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     public boolean insertUtilizadorGrupo(String utilizadorEmail, String nomeGrupo) {
@@ -21,7 +25,13 @@ public class UtilizadorGrupoDB {
             preparedStatementInsert.setString(1, utilizadorEmail); // Email do utilizador
             preparedStatementInsert.setString(2, nomeGrupo); // Nome do grupo
             preparedStatementInsert.executeUpdate();
+
             versaoDB.incrementarVersao();
+            backupSupport.setQuery(queryInsert);
+            backupSupport.setParametros(List.of(utilizadorEmail, nomeGrupo));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir utilizador no grupo: " + e.getMessage());
@@ -36,8 +46,13 @@ public class UtilizadorGrupoDB {
             preparedStatementDelete.setString(2, grupoNome);
             int rowsAffected = preparedStatementDelete.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Utilizador com email: " + email + " removido do grupo: " + grupoNome);
                 versaoDB.incrementarVersao();
+                backupSupport.setQuery(queryDelete);
+                backupSupport.setParametros(List.of(email, grupoNome));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                System.out.println("Utilizador com email: " + email + " removido do grupo: " + grupoNome);
                 return true;
             } else {
                 System.out.println("Nenhum utilizador encontrado com o email: " + email + " no grupo: " + grupoNome);
@@ -48,6 +63,7 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
+
     public boolean removeTodosUtilizadoresDoGrupo(String grupoNome) {
         boolean sucesso = true;
         try {
@@ -67,9 +83,9 @@ public class UtilizadorGrupoDB {
             System.out.println("Erro ao remover utilizadores do grupo: " + e.getMessage());
             sucesso = false;
         }
-        versaoDB.incrementarVersao();
         return sucesso;
     }
+
     public boolean updateNomeGrupo(String nomeAtual,String nomeNovo) {
         try {
             String query= "UPDATE Utilizador_Grupo SET grupo_nome=? WHERE grupo_nome = ?";
@@ -78,16 +94,21 @@ public class UtilizadorGrupoDB {
             preparedStatement.setString(2,nomeAtual);
             int rowsUpdated = preparedStatement.executeUpdate();
 
-            if(rowsUpdated>0) {
+            if (rowsUpdated > 0) {
                 versaoDB.incrementarVersao();
+                backupSupport.setQuery(query);
+                backupSupport.setParametros(List.of(nomeNovo, nomeAtual));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 return true;
             }
-
         } catch (SQLException e) {
             System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
         }
         return false;
     }
+
     public boolean selectUtilizadorNoGrupo(String utilizadorEmail, String grupoNome) {//verifica se o utilizador esta no grupo
         try {
             String query = "SELECT * FROM Utilizador_Grupo WHERE utilizador_email = ? AND grupo_nome = ?";
@@ -101,6 +122,7 @@ public class UtilizadorGrupoDB {
             return false;
         }
     }
+
     public List<String> selectEmailsDoGrupo(String grupoNome) {
         // Query para buscar os emails dos utilizadores pertencentes ao grupo
         String query = "SELECT utilizador_email FROM Utilizador_Grupo WHERE grupo_nome = ?";
@@ -120,6 +142,7 @@ public class UtilizadorGrupoDB {
             return null;
         }
     }
+
     public List<Grupo> selectGruposPorUtilizador(String utilizadorEmail) {
         List<Grupo> grupos = new ArrayList<>();
         try {
@@ -142,6 +165,7 @@ public class UtilizadorGrupoDB {
         }
         return grupos;
     }
+
     public List<Utilizador> selectUtilizadoresPorGrupo(String grupoNome) {
         List<Utilizador> utilizadores = new ArrayList<>();
         try {

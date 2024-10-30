@@ -1,6 +1,7 @@
 package BaseDeDados;
 
 import Entidades.Despesas;
+import ServidorBackup.ServerBackUpSupport;
 
 import java.sql.*;
 import java.text.ParseException;
@@ -11,9 +12,12 @@ import java.util.List;
 public class DespesaDB {
     private final Connection connection;
     private VersaoDB versaoDB;
-    public DespesaDB(Connection connection) {
+    private final ServerBackUpSupport backupSupport;
+
+    public DespesaDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     public int inserirDespesa(String descricao, double valor, Date data, String grupoNome, String criadorEmail) {
@@ -34,8 +38,14 @@ public class DespesaDB {
                     if (generatedKeys.next()) {
                         int despesaId = generatedKeys.getInt(1); // Obtém o ID gerado
                         System.out.println("Despesa inserida com sucesso! ID da despesa: " + despesaId);
+
                         versaoDB.incrementarVersao();
-                        return despesaId; // Retorna o ID gerado da despesa
+                        backupSupport.setQuery(sql);
+                        backupSupport.setParametros(List.of(descricao, valor, dataFormatada, grupoNome, criadorEmail));
+                        backupSupport.setVersao(versaoDB.getVersao());
+                        backupSupport.sendMessageToBackUpServer();
+
+                        return despesaId;
                     }
                 }
             }
@@ -114,7 +124,6 @@ public class DespesaDB {
     public ArrayList<Despesas> getDespesasPorNomeGrupo(String grupoNome) {
         ArrayList<Despesas> despesasList = new ArrayList<>();
         String sql = "SELECT descricao, valor, data, criador_email, id FROM Despesa WHERE grupo_nome = ? ORDER BY data DESC";
-        // Ordenar por data, DESC = mais recente primeiro
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, grupoNome);
@@ -154,12 +163,19 @@ public class DespesaDB {
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, idDespesa);
             int rowsAffected = pstmt.executeUpdate();
-            versaoDB.incrementarVersao();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(idDespesa));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao eliminar despesa: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public boolean atualizaDespesa(int idDespesa, String novaDescricao, double novoValor, Date novaData) {
@@ -174,12 +190,20 @@ public class DespesaDB {
             pstmt.setString(3, dataFormatada);
             pstmt.setInt(4, idDespesa);
             int rowsAffected = pstmt.executeUpdate();
-            versaoDB.incrementarVersao();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                versaoDB.incrementarVersao();
+
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(novaDescricao, novoValor, dataFormatada, idDespesa));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar despesa: " + e.getMessage());
-            return false;
         }
+        return false;
     }
 
     public String getDonoDespesa(int idDespesa) {

@@ -3,15 +3,20 @@ package BaseDeDados;
 import java.io.Serializable;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import Entidades.Pagamento;
+import ServidorBackup.ServerBackUpSupport;
 
 public class PagamentoDB {
     private final Connection connection;
     private VersaoDB versaoDB;
-    public PagamentoDB(Connection connection) {
+    private final ServerBackUpSupport backupSupport;
+
+    public PagamentoDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     public boolean inserirPagamento(String quemPagou, String quemRecebeu, double valorPagamento, String grupoNome) {
@@ -31,6 +36,11 @@ public class PagamentoDB {
             int rowsInserted = pstmt.executeUpdate();
             if (rowsInserted > 0) {
                 versaoDB.incrementarVersao();
+                backupSupport.setQuery(sql);
+                backupSupport.setParametros(List.of(quemPagou, quemRecebeu, valorPagamento, dataFormatada, grupoNome));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 System.out.println("Pagamento inserido com sucesso!");
                 return true;
             }

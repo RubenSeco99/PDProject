@@ -6,7 +6,7 @@ import Entidades.*;
 import Uteis.Funcoes;
 import Uteis.FuncoesServidor;
 import ServidorBackup.ServerBackUpSupport;
-
+import java.sql.Connection;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -112,7 +112,6 @@ class processaClienteThread implements Runnable {
 
     private Socket clienteSocket;
     private boolean running;
-    private java.sql.Connection connection;
     private UtilizadorDB utilizadorDB;
     private GrupoDB grupoDB;
     private ConviteDB conviteDB;
@@ -126,20 +125,20 @@ class processaClienteThread implements Runnable {
     private final Object lock;
     private ServerBackUpSupport messageSBS;
 
-    public processaClienteThread(Socket clienteSocket, java.sql.Connection connection, List<notificaThread> clienteSockets, Object lock, ServerBackUpSupport messageSBS) {
-        this.clienteSocket = clienteSocket;
-        this.connection =  connection;
-        this.running = true;
-        this.utilizadorDB = new UtilizadorDB(connection);
-        this.grupoDB=new GrupoDB(connection);
-        this.utilizadorGrupoDB=new UtilizadorGrupoDB(connection);
-        this.conviteDB=new ConviteDB(connection);
-        this.despesaDB=new DespesaDB(connection);
-        this.despesaPagadoresDB= new DespesaPagadoresDB(connection);
-        this.pagamentoDB = new PagamentoDB(connection);
-        this.notificaThreads = clienteSockets;
-        this.lock = lock;
-        this.messageSBS = messageSBS;
+    public processaClienteThread(Socket clienteSocket, Connection connection, List<notificaThread> clienteSockets, Object lock, ServerBackUpSupport messageSBS) {
+        this.messageSBS         = messageSBS;
+        this.utilizadorDB       = new UtilizadorDB(connection, messageSBS);
+        this.grupoDB            = new GrupoDB(connection, messageSBS);
+        this.utilizadorGrupoDB  = new UtilizadorGrupoDB(connection, messageSBS);
+        this.conviteDB          = new ConviteDB(connection, messageSBS);
+        this.despesaDB          = new DespesaDB(connection, messageSBS);
+        this.despesaPagadoresDB = new DespesaPagadoresDB(connection, messageSBS);
+        this.pagamentoDB        = new PagamentoDB(connection, messageSBS);
+        this.clienteSocket      = clienteSocket;
+        this.running            = true;
+        this.notificaThreads    = clienteSockets;
+        this.lock               = lock;
+
     }
 
     @Override
@@ -673,46 +672,19 @@ class processaClienteThread implements Runnable {
 
 class heartBeats implements Runnable{
     //THREAD PARA EMITIR HEARTBEATS DE 10 EM 10 SEGUNDOS
-    static final int PORTOBACKUPUDP = 4444;
     ServerBackUpSupport messageSBS;
-
     public heartBeats(ServerBackUpSupport messageSBS) {
         this.messageSBS = messageSBS;
     }
 
     @Override
     public void run(){
-        try(MulticastSocket multiSocket = new MulticastSocket(PORTOBACKUPUDP)) {
-            DatagramPacket dgram;
-            InetAddress groupAdress;
-            groupAdress = InetAddress.getByName("230.44.44.44");
-            NetworkInterface nif;
-            try {
-                nif = NetworkInterface.getByInetAddress(InetAddress.getByName(String.valueOf(groupAdress))); //230.44.44.44
-            } catch (SocketException | NullPointerException | UnknownHostException | SecurityException ex) {
-                nif = NetworkInterface.getByName("wlan0");
-            }
-
-            multiSocket.joinGroup(new InetSocketAddress(groupAdress, PORTOBACKUPUDP),nif);
-
-            while(true){
+        try {
+            while (true) {
                 Thread.sleep(10000);
-                //Colocar aqui a versao => messageBackUp.setVersao();
-                try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
-                     ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
-                    Oout.writeObject(messageSBS);
-                    dgram = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
-                    System.out.println("ENVIEI HEARTBEAT");
-                }
-                multiSocket.send(dgram);
+                messageSBS.sendMessageToBackUpServer();
             }
-        }catch (NumberFormatException e) {
-            System.out.println("O porto de escuta deve ser um inteiro positivo.");
-        } catch (SocketException e) {
-            System.out.println("Ocorreu um erro ao nivel do serverSocket TCP:\n\t" + e);
-        } catch (IOException e) {
-            System.out.println("Ocorreu um erro no acesso ao serverSocket:\n\t" + e);
-        } catch (InterruptedException e) {
+        }catch (InterruptedException e) {
             System.out.println("Sleep interrompido");
         }
     }
@@ -792,7 +764,10 @@ public class Servidor {
         int servicePort = Integer.parseInt(args[0]);
         final String DBPATH = args[1];
         java.sql.Connection connection = ConnectDB.criarBaseDeDados(DBPATH);
+
         ServerBackUpSupport messageSBS = new ServerBackUpSupport(5001);
+        messageSBS.inicializeMulticast();
+
         List<notificaThread> clienteSockets = Collections.synchronizedList(new ArrayList<>());
         Object lock = new Object();
 
@@ -813,7 +788,6 @@ public class Servidor {
             Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup());
             conectaServidoresBackup.setDaemon(true);
             conectaServidoresBackup.start();
-
 
             System.out.println("Server iniciado...\n");
 

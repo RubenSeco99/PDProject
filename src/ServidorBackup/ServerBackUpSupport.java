@@ -4,56 +4,78 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerBackUpSupport implements Serializable {
     static final int PORTOBACKUPUDP = 4444;
     private int portoTCP;
     private int versao;
     private String query;
-    private MulticastSocket socket;
-    private DatagramPacket packet;
-    private InetAddress groupAdress;
+    private List<Object> parametros;  // Atributo para os parâmetros da query
+    private transient MulticastSocket socket;  // Marcado como transient para evitar serialização
+    private InetAddress groupAddress;
 
     public ServerBackUpSupport(int portoTCP) {
         this.portoTCP = portoTCP;
+        this.query = "";
+        this.parametros = null;
     }
 
-    public void sendQueryToBackUpServer(String query, int versao) throws IOException {
-        this.query = query;
-        this.versao = versao;
-        try (ByteArrayOutputStream Bout = new ByteArrayOutputStream();
-             ObjectOutputStream Oout = new ObjectOutputStream(Bout)) {
-            Oout.writeObject(this);
-            packet = new DatagramPacket(Bout.toByteArray(), Bout.size(), groupAdress, PORTOBACKUPUDP);
-            System.out.println("ENVIEI HEARTBEAT");
+    public void inicializeMulticast() {
+        try {
+            groupAddress = InetAddress.getByName("230.44.44.44");
+            socket = new MulticastSocket(PORTOBACKUPUDP);
+            NetworkInterface nif;
+            try {
+                nif = NetworkInterface.getByInetAddress(groupAddress);  // Tenta obter a interface pela rede
+            } catch (SocketException | NullPointerException | SecurityException ex) {
+                nif = NetworkInterface.getByName("wlan0"); // Alternativa de fallback
+            }
+
+            socket.joinGroup(new InetSocketAddress(groupAddress, PORTOBACKUPUDP), nif);
+            System.out.println("MulticastSocket inicializado e inserido no grupo: " + groupAddress);
+
+        } catch (IOException e) {
+            System.out.println("Erro ao inicializar o MulticastSocket: " + e.getMessage());
         }
-        socket.send(packet);
     }
 
-    public int getPortoTCP() {
-        return portoTCP;
+    public void sendMessageToBackUpServer() {
+        if (socket == null || socket.isClosed()) {
+            System.out.println("Socket de multicast não inicializado corretamente.");
+            inicializeMulticast();
+        }
+
+        try (ByteArrayOutputStream bout = new ByteArrayOutputStream();
+             ObjectOutputStream oout = new ObjectOutputStream(bout)) {
+
+            oout.writeObject(this);
+            DatagramPacket packet = new DatagramPacket(bout.toByteArray(), bout.size(), groupAddress, PORTOBACKUPUDP);
+            socket.send(packet);
+            System.out.println("Mensagem enviada ao backup com sucesso.");
+
+            this.query = "";
+            this.parametros = null;
+        } catch (IOException e) {
+            System.out.println("Erro ao enviar mensagem para o servidor de backup: " + e.getMessage());
+        }
     }
 
-    public void setPortoTCP(int portoTCP) {
-        this.portoTCP = portoTCP;
-    }
+    public int getPortoTCP() { return portoTCP; }
 
-    public int getVersao() {
-        return versao;
-    }
+    public void setPortoTCP(int portoTCP) { this.portoTCP = portoTCP; }
 
-    public void setVersao(int versao) {
-        this.versao = versao;
-    }
+    public int getVersao() { return versao; }
 
-    public String getQuery() {
-        return query;
-    }
+    public void setVersao(int versao) { this.versao = versao; }
 
-    public void setQuery(String query) {
-        this.query = query;
-    }
+    public String getQuery() { return query; }
+
+    public void setQuery(String query) { this.query = query; }
+
+    public List<Object> getParametros() {return parametros; }
+
+    public void setParametros(List<Object> parametros) { this.parametros = parametros; }
 }

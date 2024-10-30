@@ -2,6 +2,11 @@ package ServidorBackup;
 
 import java.io.*;
 import java.net.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
 
 public class ServidorBackup {
     private static final int PORTOBACKUPUDP = 4444;
@@ -20,6 +25,7 @@ public class ServidorBackup {
         File localDB = new File(localFilePath);
         FileOutputStream localFileOutputStream = null;
         DatagramPacket receivedPacket;
+        Connection backupConnection = null;
 
         if (localDB.listFiles() != null && localDB.listFiles().length > 0) {
             System.out.println("A directoria " + localDB + " nao está vazia!");
@@ -93,6 +99,8 @@ public class ServidorBackup {
                     System.out.println("Transferencia concluida (numero de blocos: " + contador + ")");
                     multiSocket.setSoTimeout(TIMEOUT);
 
+                    backupConnection = conectBackUpDB(localFilePath);
+
                     try {
                         while (true) {
                             receivedPacket = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
@@ -103,7 +111,16 @@ public class ServidorBackup {
 
                                 if (received instanceof ServerBackUpSupport) {
                                     serverSupport = (ServerBackUpSupport) received;
-                                    System.out.println("Porto recebido: " + serverSupport.getPortoTCP());
+
+                                    String query = serverSupport.getQuery();
+                                    List<Object> parametros = serverSupport.getParametros();
+
+                                    if (query != null && parametros != null) {
+                                        executarQueryNoBackup(backupConnection, query, parametros);
+                                        System.out.println("Query de backup executada: " + query);
+                                    } else {
+                                        System.out.println("[HeartBeat recebido]");
+                                    }
                                 }
                             } catch (ClassNotFoundException e) {
                                 System.out.println("Mensagem recebida de tipo inesperado! " + e);
@@ -144,4 +161,52 @@ public class ServidorBackup {
         }
         System.out.println("Servidor de backup encerrado.");
     }
+
+    private static Connection conectBackUpDB(String localFilePath) {
+        Connection backupConnection;
+        try {
+            String dbUrl = "jdbc:sqlite:" +localFilePath;
+            backupConnection = DriverManager.getConnection(dbUrl);
+            System.out.println("Conexão com a base de dados de backup estabelecida.");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao conectar com a base de dados backup: " + e.getMessage());
+            return null;
+        }
+        return backupConnection;
+    }
+
+    private static void executarQueryNoBackup(Connection connection, String query, List<Object> parametros) {
+        if (connection == null) {
+            System.out.println("Erro: conexão com a base de dados não está ativa.");
+            return;
+        }
+
+        // Verificar se a query e os parâmetros estão corretos
+        if (query == null || parametros == null || query.isEmpty()) {
+            System.out.println("Erro: Query ou parâmetros inválidos.");
+            return;
+        }
+
+        // Contar o número de placeholders na query
+        int numPlaceholders = query.length() - query.replace("?", "").length();
+        if (numPlaceholders != parametros.size()) {
+            System.out.println("Erro: O número de placeholders não corresponde ao número de parâmetros.");
+            return;
+        }
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            for (int i = 0; i < parametros.size(); i++) {
+                pstmt.setObject(i + 1, parametros.get(i));
+            }
+
+            // Executa a query
+            pstmt.executeUpdate();
+            System.out.println("Query executada com sucesso no backup: " + query);
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao executar query no backup: " + e.getMessage());
+        }
+    }
+
 }

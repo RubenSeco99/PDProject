@@ -1,15 +1,20 @@
 package BaseDeDados;
 
 import Entidades.Grupo;
+import ServidorBackup.ServerBackUpSupport;
+
 import java.sql.*;
+import java.util.List;
 
 public class GrupoDB {
     private final Connection connection;
     private VersaoDB versaoDB;
+    private final ServerBackUpSupport backupSupport;
 
-    public GrupoDB(Connection connection) {
+    public GrupoDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     private boolean verificaNomeGrupo(String nome) throws SQLException {
@@ -40,6 +45,12 @@ public class GrupoDB {
                 System.out.println("Grupo inserido com sucesso. ID: " + grupoId);
             }
             versaoDB.incrementarVersao();
+
+            backupSupport.setQuery(query);
+            backupSupport.setParametros(List.of(grupo.getNome(), criadorEmail));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao inserir grupo: " + e.getMessage());
@@ -60,6 +71,12 @@ public class GrupoDB {
             preparedStatement.setString(2, nomeAtual);
             preparedStatement.executeUpdate();
             versaoDB.incrementarVersao();
+
+            backupSupport.setQuery(query);
+            backupSupport.setParametros(List.of(nomeNovo, nomeAtual));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar o nome do grupo: " + e.getMessage());
@@ -69,13 +86,19 @@ public class GrupoDB {
 
     public boolean deleteGrupo(String nomeGrupo) {
         try {
-            String deleteGrupo = "DELETE FROM Grupo WHERE nome = ?";
-            PreparedStatement preparedStatementGrupo = connection.prepareStatement(deleteGrupo);
+            String query = "DELETE FROM Grupo WHERE nome = ?";
+            PreparedStatement preparedStatementGrupo = connection.prepareStatement(query);
             preparedStatementGrupo.setString(1, nomeGrupo);
             int rowsAffected = preparedStatementGrupo.executeUpdate();
             if (rowsAffected > 0) {
                 System.out.println("Grupo '" + nomeGrupo + "' removido com sucesso.");
                 versaoDB.incrementarVersao();
+
+                backupSupport.setQuery(query);
+                backupSupport.setParametros(List.of(nomeGrupo));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 return true;
             } else {
                 System.out.println("Erro: Grupo não encontrado.");

@@ -1,17 +1,24 @@
 package BaseDeDados;
 
 import Entidades.Convite;
+import ServidorBackup.ServerBackUpSupport;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
+
 public class ConviteDB {
     private final Connection connection;
     private VersaoDB versaoDB;
-    public ConviteDB(Connection connection) {
+    private final ServerBackUpSupport backupSupport;
+
+    public ConviteDB(Connection connection, ServerBackUpSupport backupSupport) {
         this.connection = connection;
         this.versaoDB = new VersaoDB(connection);
+        this.backupSupport = backupSupport;
     }
 
     public ArrayList<Convite> listarConvitesPendentes(String utilizadorEmail) {
@@ -37,6 +44,7 @@ public class ConviteDB {
     }
     return convites;
 }
+
     public boolean updateNomeConvites(String nomeAtual,String nomeNovo) {
         try {
             String query= "UPDATE Convites_Grupo SET nome_grupo=? WHERE nome_grupo = ?";
@@ -47,6 +55,12 @@ public class ConviteDB {
 
             if(rowsUpdated>0) {
                 versaoDB.incrementarVersao();
+
+                backupSupport.setQuery(query);
+                backupSupport.setParametros(List.of(nomeNovo, nomeAtual));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 return true;
             }
 
@@ -56,6 +70,7 @@ public class ConviteDB {
         }
         return false;
     }
+
     public boolean removeConvite(String utilizadorEmail, String grupoNome) {
         try {
             String queryDelete = "DELETE FROM Convites_Grupo WHERE destinatario_email = ? AND nome_grupo = ?";
@@ -67,6 +82,12 @@ public class ConviteDB {
             if (rowsDeleted > 0) {
                 System.out.println("Convite removido com sucesso.");
                 versaoDB.incrementarVersao();
+
+                backupSupport.setQuery(queryDelete);
+                backupSupport.setParametros(List.of(utilizadorEmail, grupoNome));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 return true;
             } else {
                 System.out.println("Nenhum convite encontrado para ser removido.");
@@ -77,6 +98,7 @@ public class ConviteDB {
         }
         return false;
     }
+
     public boolean checkConviteExistance(Convite convite) {
         try {
             String query = "SELECT COUNT(*) FROM Convites_Grupo WHERE nome_grupo = ? AND  destinatario_email = ?";
@@ -93,6 +115,7 @@ public class ConviteDB {
         }
         return false; // Retorna false se ocorrer um erro ou se o convite não existir
     }
+
     public void insertInvite(Convite convite) {
         try {
             String query = "INSERT INTO Convites_Grupo (nome_grupo, remetente_email, destinatario_email, estado) VALUES (?, ?, ?, 'pendente')";
@@ -101,7 +124,13 @@ public class ConviteDB {
             preparedStatement.setString(2, convite.getRemetente());
             preparedStatement.setString(3, convite.getDestinatario());
             preparedStatement.executeUpdate();
+
             versaoDB.incrementarVersao();
+            backupSupport.setQuery(query);
+            backupSupport.setParametros(List.of(convite.getNomeGrupo(), convite.getRemetente(), convite.getDestinatario(), "pendente"));
+            backupSupport.setVersao(versaoDB.getVersao());
+            backupSupport.sendMessageToBackUpServer();
+
         } catch (SQLException e) {
             System.out.println("Erro ao inserir convite: " + e.getMessage());
         }
@@ -115,6 +144,13 @@ public class ConviteDB {
             int rowsDeleted = preparedStatementDelete.executeUpdate(); // Executa a deleção
 
             if (rowsDeleted > 0) {
+
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(queryDelete);
+                backupSupport.setParametros(List.of(nomeGrupo));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
                 System.out.println("Todos os convites para o grupo '" + nomeGrupo + "' foram removidos com sucesso.");
                 return true;
             } else {
@@ -142,6 +178,5 @@ public class ConviteDB {
         }
         return false; // Retorna false se não houver convites ou ocorrer um erro
     }
-
 
 }
