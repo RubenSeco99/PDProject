@@ -2,7 +2,7 @@ package Entidades;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
+import java.sql.Date;
 
 public class Despesas implements Serializable {
     private String descricao;
@@ -14,6 +14,12 @@ public class Despesas implements Serializable {
 
     public Despesas(){
         this.utilizadoresPartilhados = new ArrayList<>();
+    }
+
+    public Despesas(String descricao, double valor, Date data) {
+        this.descricao = descricao;
+        this.data = data;
+        this.valor = valor;
     }
 
     public String getDescricao() {return descricao;}

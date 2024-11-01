@@ -16,7 +16,7 @@ rem Esperar alguns segundos para o servidor iniciar (ajuste conforme necessário
 ping -n 2 127.0.0.1 >null
 
 rem Abrir uma nova janela para iniciar o Cliente
-start cmd /k "java -cp bin Cliente.ClienteMain localhost 5000"
+start cmd /k "java -cp bin Cliente.Cliente localhost 5000"
 
 ping -n 2 127.0.0.1 >null
 

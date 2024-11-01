@@ -445,10 +445,10 @@ class processaClienteThread implements Runnable {
                             int despesaID = despesaDB.inserirDespesa(pedidoCliente.getDespesa().getFirst().getDescricao(), pedidoCliente.getDespesa().getFirst().getValor(), pedidoCliente.getDespesa().getFirst().getData(), pedidoCliente.getUtilizador().getGrupoAtual().getNome(), pedidoCliente.getUtilizador().getEmail());
                             if(despesaID!= -1){
                                 List<String> emails = utilizadorGrupoDB.selectEmailsDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                                System.out.println(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(emails != null){
                                     double valor = pedidoCliente.getDespesa().getFirst().getValor() / emails.size();
                                     if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente", pedidoCliente.getUtilizador().getEmail())){
-                                        System.out.println("Despesa inserida com sucesso");
                                         System.out.println("Despesa inserida com sucesso");
                                         respostaSaida.setMensagem("Despesa inserida com sucesso");
                                     }else{

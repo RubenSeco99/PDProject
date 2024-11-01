@@ -92,7 +92,7 @@ public class Utilizador implements Serializable {
         return null;
     }
     public void setGrupoAtualPorNome(String nome){
-        this.grupo_atual.setNomeProvisorio(nome);
+        this.grupo_atual.setNome(nome);
     }
     public void removeGrupo(Grupo grupo) {
         this.grupos.remove(grupo);
