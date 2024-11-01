@@ -27,7 +27,7 @@ public class ClienteUI implements PropertyChangeListener {
     public void start() {
         try {
             while (running) {
-                Thread.sleep(200);
+                Thread.sleep(500);
                 if (!clienteFacade.isRegistado()) {
                     menuUtilizadoresSemLogin();
                 } else {
@@ -74,10 +74,10 @@ public class ClienteUI implements PropertyChangeListener {
         } else if(lastCommand.equalsIgnoreCase("Editar despesa")){
             handleEditExpense();
         }else if((lastCommand.equalsIgnoreCase("Escolher grupo")  && resposta.getMensagem().equalsIgnoreCase("Utilizador não pertence ao grupo")) ||
-                (lastCommand.equalsIgnoreCase("Criar grupo") && resposta.getMensagem().equalsIgnoreCase("Grupo nao criado"))||
-                 lastCommand.equalsIgnoreCase("Ver grupos") || //nao esta bem
-                (lastCommand.equalsIgnoreCase("Apagar grupo") && resposta.getMensagem().equalsIgnoreCase("Apagar grupo bem sucedido")) ||
-                 lastCommand.equalsIgnoreCase("Sair grupo") && resposta.getMensagem().equalsIgnoreCase("Saida grupo bem sucedida")
+                  lastCommand.equalsIgnoreCase("Criar grupo") ||
+                  lastCommand.equalsIgnoreCase("Ver grupos") ||
+                 (lastCommand.equalsIgnoreCase("Apagar grupo") && resposta.getMensagem().equalsIgnoreCase("Apagar grupo bem sucedido")) ||
+                  lastCommand.equalsIgnoreCase("Sair grupo") && resposta.getMensagem().equalsIgnoreCase("Saida grupo bem sucedida")
         ){
             menuGrupos();
         } else {
@@ -101,6 +101,7 @@ public class ClienteUI implements PropertyChangeListener {
 
     private void menuGrupos() throws IOException {
         System.out.println("""
+                
                 [Menu grupos]
                 O que pretende fazer?
                   1. Escolher grupo
@@ -112,13 +113,13 @@ public class ClienteUI implements PropertyChangeListener {
         switch (option) {
             case "1" -> handleChooseGroup();
             case "2" -> {lastCommand="Criar grupo";handleCreateGroup();}
-            case "3" -> {lastCommand="Ver grupo";clienteFacade.viewGroups();}
+            case "3" -> {lastCommand="Ver grupos";clienteFacade.viewGroups();}
             case "0" -> menuUtilizadoresComLogin();
             default -> System.out.println("Opção inválida, tente novamente.");
         }
     }
 
-    private void menuGrupoAtual()  {
+    private void menuGrupoAtual(){
         try {
             System.out.println(String.format("""
                     [Menu grupo: %s]
@@ -345,6 +346,8 @@ public class ClienteUI implements PropertyChangeListener {
             if(resposta.getMensagem().equalsIgnoreCase("Logout aceite")){
                 running = false;
             }
+            if(resposta.getMensagem().equalsIgnoreCase("Mudanca nome bem sucedida"))
+                clienteFacade.getUtilizador().getGrupoAtual().setNome(resposta.getUtilizador().getGrupoAtual().getNome());
         }
     }
 }

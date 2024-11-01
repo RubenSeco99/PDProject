@@ -88,7 +88,10 @@ public class ClienteModel {
                     utilizadorAtualizado.setUtilizador(resposta.getUtilizador());
                 } else if ("Aceite".equalsIgnoreCase(resposta.getMensagem())) {
                     utilizadorAtualizado = resposta.getUtilizador();
-                } else if ("Logout".equalsIgnoreCase(resposta.getMensagem())) {
+                } else if(resposta.getMensagem().equalsIgnoreCase("Mudanca nome bem sucedida")) {
+                    utilizadorAtualizado.getGrupoAtual().setNome(resposta.getUtilizador().getGrupoAtual().getNome());
+                    System.out.println("Novo nome: " + utilizadorAtualizado.getGrupoAtual().getNome());
+                }else if ("Logout".equalsIgnoreCase(resposta.getMensagem())) {
                     registado = false;
                     logout();
                 } else if ("Lista de convites".equalsIgnoreCase(resposta.getMensagem())) {

@@ -141,7 +141,7 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Mudar nome grupo");
-        comunicacao.setGrupos(novoNome);
+        comunicacao.getUtilizador().getGrupoAtual().setNomeProvisorio(novoNome);
         clienteModel.enviarMensagem(comunicacao);
     }
 

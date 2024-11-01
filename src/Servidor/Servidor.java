@@ -290,18 +290,26 @@ class processaClienteThread implements Runnable {
                                         pedidoCliente.getUtilizador().getGrupoAtual().setNome(pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
                                         respostaSaida = pedidoCliente;
                                         respostaSaida.setMensagem("Mudanca nome bem sucedida");
+                                        System.out.println("Nome atual: "+respostaSaida.getUtilizador().getGrupoAtual().getNome());
+                                        System.out.println("Nome novo: "+respostaSaida.getUtilizador().getGrupoAtual().getNomeProvisorio());
                                     } else {
                                         respostaSaida = pedidoCliente;
                                         respostaSaida.setMensagem("Tabela utilizadorGrupo nao atualizada");
                                     }
                                 }else{
-                                    respostaSaida=pedidoCliente;
-                                    respostaSaida.setMensagem("Tabela Convites nao atualizada");
+                                    if (utilizadorGrupoDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
+                                        pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio())) {
+                                    pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
+                                    pedidoCliente.getUtilizador().getGrupoAtual().setNome(pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Mudanca nome bem sucedida");
+                                        System.out.println("Nome atual: "+respostaSaida.getUtilizador().getGrupoAtual().getNome());
+                                        System.out.println("Nome novo: "+respostaSaida.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                    } else {
+                                        respostaSaida = pedidoCliente;
+                                        respostaSaida.setMensagem("Tabela utilizadorGrupo nao atualizada");
+                                    }
                                 }
-                                //metodo para alterar todos os utilizadorGrupo
-                                //atualizar pedido cliente
-                                respostaSaida=pedidoCliente;
-                                respostaSaida.setMensagem("Mudar nome grupo bem sucedido");
                             }
                             else{
                                 respostaSaida=pedidoCliente;
