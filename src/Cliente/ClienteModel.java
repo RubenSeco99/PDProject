@@ -32,13 +32,15 @@ public class ClienteModel {
         }
     }
 
-    public void enviarMensagem(Comunicacao comunicacao){
+    public boolean enviarMensagem(Comunicacao comunicacao){
         try {
             Oout.writeObject(comunicacao);
             Oout.flush();
             Oout.reset();
+            return true;
         }catch (IOException e){
             System.out.println("Erro ao enviar mensagem" + e);
+            return false;
         }
     }
 
