@@ -7,7 +7,9 @@ import Entidades.Utilizador;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.sql.Date;
+import java.util.List;
 
 public class ClienteFacade {
     private final ClienteModel clienteModel;
@@ -113,6 +115,13 @@ public class ClienteFacade {
         clienteModel.enviarMensagem(comunicacao);
     }
 
+    public void seeInvites(){
+        utilizador = clienteModel.getUtilizadorAtualizado();
+        Comunicacao comunicacao = new Comunicacao(utilizador);
+        comunicacao.setMensagem("Ver convites");
+        clienteModel.enviarMensagem(comunicacao);
+    }
+
     public void acceptInvite(String nomeGrupo) {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
@@ -128,7 +137,23 @@ public class ClienteFacade {
         comunicacao.setGrupos(nomeGrupo);
         clienteModel.enviarMensagem(comunicacao);
     }
+    public boolean handleChangeInviteState(String estado,String nomeGrupo){
+        utilizador = clienteModel.getUtilizadorAtualizado();
+        List<Convite> convites= utilizador.getConvites();
+        for(Convite c:convites)
+            if(c.getNomeGrupo().equalsIgnoreCase(nomeGrupo)){
+                utilizador.getConvite(nomeGrupo).setEstado(estado);
+                Comunicacao comunicacao = new Comunicacao(utilizador);
+                if(estado.equalsIgnoreCase("Aceite"))
+                    comunicacao.setMensagem("Aceitar convite");
+                else
+                    comunicacao.setMensagem("Rejeitar convite");
+                clienteModel.enviarMensagem(comunicacao);
+                return true;
+            }
+        return false;
 
+    }
     public void sendGroupInvite(String email) {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);

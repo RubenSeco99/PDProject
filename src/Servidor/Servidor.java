@@ -326,7 +326,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida.setMensagem("Utilizador não pertence ao grupo");
                             }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){//quando estiverem adicionados as despesas e os pagamentos
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){
+                            //quando estiverem adicionados as despesas e os pagamentos
                             // temos de verificar se existem pagamentos pendentes antes de deixar sair todo
                             if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
                                                             pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
@@ -448,7 +449,8 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Não existem convites");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Inserir despesa")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Inserir despesa")){
                             respostaSaida = pedidoCliente;
                             int despesaID = despesaDB.inserirDespesa(pedidoCliente.getDespesa().getFirst().getDescricao(), pedidoCliente.getDespesa().getFirst().getValor(), pedidoCliente.getDespesa().getFirst().getData(), pedidoCliente.getUtilizador().getGrupoAtual().getNome(), pedidoCliente.getUtilizador().getEmail());
                             if(despesaID!= -1){
@@ -468,7 +470,8 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Erro a inserir despesa");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Total gastos")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Total gastos")){
                             respostaSaida = pedidoCliente;
                             double valorTotal = despesaDB.calcularTotalDespesas(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             if(valorTotal != -1 && valorTotal != 0){
@@ -479,7 +482,8 @@ class processaClienteThread implements Runnable {
                             else{
                                 respostaSaida.setMensagem("Erro a calcular o total de gastos");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Historio despesas")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Historio despesas")){
                             ArrayList<Despesas> despesas =  despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             respostaSaida = pedidoCliente;
                             if(despesas != null){
@@ -488,7 +492,8 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Erro ao puxar o historio de despesas");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Exportar csv")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Exportar csv")){
                             respostaSaida = pedidoCliente;
                             ArrayList<Despesas> despesaCsv = despesaDB.getDespesasPorNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             if(despesaCsv !=null){
@@ -511,7 +516,8 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro a selecionar as despesas");
                                 respostaSaida.setMensagem("Erro ao selecionar as despesas");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Eliminar despesa")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Eliminar despesa")){
                             respostaSaida = pedidoCliente;
                             ArrayList<Despesas> despesas = despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             if(despesas != null){
@@ -521,7 +527,8 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro ao selecionar as despesas");
                                 respostaSaida.setMensagem("Erro ao selecionar as despesas");
                             }
-                        }else if(pedidoCliente.getMensagem().contains("Eliminar despesa com id")){
+                        }
+                        else if(pedidoCliente.getMensagem().contains("Eliminar despesa com id")){
                             respostaSaida = pedidoCliente;
                             String mensagem = pedidoCliente.getMensagem();
                             String[] partes = mensagem.split(" ");
@@ -537,7 +544,8 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro ao eliminar despesa com id");
                                 respostaSaida.setMensagem("Erro a eliminar a despesa");
                             }
-                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar despesa")){
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Editar despesa")){
                             respostaSaida = pedidoCliente;
                             ArrayList<Despesas> despesas = despesaDB.getDespesasPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                             if(despesas != null){
@@ -551,7 +559,8 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro ao selecionar as despesas para editar");
                                 respostaSaida.setMensagem("Erro ao selecionar as despesas para editar");
                             }
-                        } else if(pedidoCliente.getMensagem().contains("Editar despesa com id")){
+                        }
+                        else if(pedidoCliente.getMensagem().contains("Editar despesa com id")){
                             respostaSaida = pedidoCliente;
                             String mensagem = pedidoCliente.getMensagem();
                             String[] partes = mensagem.split(" ");
@@ -565,7 +574,8 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Insucesso a editar os dados da despesa");
                             }
-                        } else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")) {
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento")) {
                             respostaSaida = pedidoCliente;
                             ArrayList<Divida> dividas = despesaPagadoresDB.getDividasPorEmail(pedidoCliente.getUtilizador().getEmail());
                             if(dividas != null){
@@ -579,7 +589,8 @@ class processaClienteThread implements Runnable {
                                 System.out.println("Erro ao selecionar as despesas para efetuar pagamento");
                                 respostaSaida.setMensagem("Erro ao selecionar as despesas para efetuar pagamento");
                             }
-                        } else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento com id")) {
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento com id")) {
                             respostaSaida = pedidoCliente;
                             int idDespesa = pedidoCliente.getUtilizador().getPagamentoAtual().getIdDespesa();
                             double valorDivida = despesaPagadoresDB.getDividaPorId(idDespesa, pedidoCliente.getUtilizador().getEmail());

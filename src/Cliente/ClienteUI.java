@@ -80,7 +80,11 @@ public class ClienteUI implements PropertyChangeListener {
                   lastCommand.equalsIgnoreCase("Sair grupo") && resposta.getMensagem().equalsIgnoreCase("Saida grupo bem sucedida")
         ){
             menuGrupos();
-        } else {
+        } else if(lastCommand.equalsIgnoreCase("Ver convites") ||
+                lastCommand.equalsIgnoreCase("Aceitar convite")||
+        lastCommand.equalsIgnoreCase("Rejeitar convite")){
+            menuConvites();
+        }else {
             System.out.println("""
                     O que pretende fazer?
                       1. Logout
@@ -160,20 +164,39 @@ public class ClienteUI implements PropertyChangeListener {
     }
 
     private void menuConvites() throws IOException {
-        System.out.println("""
-                [Menu convites]
-                  1. Ver convites
-                  2. Aceitar convite
-                  3. Rejeitar convite
-                  0. Sair
-                """);
-        String option = reader.readLine().trim();
-        switch (option) {
-            //case "1" -> {lastCommand="Ver convites";clienteFacade.viewInvite();}
-            case "2" -> {lastCommand="";handleAcceptInvite();}
-            case "3" -> {lastCommand="";handleRejectInvite();}
-            case "0" -> menuUtilizadoresComLogin();
-            default -> System.out.println("Opção inválida, tente novamente.");
+        System.out.println("ultimo comando: "+lastCommand+" \nresposta"+resposta.getMensagem());
+        if(!lastCommand.equalsIgnoreCase("Ver convites") || (lastCommand.equalsIgnoreCase("Ver convites") && resposta.getMensagem().equalsIgnoreCase("Lista de convites vazia"))){
+            System.out.println("AQUI");
+            System.out.println("""
+                            [Menu convites]
+                              1. Ver convites
+                              0. Sair""");
+            String option = reader.readLine().trim();
+            switch (option) {
+                case "1" ->{lastCommand="Ver convites";handleSeeInvites();}
+                case "0" -> menuUtilizadoresComLogin();
+            }
+        }
+        if(lastCommand.equalsIgnoreCase("Ver convites")) {
+            System.out.println("""
+                    [Menu convites]
+                      1. Aceitar convite
+                      2. Rejeitar convite
+                      0. Sair
+                    """);
+            String option = reader.readLine().trim();
+            switch (option) {
+                case "1" -> {
+                    lastCommand = "Aceitar convite";
+                    handleChangeInviteState("Aceite");
+                }
+                case "2" -> {
+                    lastCommand = "Rejeitar convite";
+                    handleChangeInviteState("Rejeitado");
+                }
+                case "0" ->{lastCommand = ""; menuUtilizadoresComLogin();}
+                default -> System.out.println("Opção inválida, tente novamente.");
+            }
         }
     }
 
@@ -288,17 +311,20 @@ public class ClienteUI implements PropertyChangeListener {
         clienteFacade.payDebt(valor, opcao);
         lastCommand="";
     }
-
-    private void handleAcceptInvite() throws IOException {
-        System.out.print("Nome do Grupo para Aceitar o Convite: ");
-        String nomeGrupo = reader.readLine().trim();
-        clienteFacade.acceptInvite(nomeGrupo);
+    private void handleSeeInvites() {
+        clienteFacade.seeInvites();
     }
-
-    private void handleRejectInvite() throws IOException {
-        System.out.print("Nome do Grupo para Rejeitar o Convite: ");
+    private void handleChangeInviteState(String estado) throws IOException {
+        if(estado.equalsIgnoreCase("Aceite"))
+            System.out.print("Nome do Grupo para Aceitar o Convite: ");
+        else
+            System.out.print("Nome do Grupo para Rejeitar o Convite: ");
         String nomeGrupo = reader.readLine().trim();
-        clienteFacade.rejectInvite(nomeGrupo);
+        if(!clienteFacade.handleChangeInviteState(estado, nomeGrupo)){
+            System.out.println("Não foi encontrado nenhum convite para o grupo "+nomeGrupo+"!");
+           lastCommand="";
+            menuUtilizadoresComLogin();
+        }
     }
 
     private void updateUserName() throws IOException {
@@ -336,7 +362,11 @@ public class ClienteUI implements PropertyChangeListener {
                     System.out.println(d.toString());
                 }
             }
-
+            if(resposta.getMensagem().equalsIgnoreCase("Lista de convites")){
+                System.out.println("Convites pendentes:");
+                for (var convite: clienteFacade.getUtilizador().getConvites())
+                    System.out.println("Convite para o grupo: " + convite.getNomeGrupo() + " (de: " + convite.getRemetente() + ")");
+            }
             if(resposta.getMensagem().equalsIgnoreCase("Ver grupos bem sucedido")){
                 System.out.println("Lista de Grupos pertencentes: ");
                 for(var g:resposta.getUtilizador().getGrupos())
