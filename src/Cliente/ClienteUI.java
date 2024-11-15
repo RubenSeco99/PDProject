@@ -15,6 +15,7 @@ public class ClienteUI implements PropertyChangeListener {
     private boolean running;
     private String lastCommand;
     private Comunicacao resposta;
+    final Object sincroniza;
 
     public ClienteUI(ClienteFacade clienteFacade) {
         this.clienteFacade = clienteFacade;
@@ -22,16 +23,21 @@ public class ClienteUI implements PropertyChangeListener {
         this.clienteFacade.addPropertyChangeListener(this);
         this.running = true;
         this.lastCommand = "";
+        sincroniza = new Object();
     }
 
     public void start() {
         try {
-            while (running) {
-                Thread.sleep(500);
-                if (!clienteFacade.isRegistado()) {
-                    menuUtilizadoresSemLogin();
-                } else {
-                    menuUtilizadoresComLogin();
+            synchronized (sincroniza) {
+                while (running) {
+                    if (!clienteFacade.getSincronizado()) {
+                        sincroniza.wait();
+                    }
+                    if (!clienteFacade.isRegistado()) {
+                        menuUtilizadoresSemLogin();
+                    } else {
+                        menuUtilizadoresComLogin();
+                    }
                 }
             }
         } catch (InterruptedException | IOException e) {
@@ -378,6 +384,11 @@ public class ClienteUI implements PropertyChangeListener {
             }
             if(resposta.getMensagem().equalsIgnoreCase("Mudanca nome bem sucedida"))
                 clienteFacade.getUtilizador().getGrupoAtual().setNome(resposta.getUtilizador().getGrupoAtual().getNome());
+
+            // Este metodo tem que ficar sempre no final
+            synchronized (sincroniza){
+                sincroniza.notify();
+            }
         }
     }
 }

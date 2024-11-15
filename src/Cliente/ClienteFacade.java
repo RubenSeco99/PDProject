@@ -18,6 +18,7 @@ public class ClienteFacade {
     public ClienteFacade(String serverAddress, int serverPort) {
         clienteModel = new ClienteModel(serverAddress, serverPort, this);
         utilizador = new Utilizador();
+
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -229,4 +230,6 @@ public class ClienteFacade {
     public Utilizador getUtilizador() {
         return clienteModel.getUtilizadorAtualizado();
     }
+
+    public boolean getSincronizado(){return clienteModel.getSincronizado();}
 }

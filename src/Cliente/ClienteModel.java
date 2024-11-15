@@ -15,6 +15,7 @@ public class ClienteModel {
     private final PropertyChangeSupport support;
     private Thread listenerThread;
     private ClienteFacade facade;
+    private boolean sincronizado;
 
     public ClienteModel(String serverAddress, int serverPort, ClienteFacade facade) {
         this.support = new PropertyChangeSupport(this);
@@ -25,6 +26,7 @@ public class ClienteModel {
             this.Oin = new ObjectInputStream(socket.getInputStream());
             this.utilizadorAtualizado = new Utilizador();
             this.registado = false;
+            sincronizado = true;
 
             startListening();
         }catch (IOException e){
@@ -37,6 +39,7 @@ public class ClienteModel {
             Oout.writeObject(comunicacao);
             Oout.flush();
             Oout.reset();
+            sincronizado = false;
         }catch (IOException e){
             System.out.println("Erro ao enviar mensagem" + e);
         }
@@ -71,6 +74,7 @@ public class ClienteModel {
                     Comunicacao resposta = (Comunicacao) Oin.readObject();
                     processarResposta(resposta);
                     support.firePropertyChange("mensagemRecebida", null, resposta);
+                    sincronizado = true;
                 }
             } catch (EOFException e) {
                 System.out.println("Conexão terminada pelo servidor.");
@@ -123,4 +127,6 @@ public class ClienteModel {
     public boolean isRegistado() {
         return registado;
     }
+
+    public boolean getSincronizado() {return sincronizado;}
 }
