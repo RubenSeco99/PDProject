@@ -16,8 +16,7 @@ public class ClienteUI implements PropertyChangeListener {
     private String lastCommand;
     private Comunicacao resposta;
     final Object sincroniza;
-
-    private boolean sincronizado;
+    boolean sincronizado;
 
     public ClienteUI(ClienteFacade clienteFacade) {
         this.clienteFacade = clienteFacade;
@@ -26,21 +25,26 @@ public class ClienteUI implements PropertyChangeListener {
         this.running = true;
         this.lastCommand = "";
         sincroniza = new Object();
-        sincronizado = clienteFacade.getSincronizado();
+        sincronizado = true;
     }
 
     public void start() {
         try {
             synchronized (sincroniza) {
                 while (running) {
-                    if (!clienteFacade.getSincronizado()) {
+                    if (!sincronizado) {
                         sincroniza.wait();
+                        if(lastCommand.equals("Logout")) {
+                            System.out.println("A desligar cliente...");
+                            break;
+                        }
                     }
                     if (!clienteFacade.isRegistado()) {
                         menuUtilizadoresSemLogin();
                     } else {
                         menuUtilizadoresComLogin();
                     }
+                    //sincronizado = false;
                 }
             }
         } catch (InterruptedException | IOException e) {
@@ -103,7 +107,7 @@ public class ClienteUI implements PropertyChangeListener {
                     """);
             String option = reader.readLine().trim();
             switch (option) {
-                case "1" -> clienteFacade.logout();
+                case "1" -> {sincronizado = false; lastCommand = "Logout"; clienteFacade.logout();}
                 case "2" -> handleUpdateUserData();
                 case "3" -> menuGrupos();
                 case "4" -> menuConvites();
@@ -126,8 +130,8 @@ public class ClienteUI implements PropertyChangeListener {
         switch (option) {
             case "1" -> handleChooseGroup();
             case "2" -> {lastCommand="Criar grupo";handleCreateGroup();}
-            case "3" -> {lastCommand="Ver grupos";clienteFacade.viewGroups();}
-            case "0" -> menuUtilizadoresComLogin();
+            case "3" -> {lastCommand="Ver grupos";sincronizado = false; clienteFacade.viewGroups();}
+            case "0" -> {lastCommand = "";menuUtilizadoresComLogin();}
             default -> System.out.println("Opção inválida, tente novamente.");
         }
     }
@@ -154,15 +158,15 @@ public class ClienteUI implements PropertyChangeListener {
             switch (option) {
                 case "1" -> {lastCommand = "Enviar convite grupo";handleSendInvite();}
                 case "2" -> {lastCommand = "Mudar nome grupo";handleUpdateGroupName();}
-                case "3" -> {lastCommand = "Apagar grupo";clienteFacade.deleteGroup();}
+                case "3" -> {lastCommand = "Apagar grupo";sincronizado=false;clienteFacade.deleteGroup();}
                 case "4" -> {lastCommand = "Inserir despesa"; handleAddExpense();}
-                case "5" -> {lastCommand = "Total gastos";clienteFacade.viewTotalExpenses();}
-                case "6" -> {lastCommand = "Historio despesas";clienteFacade.viewExpenses();}
-                case "7" -> {lastCommand = "Exportar csv";clienteFacade.exportExpensesToCSV();}
-                case "8" -> {lastCommand = "Editar despesa"; clienteFacade.viewExpenses();}
-                case "9" -> {lastCommand = "Eliminar despesa"; clienteFacade.viewExpenses();}
-                case "10" -> {lastCommand = "Fazer pagamento";clienteFacade.viewExpenses();}
-                case "11" -> {lastCommand = "Sair grupo";clienteFacade.exitGroup();}
+                case "5" -> {lastCommand = "Total gastos";sincronizado=false;clienteFacade.viewTotalExpenses();}
+                case "6" -> {lastCommand = "Historio despesas";sincronizado=false;clienteFacade.viewExpenses();}
+                case "7" -> {lastCommand = "Exportar csv";sincronizado=false;clienteFacade.exportExpensesToCSV();}
+                case "8" -> {lastCommand = "Editar despesa";sincronizado=false;clienteFacade.viewExpenses();}
+                case "9" -> {lastCommand = "Eliminar despesa";sincronizado=false; clienteFacade.viewExpenses();}
+                case "10" -> {lastCommand = "Fazer pagamento";sincronizado=false;clienteFacade.viewExpenses();}
+                case "11" -> {lastCommand = "Sair grupo";sincronizado=false;clienteFacade.exitGroup();}
                 case "0" -> {lastCommand = "";menuUtilizadoresComLogin();}
                 default -> System.out.println("Opção inválida, tente novamente.");
             }
@@ -183,9 +187,9 @@ public class ClienteUI implements PropertyChangeListener {
                 case "1" ->{lastCommand="Ver convites";handleSeeInvites();}
                 case "0" -> System.out.println("\n");//{lastCommand="";menuUtilizadoresComLogin();}
             }
-        }
-        if(lastCommand.equalsIgnoreCase("Ver convites")) {
+        }else if(lastCommand.equalsIgnoreCase("Ver convites")) {
             System.out.println("""
+                    
                     [Menu convites]
                       1. Aceitar convite
                       2. Rejeitar convite
@@ -403,8 +407,8 @@ public class ClienteUI implements PropertyChangeListener {
 
             // Este metodo tem que ficar sempre no final
             synchronized (sincroniza){
-                sincroniza.notify();
                 sincronizado = true;
+                sincroniza.notify();
             }
         }
     }

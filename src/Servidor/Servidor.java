@@ -646,10 +646,11 @@ class processaClienteThread implements Runnable {
                 } catch (SocketException e) {
                     System.out.println("Cliente desconectado inesperadamente: " + clienteSocket.getRemoteSocketAddress());
                     if (utilizadorThread != null) {
-                        utilizadorThread.setAtivo(0);
-                        utilizadorDB.updateUtilizador(utilizadorThread);
-                        if(utilizadorThread.getEmail()!=null)
+                        if(utilizadorThread.getAtivo() == 1 && utilizadorThread.getEmail() != null) {
+                            utilizadorThread.setAtivo(0);
+                            utilizadorDB.updateUtilizador(utilizadorThread);
                             System.out.println("Utilizador " + utilizadorThread.getEmail() + " marcado como inativo.");
+                        }
                     }
                     running = false;
                 } catch (EOFException e) {
@@ -819,7 +820,6 @@ public class Servidor {
                     td.start();
                 }catch (IOException e){
                     if (encerraServidor) {
-
                         System.out.println("Servidor encerrado com sucesso.");
                         break;
                     } else {

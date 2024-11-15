@@ -101,6 +101,7 @@ public class UtilizadorDB {
             return false;
         }
     }
+
     public void updateUtilizador(Utilizador utilizador){
         try {
             String query = "UPDATE Utilizador SET nome = ?, password = ?, telefone = ?, ativo = ? WHERE email = ?";

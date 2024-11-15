@@ -20,9 +20,7 @@ public class ClienteFacade {
     public ClienteFacade(String serverAddress, int serverPort) {
         sincronizado = true;
         clienteModel = new ClienteModel(serverAddress, serverPort, this);
-        clienteModel.setSincronizado(sincronizado);
         utilizador = new Utilizador();
-
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -235,6 +233,4 @@ public class ClienteFacade {
     public Utilizador getUtilizador() {
         return clienteModel.getUtilizadorAtualizado();
     }
-
-    public boolean getSincronizado(){return clienteModel.getSincronizado();}
 }
