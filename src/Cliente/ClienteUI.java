@@ -17,6 +17,8 @@ public class ClienteUI implements PropertyChangeListener {
     private Comunicacao resposta;
     final Object sincroniza;
 
+    private boolean sincronizado;
+
     public ClienteUI(ClienteFacade clienteFacade) {
         this.clienteFacade = clienteFacade;
         this.reader = new BufferedReader(new InputStreamReader(System.in));
@@ -24,6 +26,7 @@ public class ClienteUI implements PropertyChangeListener {
         this.running = true;
         this.lastCommand = "";
         sincroniza = new Object();
+        sincronizado = clienteFacade.getSincronizado();
     }
 
     public void start() {
@@ -170,9 +173,7 @@ public class ClienteUI implements PropertyChangeListener {
     }
 
     private void menuConvites() throws IOException {
-        System.out.println("ultimo comando: "+lastCommand+" \nresposta"+resposta.getMensagem());
         if(!lastCommand.equalsIgnoreCase("Ver convites") || (lastCommand.equalsIgnoreCase("Ver convites") && resposta.getMensagem().equalsIgnoreCase("Lista de convites vazia"))){
-            System.out.println("AQUI");
             System.out.println("""
                             [Menu convites]
                               1. Ver convites
@@ -180,7 +181,7 @@ public class ClienteUI implements PropertyChangeListener {
             String option = reader.readLine().trim();
             switch (option) {
                 case "1" ->{lastCommand="Ver convites";handleSeeInvites();}
-                case "0" -> menuUtilizadoresComLogin();
+                case "0" -> System.out.println("\n");//{lastCommand="";menuUtilizadoresComLogin();}
             }
         }
         if(lastCommand.equalsIgnoreCase("Ver convites")) {
@@ -211,6 +212,7 @@ public class ClienteUI implements PropertyChangeListener {
         String email = reader.readLine().trim();
         System.out.print("Password: ");
         String password = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.login(email, password);
     }
 
@@ -221,6 +223,7 @@ public class ClienteUI implements PropertyChangeListener {
         String email = reader.readLine().trim();
         System.out.print("Password: ");
         String password = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.register(nome, email, password);
     }
 
@@ -246,24 +249,28 @@ public class ClienteUI implements PropertyChangeListener {
         System.out.print("Indique o nome do grupo que deseja escolher: ");
         String nomeGrupo = reader.readLine().trim();
         lastCommand = "Escolher grupo";
+        sincronizado=false;
         clienteFacade.chooseGroup(nomeGrupo);
     }
 
     private void handleCreateGroup() throws IOException {
         System.out.print("Nome do Grupo: ");
         String groupName = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.createGroup(groupName);
     }
 
     private void handleSendInvite() throws IOException {
         System.out.print("Email do Utilizador a Convidar: ");
         String email = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.sendGroupInvite(email);
     }
 
     private void handleUpdateGroupName() throws IOException {
         System.out.print("Novo Nome do Grupo: ");
         String novoNome = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.updateGroupName(novoNome);
     }
 
@@ -277,6 +284,7 @@ public class ClienteUI implements PropertyChangeListener {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
             String dataInput = reader.readLine().trim();
             Date data = new Date(dateFormat.parse(dataInput).getTime());
+            sincronizado=false;
             clienteFacade.addExpense(descricao, valor, data);
         }catch (ParseException | IOException e) {
             System.out.println(e.getMessage());
@@ -295,6 +303,7 @@ public class ClienteUI implements PropertyChangeListener {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
             String dataInput = reader.readLine().trim();
             Date data = new Date(dateFormat.parse(dataInput).getTime());
+            sincronizado=false;
             clienteFacade.updateExpense(descricao, valor, data, opcao);
             lastCommand="";
         }catch (ParseException | IOException e) {
@@ -305,6 +314,7 @@ public class ClienteUI implements PropertyChangeListener {
     public void handleRemoveExpense() throws IOException {
         System.out.println("Escolha o id da despesa que pretende eliminar");
         int opcao = Integer.parseInt(reader.readLine().trim());
+        sincronizado=false;
         clienteFacade.deleteExpense(opcao);
         lastCommand="";
     }
@@ -314,10 +324,12 @@ public class ClienteUI implements PropertyChangeListener {
         int opcao = Integer.parseInt(reader.readLine().trim());
         System.out.print("Valor a Pagar: ");
         double valor = Double.parseDouble(reader.readLine().trim());
+        sincronizado=false;
         clienteFacade.payDebt(valor, opcao);
         lastCommand="";
     }
     private void handleSeeInvites() {
+        sincronizado=false;
         clienteFacade.seeInvites();
     }
     private void handleChangeInviteState(String estado) throws IOException {
@@ -326,28 +338,32 @@ public class ClienteUI implements PropertyChangeListener {
         else
             System.out.print("Nome do Grupo para Rejeitar o Convite: ");
         String nomeGrupo = reader.readLine().trim();
+        sincronizado=false;
         if(!clienteFacade.handleChangeInviteState(estado, nomeGrupo)){
             System.out.println("Não foi encontrado nenhum convite para o grupo "+nomeGrupo+"!");
            lastCommand="";
-            menuUtilizadoresComLogin();
+           // menuUtilizadoresComLogin();
         }
     }
 
     private void updateUserName() throws IOException {
         System.out.print("Novo Nome: ");
         String nome = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.updateUserName(nome);
     }
 
     private void updateUserPassword() throws IOException {
         System.out.print("Nova Password: ");
         String password = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.updateUserPassword(password);
     }
 
     private void updateUserPhone() throws IOException {
         System.out.print("Novo Telefone: ");
         String telefone = reader.readLine().trim();
+        sincronizado=false;
         clienteFacade.updateUserPhone(telefone);
     }
 
@@ -388,6 +404,7 @@ public class ClienteUI implements PropertyChangeListener {
             // Este metodo tem que ficar sempre no final
             synchronized (sincroniza){
                 sincroniza.notify();
+                sincronizado = true;
             }
         }
     }

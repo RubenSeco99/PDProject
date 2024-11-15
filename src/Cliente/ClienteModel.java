@@ -26,7 +26,6 @@ public class ClienteModel {
             this.Oin = new ObjectInputStream(socket.getInputStream());
             this.utilizadorAtualizado = new Utilizador();
             this.registado = false;
-            sincronizado = true;
 
             startListening();
         }catch (IOException e){
@@ -129,4 +128,8 @@ public class ClienteModel {
     }
 
     public boolean getSincronizado() {return sincronizado;}
+
+    public void setSincronizado(boolean sincronizado) {
+        this.sincronizado = sincronizado;
+    }
 }

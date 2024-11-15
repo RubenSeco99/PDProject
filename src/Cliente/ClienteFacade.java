@@ -15,8 +15,12 @@ public class ClienteFacade {
     private final ClienteModel clienteModel;
     private Utilizador utilizador;
 
+    private boolean sincronizado;
+
     public ClienteFacade(String serverAddress, int serverPort) {
+        sincronizado = true;
         clienteModel = new ClienteModel(serverAddress, serverPort, this);
+        clienteModel.setSincronizado(sincronizado);
         utilizador = new Utilizador();
 
     }
@@ -152,6 +156,7 @@ public class ClienteFacade {
                 clienteModel.enviarMensagem(comunicacao);
                 return true;
             }
+        sincronizado=true;
         return false;
 
     }
