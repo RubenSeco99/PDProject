@@ -21,7 +21,7 @@ start cmd /k "java -cp bin Cliente.ClienteMain localhost 5000"
 ping -n 2 127.0.0.1 >null
 
 rem Abrir uma nova janela para iniciar o Cliente
-rem start cmd /k "java -cp bin;lib/sqlite-jdbc-3.46.1.3.jar ServidorBackup.ServidorBackup src/BaseDeDadosBackUp"
+start cmd /k "java -cp bin;lib/sqlite-jdbc-3.46.1.3.jar ServidorBackup.ServidorBackup src/BaseDeDadosBackUp"
 
 rem Pausar o terminal original para ver mensagens de erro ou saída
 pause

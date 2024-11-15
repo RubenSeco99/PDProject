@@ -86,13 +86,13 @@ public class ServidorBackup {
                     }
 
                     InputStream reader = socketTCP.getInputStream();
-                    byte[] buffer = new byte[MAX_SIZE];  // Buffer para armazenar os dados recebidos
+                    byte[] buffer = new byte[MAX_SIZE];
                     int bytesRead;
                     int contador = 0;
 
-                    while ((bytesRead = reader.read(buffer)) > 0) {  // Lê blocos de dados do servidor
+                    while ((bytesRead = reader.read(buffer)) > 0) {
                         System.out.println("Bloco lido");
-                        localFileOutputStream.write(buffer, 0, bytesRead);  // Escreve no ficheiro local
+                        localFileOutputStream.write(buffer, 0, bytesRead);
                         contador++;
                     }
 
@@ -100,6 +100,8 @@ public class ServidorBackup {
                     multiSocket.setSoTimeout(TIMEOUT);
 
                     backupConnection = conectBackUpDB(localFilePath);
+
+                    int versaoAnterior = -1;
 
                     try {
                         while (true) {
@@ -116,6 +118,10 @@ public class ServidorBackup {
                                     List<Object> parametros = serverSupport.getParametros();
 
                                     if (query != null && parametros != null) {
+                                        if(versaoAnterior == serverSupport.getVersao()) {
+                                            System.out.println("Versao anterior igual a versao atual\nA sair...");
+                                            break;
+                                        }
                                         executarQueryNoBackup(backupConnection, query, parametros);
                                         System.out.println("Query de backup executada: " + query);
                                     } else {
@@ -127,6 +133,7 @@ public class ServidorBackup {
                             } catch (IOException e) {
                                 System.out.println("Impossibilidade de aceder ao conteudo da mensagem recebida! " + e);
                             }
+                            versaoAnterior = serverSupport.getVersao();
                         }
                     } catch (SocketTimeoutException e) {
                         System.out.println("Timeout ao receber heartbeat, esperando o proximo...");
@@ -182,13 +189,13 @@ public class ServidorBackup {
             return;
         }
 
-        // Verificar se a query e os parâmetros estão corretos
+        // Verifica novamente os parametros recebidos
         if (query == null || parametros == null || query.isEmpty()) {
             System.out.println("Erro: Query ou parâmetros inválidos.");
             return;
         }
 
-        // Contar o número de placeholders na query
+        // Conta se o numero de parametros batem
         int numPlaceholders = query.length() - query.replace("?", "").length();
         if (numPlaceholders != parametros.size()) {
             System.out.println("Erro: O número de placeholders não corresponde ao número de parâmetros.");
