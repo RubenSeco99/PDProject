@@ -69,16 +69,7 @@ public class ClienteUI implements PropertyChangeListener {
     }
 
     private void menuUtilizadoresComLogin() throws IOException {
-        if((lastCommand.equalsIgnoreCase("Escolher grupo") && resposta.getMensagem().equalsIgnoreCase("Grupo escolhido")) ||
-        lastCommand.equalsIgnoreCase("Enviar convite grupo") ||
-        lastCommand.equalsIgnoreCase("Mudar nome grupo") ||
-        lastCommand.equalsIgnoreCase("Apagar grupo") && resposta.getMensagem().equalsIgnoreCase("Apagar grupo mal sucedido") ||
-        lastCommand.equalsIgnoreCase("Sair grupo") && resposta.getMensagem().equalsIgnoreCase("Saida grupo mal sucedido") ||
-        lastCommand.equalsIgnoreCase("Inserir despesa") ||
-        lastCommand.equalsIgnoreCase("Total gastos") ||
-        lastCommand.equalsIgnoreCase("Historio despesas") ||
-        lastCommand.equalsIgnoreCase("Exportar csv")
-        ){
+        if(verificaRoteamentoMenuGrupoAtual()){
             menuGrupoAtual();
         }else if(lastCommand.equalsIgnoreCase("Eliminar despesa")){
             handleRemoveExpense();
@@ -86,16 +77,9 @@ public class ClienteUI implements PropertyChangeListener {
             handlePayDebt();
         } else if(lastCommand.equalsIgnoreCase("Editar despesa")){
             handleEditExpense();
-        }else if((lastCommand.equalsIgnoreCase("Escolher grupo")  && resposta.getMensagem().equalsIgnoreCase("Utilizador não pertence ao grupo")) ||
-                  lastCommand.equalsIgnoreCase("Criar grupo") ||
-                  lastCommand.equalsIgnoreCase("Ver grupos") ||
-                 (lastCommand.equalsIgnoreCase("Apagar grupo") && resposta.getMensagem().equalsIgnoreCase("Apagar grupo bem sucedido")) ||
-                  lastCommand.equalsIgnoreCase("Sair grupo") && resposta.getMensagem().equalsIgnoreCase("Saida grupo bem sucedida")
-        ){
+        }else if(verificaRoteamentoMenuGrupos()){
             menuGrupos();
-        } else if(lastCommand.equalsIgnoreCase("Ver convites") ||
-                lastCommand.equalsIgnoreCase("Aceitar convite")||
-        lastCommand.equalsIgnoreCase("Rejeitar convite")){
+        } else if(verificaRoteamentoMenuConvites()){
             menuConvites();
         }else {
             System.out.println("""
@@ -138,7 +122,8 @@ public class ClienteUI implements PropertyChangeListener {
 
     private void menuGrupoAtual(){
         try {
-            System.out.println(String.format("""
+            System.out.printf("""
+                    
                     [Menu grupo: %s]
                     O que pretende fazer?
                       1. Enviar convite
@@ -155,7 +140,7 @@ public class ClienteUI implements PropertyChangeListener {
                       12. Visualizar saldos
                       13. Sair do grupo
                       0. Sair
-                    """, clienteFacade.getUtilizador().getGrupoAtual().getNome()));
+                    %n""", clienteFacade.getUtilizador().getGrupoAtual().getNome());
             String option = reader.readLine().trim();
             switch (option) {
                 case "1" -> {lastCommand = "Enviar convite grupo";handleSendInvite();}
@@ -321,15 +306,19 @@ public class ClienteUI implements PropertyChangeListener {
         }
     }
 
-    public void handleRemoveExpense() throws IOException {
-        System.out.println("Escolha o id da despesa que pretende eliminar");
-        int opcao = Integer.parseInt(reader.readLine().trim());
-        sincronizado=false;
-        clienteFacade.deleteExpense(opcao);
-        lastCommand="";
+    public void handleRemoveExpense() {
+        try {
+            System.out.println("Escolha o id da despesa que pretende eliminar");
+            int opcao = Integer.parseInt(reader.readLine().trim());
+            sincronizado=false;
+            clienteFacade.deleteExpense(opcao);
+            lastCommand="";
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }
     }
 
-    private void handlePayDebt() throws IOException {
+    private void handlePayDebt(){
         while(true) {
             try {
                 System.out.print("Indique o id da divida que deseja pagar: ");
@@ -340,7 +329,7 @@ public class ClienteUI implements PropertyChangeListener {
 
                 sincronizado = false;
                 clienteFacade.payDebt(valor, opcao);
-                lastCommand = "";
+                lastCommand="Pagamento feito";
                 break;
             } catch (NumberFormatException e) {
                 System.out.println("Erro: Insira apenas valores numéricos válidos.");
@@ -391,6 +380,41 @@ public class ClienteUI implements PropertyChangeListener {
     private void exit() {
         System.out.println("Encerrando o cliente...");
         running = false;
+    }
+
+    private boolean verificaRoteamentoMenuGrupoAtual(){
+        return (lastCommand.equalsIgnoreCase("Escolher grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Grupo escolhido")) ||
+                lastCommand.equalsIgnoreCase("Enviar convite grupo") ||
+                lastCommand.equalsIgnoreCase("Mudar nome grupo") ||
+                lastCommand.equalsIgnoreCase("Apagar grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Apagar grupo mal sucedido") ||
+                lastCommand.equalsIgnoreCase("Sair grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Saida grupo mal sucedido") ||
+                lastCommand.equalsIgnoreCase("Inserir despesa") ||
+                lastCommand.equalsIgnoreCase("Total gastos") ||
+                lastCommand.equalsIgnoreCase("Historio despesas") ||
+                lastCommand.equalsIgnoreCase("Exportar csv") ||
+                lastCommand.equalsIgnoreCase("Listar pagamentos") ||
+                lastCommand.equalsIgnoreCase("Visualizar saldos") ||
+                lastCommand.equalsIgnoreCase("Pagamento feito");
+    }
+
+    private boolean verificaRoteamentoMenuGrupos(){
+        return (lastCommand.equalsIgnoreCase("Escolher grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Utilizador não pertence ao grupo")) ||
+                lastCommand.equalsIgnoreCase("Criar grupo") ||
+                lastCommand.equalsIgnoreCase("Ver grupos") ||
+                (lastCommand.equalsIgnoreCase("Apagar grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Apagar grupo bem sucedido")) ||
+                lastCommand.equalsIgnoreCase("Sair grupo") &&
+                resposta.getMensagem().equalsIgnoreCase("Saida grupo bem sucedida");
+    }
+
+    private boolean verificaRoteamentoMenuConvites(){
+        return lastCommand.equalsIgnoreCase("Ver convites") ||
+                lastCommand.equalsIgnoreCase("Aceitar convite")||
+                lastCommand.equalsIgnoreCase("Rejeitar convite");
     }
 
     @Override

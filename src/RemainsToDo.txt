@@ -7,14 +7,18 @@
 - Quando se altera o nome de um grupo tem que alterar nas despesas e pagamento ✅
 -Listagem de pagamentos efetuados ✅
 -Visualização dos saldos do grupo corrente com, para cada elemento, indicação do:
-	o gasto total;❌
-	o valor total que deve;❌
-	o valor que que deve a cada um dos restantes elementos;❌
-	o valor total que tem a receber;❌
-	o valor que tem a receber de cada um dos restantes 	elementos❌
+	o gasto total;✅
+	o valor total que deve;✅
+	o valor que que deve a cada um dos restantes elementos;✅
+	o valor total que tem a receber;✅
+	o valor que tem a receber de cada um dos restantes 	elementos✅
 
 - BatServidorBackup✅
 - Não garantimos que quando transferimos a DB não há mais operações✅
 - Sem query tem que ter a mesma versão que a antiga✅
 - Quando a autenticação falha ou as credenciais não são enviadas no espaço de 60
     segundos, o servidor encerra a ligação TCP com o cliente; ✅
+- Roteamentos convites ✅
+- Metodos para verificar roteamentos (para não ficar tudo cheio de if's) ✅
+- Roteamento para o menuGrupoAtual (falta testar alguns) ✅
+
