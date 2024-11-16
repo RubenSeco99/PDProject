@@ -1,5 +1,7 @@
 package Cliente;
 
+import Comunicacao.Comunicacao;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;

@@ -1,13 +1,12 @@
 package Cliente;
 
+import Comunicacao.Comunicacao;
 import Entidades.Convite;
 import Entidades.Despesas;
 import Entidades.Pagamento;
 import Entidades.Utilizador;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.sql.Date;
 import java.util.List;
 

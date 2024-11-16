@@ -21,4 +21,6 @@
 - Roteamentos convites ✅
 - Metodos para verificar roteamentos (para não ficar tudo cheio de if's) ✅
 - Roteamento para o menuGrupoAtual (falta testar alguns) ✅
+- Servidor separado em ficheiros ✅
+- Comunicação em package a parte ✅
 

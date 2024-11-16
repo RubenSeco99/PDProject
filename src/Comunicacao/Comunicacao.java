@@ -1,4 +1,4 @@
-package Cliente;
+package Comunicacao;
 
 import java.io.Serializable;
 import java.util.ArrayList;

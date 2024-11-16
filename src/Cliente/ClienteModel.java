@@ -1,5 +1,6 @@
 package Cliente;
 
+import Comunicacao.Comunicacao;
 import Entidades.Utilizador;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
