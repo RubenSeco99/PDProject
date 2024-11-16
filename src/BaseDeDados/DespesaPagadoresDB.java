@@ -9,7 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DespesaPagadoresDB {
     private final Connection connection;
@@ -59,7 +61,6 @@ public class DespesaPagadoresDB {
         }
         return false;
     }
-
     public boolean checkUserDivida(ArrayList<Despesas> despesasList, String email) {
         String query = "SELECT COUNT(*) FROM Despesa_Pagadores " +
                 "WHERE despesa_id = ? AND utilizador_email = ? AND estado_pagamento = 'Pendente'";
@@ -89,7 +90,6 @@ public class DespesaPagadoresDB {
             return false; // Retorna false em caso de erro
         }
     }
-
     public ArrayList<Despesas> preencherUtilizadoresPartilhados(ArrayList<Despesas> despesasList) {
         String sql = "SELECT utilizador_email FROM Despesa_Pagadores WHERE despesa_id = ? AND utilizador_email != ?";
 
@@ -259,6 +259,51 @@ public class DespesaPagadoresDB {
         }
 
         return dividas;
+    }
+    public double calcularTotalDevidoPorUtilizador(String email, String nomeGrupo) {
+        String sql = "SELECT SUM(dp.valor_divida) AS total_devido " +
+                "FROM Despesa_Pagadores dp " +
+                "JOIN Despesa d ON dp.despesa_id = d.id " +
+                "WHERE dp.utilizador_email = ? AND d.grupo_nome = ? AND d.criador_email != ? AND dp.estado_pagamento = 'Pendente'";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            pstmt.setString(2, nomeGrupo);
+            pstmt.setString(3, email);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("total_devido");
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao calcular o total devido por utilizador: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+
+    public Map<String, Double> calcularDeveParaCada(String emailUtilizador, String nomeGrupo) {
+        Map<String, Double> deveA = new HashMap<>();
+        String sql = "SELECT dp.utilizador_email, dp.valor_divida, d.criador_email " +
+                "FROM Despesa_Pagadores dp " +
+                "JOIN Despesa d ON dp.despesa_id = d.id " +
+                "WHERE d.grupo_nome = ? AND dp.estado_pagamento = 'Pendente' AND dp.utilizador_email = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, nomeGrupo);
+            pstmt.setString(2, emailUtilizador);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String criadorEmail = rs.getString("criador_email");
+                double valorDivida = rs.getDouble("valor_divida");
+                if (!emailUtilizador.equals(criadorEmail)) {
+                    deveA.merge(criadorEmail, valorDivida, Double::sum);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao calcular quem deve a quem: " + e.getMessage());
+        }
+        return deveA;
     }
 
 }

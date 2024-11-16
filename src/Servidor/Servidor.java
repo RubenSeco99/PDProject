@@ -9,9 +9,7 @@ import ServidorBackup.ServerBackUpSupport;
 import java.sql.Connection;
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 class encerraServerThread implements Runnable{
 
@@ -681,6 +679,49 @@ class processaClienteThread implements Runnable {
                             }else{
                                 respostaSaida.setMensagem("Insucesso a listar pagamentos");
                             }
+                        }else if(pedidoCliente.getMensagem().equalsIgnoreCase("Visualizar saldos")){
+                            respostaSaida = pedidoCliente;
+                            String nomeGrupo = pedidoCliente.getUtilizador().getGrupoAtual().getNome();
+                            List<Utilizador> utilizadores = utilizadorGrupoDB.selectUtilizadoresPorGrupo(nomeGrupo);
+                            Map<String, Double> gastosTotais = new HashMap<>();
+                            Map<String, Double> valoresDevidos = new HashMap<>();
+                            Map<String, Map<String, Double>> deveParaCada = new HashMap<>();
+                            Map<String, Double> totalReceber = new HashMap<>();
+                            Map<String, Map<String, Double>> receberDeCada = new HashMap<>();
+
+                            // Calcular o gasto total por elemento
+                            for (Utilizador u : utilizadores) {
+                                double gastoTotal = despesaDB.calcularGastoTotalPorUtilizador(u.getEmail(), nomeGrupo);
+                                gastosTotais.put(u.getEmail(), gastoTotal);
+                            }
+
+                            // Calcular o valor total que cada elemento deve e detalhar quanto deve a cada um
+                            for (Utilizador u : utilizadores) {
+                                double totalDevido = despesaPagadoresDB.calcularTotalDevidoPorUtilizador(u.getEmail(), nomeGrupo);
+                                valoresDevidos.put(u.getEmail(), totalDevido);
+
+                                // Chama o método e atribui o resultado ao mapa
+                                Map<String, Double> deveA = despesaPagadoresDB.calcularDeveParaCada(u.getEmail(), nomeGrupo);
+                                if (!deveA.isEmpty()) { // Apenas adiciona se houver devedores
+                                    deveParaCada.put(u.getEmail(), deveA);
+                                }
+                            }
+
+                            // Calcular o valor total que cada elemento tem a receber e detalhar quanto tem a receber de cada um
+                            for (Utilizador u : utilizadores) {
+                                double totalAReceber = pagamentoDB.calcularTotalReceberPorUtilizador(u.getEmail(), nomeGrupo);
+                                totalReceber.put(u.getEmail(), totalAReceber);
+                                Map<String, Double> receberDe = pagamentoDB.calcularReceberDeCada(u.getEmail(), nomeGrupo);
+                                receberDeCada.put(u.getEmail(), receberDe);
+                            }
+
+                            // Montar a resposta com os dados calculados
+                            respostaSaida.setMensagem("Saldos do grupo");
+                            respostaSaida.setGastosTotais(gastosTotais);
+                            respostaSaida.setValoresDevidos(valoresDevidos);
+                            respostaSaida.setDeveParaCada(deveParaCada);
+                            respostaSaida.setTotalReceber(totalReceber);
+                            respostaSaida.setReceberDeCada(receberDeCada);
                         }
                     }
 

@@ -250,4 +250,23 @@ public class DespesaDB {
         }
         return null;
     }
+
+    public double calcularGastoTotalPorUtilizador(String email, String nomeGrupo) {
+        double totalGasto = 0.0;
+        String sql = "SELECT SUM(valor) AS total FROM Despesa WHERE criador_email = ? AND grupo_nome = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            pstmt.setString(2, nomeGrupo);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                totalGasto = rs.getDouble("total");
+            }
+        } catch (SQLException ex) {
+            System.out.println("Erro ao calcular o gasto total por utilizador: " + ex.getMessage());
+        }
+        return totalGasto;
+    }
+
 }

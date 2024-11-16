@@ -16,11 +16,10 @@ public class ClienteModel {
     private Utilizador utilizadorAtualizado;
     private final PropertyChangeSupport support;
     private Thread listenerThread;
-    private ClienteFacade facade;
 
-    public ClienteModel(String serverAddress, int serverPort, ClienteFacade facade) {
+
+    public ClienteModel(String serverAddress, int serverPort) {
         this.support = new PropertyChangeSupport(this);
-        this.facade = facade;
         try {
             this.socket = new Socket(serverAddress, serverPort);
             this.Oout = new ObjectOutputStream(socket.getOutputStream());

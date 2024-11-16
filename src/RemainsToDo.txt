@@ -5,7 +5,7 @@
 - Fazer pagamento com bug (validar se tem despesa e so deixar escolher o seu id)✅
 - Saida do grupo só se o user não tiver dividas✅
 - Quando se altera o nome de um grupo tem que alterar nas despesas e pagamento ✅
--Listagem de pagamentos efetuados❌
+-Listagem de pagamentos efetuados ✅
 -Visualização dos saldos do grupo corrente com, para cada elemento, indicação do:
 	o gasto total;❌
 	o valor total que deve;❌

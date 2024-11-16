@@ -2,6 +2,9 @@ package Cliente;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import Entidades.*;
 
 public class Comunicacao implements Serializable {
@@ -16,6 +19,13 @@ public class Comunicacao implements Serializable {
     private ArrayList<Pagamento> pagamentos;
     private int despesaId;
 
+    // Mapas para funcionamento do comando "Visualizar saldos"
+    private Map<String, Double> gastosTotais;
+    private Map<String, Double> valoresDevidos;
+    private Map<String, Map<String, Double>> deveParaCada;
+    private Map<String, Double> totalReceber;
+    private Map<String, Map<String, Double>> receberDeCada;
+
     public Comunicacao() {
     }
 
@@ -25,6 +35,51 @@ public class Comunicacao implements Serializable {
         this.convites = new ArrayList<>();
         this.despesa = new ArrayList<>();
         this.pagamentos = new ArrayList<>();
+        this.gastosTotais = new HashMap<>();
+        this.valoresDevidos = new HashMap<>();
+        this.deveParaCada = new HashMap<>();
+        this.totalReceber = new HashMap<>();
+        this.receberDeCada = new HashMap<>();
+    }
+
+    public Map<String, Double> getGastosTotais() {
+        return gastosTotais;
+    }
+
+    public void setGastosTotais(Map<String, Double> gastosTotais) {
+        this.gastosTotais = gastosTotais;
+    }
+
+    public Map<String, Double> getValoresDevidos() {
+        return valoresDevidos;
+    }
+
+    public void setValoresDevidos(Map<String, Double> valoresDevidos) {
+        this.valoresDevidos = valoresDevidos;
+    }
+
+    public Map<String, Map<String, Double>> getDeveParaCada() {
+        return deveParaCada;
+    }
+
+    public void setDeveParaCada(Map<String, Map<String, Double>> deveParaCada) {
+        this.deveParaCada = deveParaCada;
+    }
+
+    public Map<String, Double> getTotalReceber() {
+        return totalReceber;
+    }
+
+    public void setTotalReceber(Map<String, Double> totalReceber) {
+        this.totalReceber = totalReceber;
+    }
+
+    public Map<String, Map<String, Double>> getReceberDeCada() {
+        return receberDeCada;
+    }
+
+    public void setReceberDeCada(Map<String, Map<String, Double>> receberDeCada) {
+        this.receberDeCada = receberDeCada;
     }
 
     public String getMensagem() {

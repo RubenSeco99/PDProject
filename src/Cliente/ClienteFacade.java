@@ -19,7 +19,7 @@ public class ClienteFacade {
 
     public ClienteFacade(String serverAddress, int serverPort) {
         sincronizado = true;
-        clienteModel = new ClienteModel(serverAddress, serverPort, this);
+        clienteModel = new ClienteModel(serverAddress, serverPort);
         utilizador = new Utilizador();
     }
 
@@ -81,6 +81,13 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Listar pagamentos");
+        clienteModel.enviarMensagem(comunicacao);
+    }
+
+    public void viewBalances(){
+        utilizador = clienteModel.getUtilizadorAtualizado();
+        Comunicacao comunicacao = new Comunicacao(utilizador);
+        comunicacao.setMensagem("Visualizar saldos");
         clienteModel.enviarMensagem(comunicacao);
     }
 

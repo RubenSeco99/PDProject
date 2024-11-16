@@ -8,7 +8,7 @@ public class Pagamento implements Serializable {
     private String quemPagou;
     private String quemRecebeu;
     private double valorPagamento;
-    private java.sql.Date dataPagamento;
+    private Date dataPagamento;
     private String grupoNome;
     private int idDespesa;
 

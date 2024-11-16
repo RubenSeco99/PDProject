@@ -152,7 +152,8 @@ public class ClienteUI implements PropertyChangeListener {
                       9. Eliminar despesa
                       10. Fazer pagamento
                       11. Listar pagamentos
-                      12. Sair do grupo
+                      12. Visualizar saldos
+                      13. Sair do grupo
                       0. Sair
                     """, clienteFacade.getUtilizador().getGrupoAtual().getNome()));
             String option = reader.readLine().trim();
@@ -168,7 +169,8 @@ public class ClienteUI implements PropertyChangeListener {
                 case "9" -> {lastCommand = "Eliminar despesa";sincronizado=false; clienteFacade.viewExpenses();}
                 case "10" -> {lastCommand = "Fazer pagamento";sincronizado=false;clienteFacade.viewExpenses();}
                 case "11" -> {lastCommand = "Listar pagamentos"; sincronizado=false;clienteFacade.listPayments();}
-                case "12" -> {lastCommand = "Sair grupo";sincronizado=false;clienteFacade.exitGroup();}
+                case "12" -> {lastCommand = "Visualizar saldos"; sincronizado=false; clienteFacade.viewBalances();}
+                case "13" -> {lastCommand = "Sair grupo";sincronizado=false;clienteFacade.exitGroup();}
                 case "0" -> {lastCommand = "";menuUtilizadoresComLogin();}
                 default -> System.out.println("Opção inválida, tente novamente.");
             }
@@ -361,9 +363,8 @@ public class ClienteUI implements PropertyChangeListener {
         sincronizado=false;
         if(!clienteFacade.handleChangeInviteState(estado, nomeGrupo)){
             System.out.println("Não foi encontrado nenhum convite para o grupo "+nomeGrupo+"!");
-           lastCommand="";
-           // menuUtilizadoresComLogin();
         }
+        lastCommand="";
     }
 
     private void updateUserName() throws IOException {
@@ -418,6 +419,43 @@ public class ClienteUI implements PropertyChangeListener {
                 System.out.println("\nLista de pagamentos: ");
                 for(var pagamentos : resposta.getPagamentos())
                     System.out.println("Quem pagou: " + pagamentos.getQuemPagou() +" : valor: " + pagamentos.getValorPagamento() + " Quem recebeu: " + pagamentos.getQuemRecebeu());
+            }
+
+            if (resposta.getMensagem().equalsIgnoreCase("Saldos do grupo")) {
+
+                System.out.println("\n\n[Visualização de Saldos do Grupo]:");
+
+                // Imprimir o total que cada utilizador deve
+                System.out.println("\nTotal em dívida de cada utilizador:");
+                for (var entry : resposta.getValoresDevidos().entrySet()) {
+                    System.out.printf("Utilizador: %s - Total em dívida: %.2f%n", entry.getKey(), entry.getValue());
+                }
+
+                // Imprimir o total que cada utilizador tem a receber
+                System.out.println("\nTotal que cada utilizador tem a receber:");
+                for (var entry : resposta.getTotalReceber().entrySet()) {
+                    System.out.printf("Utilizador: %s - Total a receber: %.2f%n", entry.getKey(), entry.getValue());
+                }
+
+                // Quem tem que pagar a quem?
+                System.out.println("\nQuem deve a quem:");
+                for (var entry : resposta.getDeveParaCada().entrySet()) {
+                    System.out.println("Utilizador: " + entry.getKey() + " deve a:");
+                    for (var subEntry : entry.getValue().entrySet()) {
+                        System.out.printf("  - %s: %.2f%n", subEntry.getKey(), subEntry.getValue());
+                    }
+                }
+                System.out.println();
+
+                // Quem recebe de quem?
+                System.out.println("\nQuem recebe de quem:");
+                for (var entry : resposta.getReceberDeCada().entrySet()) {
+                    System.out.println("Utilizador: " + entry.getKey() + " recebeu de:");
+                    for (var subEntry : entry.getValue().entrySet()) {
+                        System.out.printf("  - %s: %.2f%n", subEntry.getKey(), subEntry.getValue());
+                    }
+                }
+                System.out.println();
             }
 
             if(resposta.getMensagem().equalsIgnoreCase("Logout aceite")){

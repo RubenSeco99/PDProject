@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import Entidades.Pagamento;
 import ServidorBackup.ServerBackUpSupport;
@@ -72,10 +74,9 @@ public class PagamentoDB {
         }
         return false;
     }
-
     public ArrayList<Pagamento> getPagamentosPorGrupo(String grupoNome) {
         ArrayList<Pagamento> pagamentos = new ArrayList<>();
-        String query = "SELECT quem_pagou, quem_recebeu, valor_pagamento, data_pagamento, grupo_nome " +
+        String query = "SELECT quem_pagou, quem_recebeu, valor_pagamento, grupo_nome " +
                 "FROM Pagamento WHERE grupo_nome = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -87,7 +88,6 @@ public class PagamentoDB {
                 pagamento.setQuemPagou(rs.getString("quem_pagou"));
                 pagamento.setQuemRecebeu(rs.getString("quem_recebeu"));
                 pagamento.setValorPagamento(rs.getDouble("valor_pagamento"));
-                pagamento.setDataPagamento(rs.getDate("data_pagamento"));
                 pagamento.setGrupoNome(rs.getString("grupo_nome"));
 
                 pagamentos.add(pagamento);
@@ -98,5 +98,48 @@ public class PagamentoDB {
         }
         return pagamentos;
     }
+    public double calcularTotalReceberPorUtilizador(String email, String nomeGrupo) {
+        String sql = "SELECT SUM(dp.valor_divida) AS total_receber " +
+                "FROM Despesa_Pagadores dp " +
+                "JOIN Despesa d ON dp.despesa_id = d.id " +
+                "WHERE d.criador_email = ? AND d.grupo_nome = ? AND dp.utilizador_email != ? AND dp.estado_pagamento = 'Pendente'";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            pstmt.setString(2, nomeGrupo);
+            pstmt.setString(3, email);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("total_receber");
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao calcular o total a receber por utilizador: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    public Map<String, Double> calcularReceberDeCada(String email, String nomeGrupo) {
+        Map<String, Double> receberDeCada = new HashMap<>();
+        String sql = "SELECT quem_pagou, SUM(valor_pagamento) AS total_receber " +
+                "FROM Pagamento " +
+                "WHERE quem_recebeu = ? AND grupo_nome = ? " +
+                "GROUP BY quem_pagou";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            pstmt.setString(2, nomeGrupo);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String pagador = rs.getString("quem_pagou");
+                double valorReceber = rs.getDouble("total_receber");
+                receberDeCada.put(pagador, valorReceber);
+            }
+        } catch (SQLException ex) {
+            System.out.println("Erro ao calcular valores a receber de cada membro: " + ex.getMessage());
+        }
+        return receberDeCada;
+    }
+
 
 }
