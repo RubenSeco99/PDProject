@@ -24,7 +24,7 @@ public class UtilizadorDB {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, utilizador.getNome());
             preparedStatement.setString(2, utilizador.getPassword());
-            preparedStatement.setInt(3, utilizador.getTelefone());
+            preparedStatement.setString(3, utilizador.getTelefone());
             preparedStatement.setString(4, utilizador.getEmail());
             preparedStatement.setInt(5, utilizador.getAtivo());
             preparedStatement.executeUpdate();
@@ -49,7 +49,7 @@ public class UtilizadorDB {
                 Utilizador utilizador = new Utilizador();
                 utilizador.setNome(resultSet.getString("nome"));
                 utilizador.setPassword(resultSet.getString("password"));
-                utilizador.setTelefone(resultSet.getInt("telefone"));
+                utilizador.setTelefone(resultSet.getString("telefone"));
                 utilizador.setEmail(resultSet.getString("email"));
                 utilizador.setAtivo(resultSet.getInt("ativo"));
                 return utilizador;
@@ -108,7 +108,7 @@ public class UtilizadorDB {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, utilizador.getNome());
             preparedStatement.setString(2, utilizador.getPassword());
-            preparedStatement.setInt(3, utilizador.getTelefone());
+            preparedStatement.setString(3, utilizador.getTelefone());
             preparedStatement.setInt(4, utilizador.getAtivo());
             preparedStatement.setString(5, utilizador.getEmail());
             preparedStatement.executeUpdate();

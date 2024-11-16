@@ -125,6 +125,10 @@ public class ServidorBackup {
                                         executarQueryNoBackup(backupConnection, query, parametros);
                                         System.out.println("Query de backup executada: " + query);
                                     } else {
+                                        if(versaoAnterior != serverSupport.getVersao()){
+                                            System.out.println("Versao anterior diferente da atual\nA sair...");
+                                            break;
+                                        }
                                         System.out.println("[HeartBeat recebido]");
                                     }
                                 }

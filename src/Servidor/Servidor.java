@@ -124,8 +124,10 @@ class processaClienteThread implements Runnable {
     List <notificaThread> notificaThreads;
     private final Object lock;
     private ServerBackUpSupport messageSBS;
+    private boolean isBackupInProgress;
+    private final Object databaseLock;
 
-    public processaClienteThread(Socket clienteSocket, Connection connection, List<notificaThread> clienteSockets, Object lock, ServerBackUpSupport messageSBS) {
+    public processaClienteThread(Socket clienteSocket, Connection connection, List<notificaThread> clienteSockets, Object lock, ServerBackUpSupport messageSBS, boolean isBackupInProgress, Object databaseLock) {
         this.messageSBS         = messageSBS;
         this.utilizadorDB       = new UtilizadorDB(connection, messageSBS);
         this.grupoDB            = new GrupoDB(connection, messageSBS);
@@ -138,14 +140,22 @@ class processaClienteThread implements Runnable {
         this.running            = true;
         this.notificaThreads    = clienteSockets;
         this.lock               = lock;
-
+        this.isBackupInProgress = isBackupInProgress;
+        this.databaseLock       = databaseLock;
     }
 
     @Override
     public void run() {
 
+        try {
+            clienteSocket.setSoTimeout(60000);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
         try(ObjectInputStream Oin = new ObjectInputStream(clienteSocket.getInputStream());
             ObjectOutputStream Oout = new ObjectOutputStream(clienteSocket.getOutputStream())) {
+
             Utilizador utilizadorThread = new Utilizador();
 
             while(running && !clienteSocket.isClosed()){
@@ -156,6 +166,12 @@ class processaClienteThread implements Runnable {
                     utilizadorThread = pedidoCliente.getUtilizador();
                     System.out.println("\nPedido recebido: " + pedidoCliente);
                     System.out.println("> ");
+
+                    if(isBackupInProgress){
+                        synchronized (databaseLock){
+                            databaseLock.wait();
+                        }
+                    }
 
                     if(!conectado) {
                         if (pedidoCliente.getMensagem().equalsIgnoreCase("Sair")) {
@@ -174,6 +190,13 @@ class processaClienteThread implements Runnable {
                                 utilizadorDB.insertUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setMensagem("Aceite");
+
+                                try {
+                                    clienteSocket.setSoTimeout(0); // Remove o timeout
+                                } catch (SocketException e) {
+                                    throw new RuntimeException(e);
+                                }
+
                             } else {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Email existente");
@@ -195,6 +218,13 @@ class processaClienteThread implements Runnable {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setUtilizador(pedidoCliente.getUtilizador());
                                 respostaSaida.setMensagem("Login aceite");
+
+                                try {
+                                    clienteSocket.setSoTimeout(0); // Remove o timeout
+                                } catch (SocketException e) {
+                                    throw new RuntimeException(e);
+                                }
+
                             } else {
                                 respostaSaida = pedidoCliente;
                                 respostaSaida.setMensagem("Credencias incorretas");
@@ -286,6 +316,10 @@ class processaClienteThread implements Runnable {
                                                              pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio())) {
                                     if (utilizadorGrupoDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
                                             pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio())) {
+                                        pagamentoDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
+                                                pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                        despesaDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
+                                                pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
                                         pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
                                         pedidoCliente.getUtilizador().getGrupoAtual().setNome(pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
                                         respostaSaida = pedidoCliente;
@@ -299,10 +333,14 @@ class processaClienteThread implements Runnable {
                                 }else{
                                     if (utilizadorGrupoDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
                                         pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio())) {
-                                    pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
-                                    pedidoCliente.getUtilizador().getGrupoAtual().setNome(pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
-                                    respostaSaida = pedidoCliente;
-                                    respostaSaida.setMensagem("Mudanca nome bem sucedida");
+                                        pagamentoDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
+                                                pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                        despesaDB.updateNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome(),
+                                                pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                        pedidoCliente.getUtilizador().setConvites(conviteDB.listarConvitesPendentes(pedidoCliente.getUtilizador().getEmail()));
+                                        pedidoCliente.getUtilizador().getGrupoAtual().setNome(pedidoCliente.getUtilizador().getGrupoAtual().getNomeProvisorio());
+                                        respostaSaida = pedidoCliente;
+                                        respostaSaida.setMensagem("Mudanca nome bem sucedida");
                                         System.out.println("Nome atual: "+respostaSaida.getUtilizador().getGrupoAtual().getNome());
                                         System.out.println("Nome novo: "+respostaSaida.getUtilizador().getGrupoAtual().getNomeProvisorio());
                                     } else {
@@ -326,44 +364,44 @@ class processaClienteThread implements Runnable {
                                 respostaSaida.setMensagem("Utilizador não pertence ao grupo");
                             }
                         }
-                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")){
-                            //quando estiverem adicionados as despesas e os pagamentos
-                            // temos de verificar se existem pagamentos pendentes antes de deixar sair todo
-                            if(utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
-                                                            pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
-                            {
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Sair grupo")) {
+                            ArrayList<Despesas> despesasList = despesaDB.getDespesasPorNomeGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if (!despesasList.isEmpty() && despesaPagadoresDB.checkUserDivida(despesasList, pedidoCliente.getUtilizador().getEmail())) {
+                                respostaSaida.setMensagem("Nao pode sair, ainda tem pagamentos pendentes");
+                            } else {
+                                if (utilizadorGrupoDB.removeUtilizadorGrupo(pedidoCliente.getUtilizador().getEmail(),
+                                    pedidoCliente.getUtilizador().getGrupoAtual().getNome())) {
                                 List<Utilizador> ul = utilizadorGrupoDB.selectUtilizadoresPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
-                                if(ul.isEmpty()){
-                                    if(grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                        if(conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())||
-                                                !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())){
-                                            if(utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()))
-                                            {
-                                                pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
+                                if (ul.isEmpty()) {
+                                    if (grupoDB.deleteGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())) {
+                                        if (conviteDB.removeTodosConvitesPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome()) ||
+                                                !conviteDB.checkConviteExistanceByGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())) {
+                                                if (utilizadorGrupoDB.removeTodosUtilizadoresDoGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome())) {
+                                                    pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
+                                                    respostaSaida = pedidoCliente;
+                                                    respostaSaida.setMensagem("Saida grupo bem sucedida");
+                                                } else {
+                                                    respostaSaida = pedidoCliente;
+                                                    respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
+                                                }
+                                            } else {
                                                 respostaSaida = pedidoCliente;
-                                                respostaSaida.setMensagem("Saida grupo bem sucedida");
-                                            }else{
-                                                respostaSaida = pedidoCliente;
-                                                respostaSaida.setMensagem("Apagar todos utilizadores do grupo mal sucedido");
+                                                respostaSaida.setMensagem("Apagar todos convites mal sucedido");
                                             }
-                                        }else{
+                                        } else {
                                             respostaSaida = pedidoCliente;
-                                            respostaSaida.setMensagem("Apagar todos convites mal sucedido");
+                                            respostaSaida.setMensagem("Apagar grupo mal sucedido");
                                         }
-                                    }else{
+                                    } else {
+                                        pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
                                         respostaSaida = pedidoCliente;
-                                        respostaSaida.setMensagem("Apagar grupo mal sucedido");
+                                        respostaSaida.setMensagem("Saida grupo bem sucedida");
                                     }
-                                }else{
-                                    pedidoCliente.getUtilizador().setGrupoAtualPorNome("");
-                                    respostaSaida = pedidoCliente;
-                                    respostaSaida.setMensagem("Saida grupo bem sucedida");
-                                }
 
-                            }
-                             else {
-                                respostaSaida = pedidoCliente;
-                                respostaSaida.setMensagem("Saida Grupo mal sucedida");
+                                } else {
+                                    respostaSaida = pedidoCliente;
+                                    respostaSaida.setMensagem("Saida Grupo mal sucedida");
+                                }
                             }
                         }
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Ver grupos")){
@@ -458,7 +496,7 @@ class processaClienteThread implements Runnable {
                                 System.out.println(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
                                 if(emails != null){
                                     double valor = pedidoCliente.getDespesa().getFirst().getValor() / emails.size();
-                                    if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente", pedidoCliente.getUtilizador().getEmail())){
+                                    if(despesaPagadoresDB.inserirDespesaPagadores(despesaID,emails,valor,"Pendente", pedidoCliente.getUtilizador().getEmail(),pedidoCliente.getUtilizador().getEmail())){
                                         System.out.println("Despesa inserida com sucesso");
                                         respostaSaida.setMensagem("Despesa inserida com sucesso");
                                     }else{
@@ -593,36 +631,59 @@ class processaClienteThread implements Runnable {
                         else if(pedidoCliente.getMensagem().equalsIgnoreCase("Fazer pagamento com id")) {
                             respostaSaida = pedidoCliente;
                             int idDespesa = pedidoCliente.getUtilizador().getPagamentoAtual().getIdDespesa();
-                            double valorDivida = despesaPagadoresDB.getDividaPorId(idDespesa, pedidoCliente.getUtilizador().getEmail());
-                            double valorFinal = valorDivida - pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento();
-                            if(valorFinal <= 0) {
-                                valorFinal = 0;
-                                if(despesaPagadoresDB.atualizarEstadoDivida(idDespesa, pedidoCliente.getUtilizador().getEmail(), "Pago")) {
-                                    if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
-                                        pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
-                                                despesaDB.getDonoDespesa(idDespesa),
-                                                pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
-                                                pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
-                                        respostaSaida.setMensagem("Pagamento completo com sucesso");
+                            if(despesaDB.checkDespesaExiste(idDespesa)) {
+                                double valorDivida = despesaPagadoresDB.getDividaPorId(idDespesa, pedidoCliente.getUtilizador().getEmail());
+                                double valorPagamento = pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento();
+                                double remanescente=0;
+                                if(valorPagamento>valorDivida)
+                                    remanescente = valorPagamento - valorDivida;
+                                double valorFinal = valorDivida - pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento();
+                                if (valorFinal <= 0) {
+                                    valorFinal = 0;
+                                    if (despesaPagadoresDB.atualizarEstadoDivida(idDespesa, pedidoCliente.getUtilizador().getEmail(), "Pago")) {
+                                        if (despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
+                                            pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
+                                                    despesaDB.getDonoDespesa(idDespesa),
+                                                    pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento()-remanescente,
+                                                    pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
+                                            if (remanescente==0)
+                                                respostaSaida.setMensagem("Pagamento completo com sucesso");
+                                            else
+                                                respostaSaida.setMensagem("Pagamento completo com sucesso, troco "+remanescente);
+                                        } else {
+                                            respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                        }
                                     } else {
                                         respostaSaida.setMensagem("Erro a efetuar pagamento");
                                     }
                                 } else {
-                                    respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                    if (despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
+                                        pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
+                                                despesaDB.getDonoDespesa(idDespesa),
+                                                pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
+                                                pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
+                                        respostaSaida.setMensagem("Pagamento efetuado com sucesso");
+                                    } else {
+                                        respostaSaida.setMensagem("Erro a efetuar pagamento");
+                                    }
                                 }
-                            } else {
-                                if(despesaPagadoresDB.atualizarValorDespesa(idDespesa, valorFinal, pedidoCliente.getUtilizador().getEmail())) {
-                                    pagamentoDB.inserirPagamento(pedidoCliente.getUtilizador().getEmail(),
-                                            despesaDB.getDonoDespesa(idDespesa),
-                                            pedidoCliente.getUtilizador().getPagamentoAtual().getValorPagamento(),
-                                            pedidoCliente.getUtilizador().getPagamentoAtual().getGrupoNome());
-                                    respostaSaida.setMensagem("Pagamento efetuado com sucesso");
-                                } else {
-                                    respostaSaida.setMensagem("Erro a efetuar pagamento");
-                                }
+                            }
+                            else{
+                                respostaSaida.setMensagem("Id despesa nao existente");
+                            }
+                        }
+                        else if(pedidoCliente.getMensagem().equalsIgnoreCase("Listar pagamentos")){
+                            respostaSaida = pedidoCliente;
+                            ArrayList<Pagamento> pagamentos = pagamentoDB.getPagamentosPorGrupo(pedidoCliente.getUtilizador().getGrupoAtual().getNome());
+                            if(pagamentos!= null){
+                                respostaSaida.setMensagem("Lista de pagamentos");
+                                respostaSaida.setPagamentos(pagamentos);
+                            }else{
+                                respostaSaida.setMensagem("Insucesso a listar pagamentos");
                             }
                         }
                     }
+
                     Oout.writeObject(respostaSaida);
                     Oout.flush();
 
@@ -665,6 +726,8 @@ class processaClienteThread implements Runnable {
                 } catch (ClassNotFoundException | IOException e) {
                     System.out.println("Erro na comunicação com o cliente:\n\t" + e);
                     running = false; // Encerrar a thread em caso de erro
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -714,7 +777,14 @@ class conectaServidoresBackup implements Runnable {
     // THREAD QUE ESPERA OS SERVIDORES BACKUP SE CONECTAREM DIRETAMENTE VIA TCP PARA RECEBEREM AS ATUALIZAÇÕES DA BASE DE DADOS
     private static final int PORTOBACKUPTCP = 5001;
     private final File databaseFile = new File("./src/BaseDeDados/BaseDados.db");
-    public static final int MAX_SIZE = 4000;
+    private static final int MAX_SIZE = 4000;
+    private boolean isBackupInProgress;
+    private final Object databaseLock;
+
+    public conectaServidoresBackup(boolean isBackupInProgress, Object databaseLock){
+        this.isBackupInProgress = isBackupInProgress;
+        this.databaseLock = databaseLock;
+    }
 
     @Override
     public void run() {
@@ -739,7 +809,7 @@ class conectaServidoresBackup implements Runnable {
                 try {
                     Socket backupServerSocket = socketBackup.accept();
                     System.out.println("Conexão estabelecida com o servidor backup: " + backupServerSocket.getInetAddress().getHostAddress());
-
+                    isBackupInProgress = true;
                     //VAI LER O FICHEIRO DA BASE DE DADOS E ENVIA POR CHUNKS
                     try (FileInputStream fileInputStream = new FileInputStream(databaseFile)) {
                         OutputStream out = backupServerSocket.getOutputStream();
@@ -752,6 +822,14 @@ class conectaServidoresBackup implements Runnable {
                         } while (nbytes > 0);
                             out.close();
                         System.out.println("Transferência concluída para o servidor backup.");
+
+                        // Notifica as threads que atendem clientes que podem continuar
+                        isBackupInProgress = false;
+
+                        synchronized (databaseLock){
+                            databaseLock.notify();
+                        }
+
                     } catch (IOException e) {
                         System.out.println("Erro ao ler ou enviar o ficheiro: " + e.getMessage());
                     }
@@ -772,8 +850,10 @@ public class Servidor {
     public static String NOMEGRUPO;
     public static String EMAILREMETENTE;
     public static volatile boolean encerraServidor = false;
+    private static volatile boolean isBackupInProgress = false;
+    private static final Object databaseLock = new Object();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         if (args.length != 2) {
             System.out.println("\nNumero de argumentos incorrecto\n");
@@ -804,7 +884,7 @@ public class Servidor {
             heartbeats.setDaemon(true);
             heartbeats.start();
 
-            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup());
+            Thread conectaServidoresBackup = new Thread(new conectaServidoresBackup(isBackupInProgress,databaseLock));
             conectaServidoresBackup.setDaemon(true);
             conectaServidoresBackup.start();
 
@@ -815,7 +895,8 @@ public class Servidor {
                     break;
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets, lock, messageSBS));
+                    Thread td = new Thread(new processaClienteThread(clientSocket,connection, clienteSockets,
+                                                                        lock, messageSBS, isBackupInProgress, databaseLock));
                     td.setDaemon(true);
                     td.start();
                 }catch (IOException e){

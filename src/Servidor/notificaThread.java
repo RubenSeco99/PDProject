@@ -7,8 +7,6 @@ import java.net.Socket;
 public class notificaThread {
     private String email;
     private Socket socket;
-
-
     ObjectOutputStream Oout;
 
     public notificaThread(String email, Socket socket){

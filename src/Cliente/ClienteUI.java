@@ -151,7 +151,8 @@ public class ClienteUI implements PropertyChangeListener {
                       8. Editar despesa
                       9. Eliminar despesa
                       10. Fazer pagamento
-                      11. Sair do grupo
+                      11. Listar pagamentos
+                      12. Sair do grupo
                       0. Sair
                     """, clienteFacade.getUtilizador().getGrupoAtual().getNome()));
             String option = reader.readLine().trim();
@@ -166,7 +167,8 @@ public class ClienteUI implements PropertyChangeListener {
                 case "8" -> {lastCommand = "Editar despesa";sincronizado=false;clienteFacade.viewExpenses();}
                 case "9" -> {lastCommand = "Eliminar despesa";sincronizado=false; clienteFacade.viewExpenses();}
                 case "10" -> {lastCommand = "Fazer pagamento";sincronizado=false;clienteFacade.viewExpenses();}
-                case "11" -> {lastCommand = "Sair grupo";sincronizado=false;clienteFacade.exitGroup();}
+                case "11" -> {lastCommand = "Listar pagamentos"; sincronizado=false;clienteFacade.listPayments();}
+                case "12" -> {lastCommand = "Sair grupo";sincronizado=false;clienteFacade.exitGroup();}
                 case "0" -> {lastCommand = "";menuUtilizadoresComLogin();}
                 default -> System.out.println("Opção inválida, tente novamente.");
             }
@@ -227,8 +229,10 @@ public class ClienteUI implements PropertyChangeListener {
         String email = reader.readLine().trim();
         System.out.print("Password: ");
         String password = reader.readLine().trim();
+        System.out.print("Telemovel: ");
+        String telemovel = reader.readLine().trim();
         sincronizado=false;
-        clienteFacade.register(nome, email, password);
+        clienteFacade.register(nome, email, password,telemovel);
     }
 
     private void handleUpdateUserData() throws IOException {
@@ -324,14 +328,26 @@ public class ClienteUI implements PropertyChangeListener {
     }
 
     private void handlePayDebt() throws IOException {
-        System.out.print("Indique o id da divida que deseja pagar: ");
-        int opcao = Integer.parseInt(reader.readLine().trim());
-        System.out.print("Valor a Pagar: ");
-        double valor = Double.parseDouble(reader.readLine().trim());
-        sincronizado=false;
-        clienteFacade.payDebt(valor, opcao);
-        lastCommand="";
+        while(true) {
+            try {
+                System.out.print("Indique o id da divida que deseja pagar: ");
+                int opcao = Integer.parseInt(reader.readLine().trim()); // Pode lançar NumberFormatException
+
+                System.out.print("Valor a Pagar: ");
+                double valor = Double.parseDouble(reader.readLine().trim()); // Pode lançar NumberFormatException
+
+                sincronizado = false;
+                clienteFacade.payDebt(valor, opcao);
+                lastCommand = "";
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Erro: Insira apenas valores numéricos válidos.");
+            } catch (Exception e) {
+                System.out.println("Ocorreu um erro inesperado: " + e.getMessage());
+            }
+        }
     }
+
     private void handleSeeInvites() {
         sincronizado=false;
         clienteFacade.seeInvites();
@@ -397,6 +413,11 @@ public class ClienteUI implements PropertyChangeListener {
                 System.out.println("Lista de Grupos pertencentes: ");
                 for(var g:resposta.getUtilizador().getGrupos())
                     System.out.println("Nome: "+g.getNome());
+            }
+            if(resposta.getMensagem().equalsIgnoreCase("Lista de pagamentos")){
+                System.out.println("\nLista de pagamentos: ");
+                for(var pagamentos : resposta.getPagamentos())
+                    System.out.println("Quem pagou: " + pagamentos.getQuemPagou() +" : valor: " + pagamentos.getValorPagamento() + " Quem recebeu: " + pagamentos.getQuemRecebeu());
             }
 
             if(resposta.getMensagem().equalsIgnoreCase("Logout aceite")){

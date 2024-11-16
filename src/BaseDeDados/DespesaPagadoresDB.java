@@ -22,17 +22,16 @@ public class DespesaPagadoresDB {
         this.backupSupport = backupSupport;
     }
 
-    public boolean inserirDespesaPagadores(int despesaId, List<String> emails, double valorDivida, String estadoPagamento, String pagador) {
+    public boolean inserirDespesaPagadores(int despesaId, List<String> emails, double valorDivida, String estadoPagamento, String pagador, String emailCriador) {
         String sql = "INSERT INTO Despesa_Pagadores (despesa_id, utilizador_email, valor_divida, estado_pagamento) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             for (String email : emails) {
                 pstmt.setInt(1, despesaId);
                 pstmt.setString(2, email);
-                pstmt.setDouble(3, valorDivida);
+                pstmt.setDouble(3, email.equals(emailCriador)?0:valorDivida);
                 String estadoPag = email.equalsIgnoreCase(pagador) ? "Pago" : estadoPagamento;
                 pstmt.setString(4, estadoPag);
-
                 pstmt.addBatch();
             }
             int[] results = pstmt.executeBatch(); // Executa o batch após o loop
@@ -49,7 +48,7 @@ public class DespesaPagadoresDB {
                 versaoDB.incrementarVersao();
                 String estadoPag = email.equalsIgnoreCase(pagador) ? "Pago" : estadoPagamento;
                 backupSupport.setQuery(sql);
-                backupSupport.setParametros(List.of(despesaId, email, valorDivida, estadoPag));
+                backupSupport.setParametros(List.of(despesaId, email, email.equals(emailCriador)?0:valorDivida, estadoPag));
                 backupSupport.setVersao(versaoDB.getVersao());
                 backupSupport.sendMessageToBackUpServer();
             }
@@ -61,7 +60,23 @@ public class DespesaPagadoresDB {
         return false;
     }
 
-
+    public boolean checkUserDivida(ArrayList<Despesas> despesasList, String email) {
+        String query = "SELECT COUNT(*) FROM Despesa_Pagadores " +
+                "WHERE despesa_id = ? AND utilizador_email = ? AND estado_pagamento = 'Pendente'";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            for (Despesas despesa : despesasList) {
+                pstmt.setInt(1, despesa.getIdDespesa());
+                pstmt.setString(2, email);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0)
+                        return true;
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Erro ao verificar dívidas pendentes: " + ex.getMessage());
+        }
+        return false;
+    }
     public boolean temDespesasPendentes(String grupoNome) {
         String sql = "SELECT * FROM Despesa_Pagadores dp " +
                      "JOIN Despesa d ON dp.despesa_id = d.id " +
@@ -103,7 +118,6 @@ public class DespesaPagadoresDB {
         // Retornar o array de despesas atualizado
         return despesasList;
     }
-
     public boolean eliminarDespesasPagadoresPorIdDespesa(int despesaId) {
         String sql = "DELETE FROM Despesa_Pagadores WHERE despesa_id = ?";
 
@@ -125,7 +139,6 @@ public class DespesaPagadoresDB {
         }
         return false;
     }
-
     public boolean atualizarValorDivida(int despesaId, double novoValorTotal) {
         String contarLinhasSql = "SELECT COUNT(*) AS total FROM Despesa_Pagadores WHERE despesa_id = ?";
         String atualizarDividaSql = "UPDATE Despesa_Pagadores SET valor_divida = ? WHERE despesa_id = ?";
@@ -166,7 +179,6 @@ public class DespesaPagadoresDB {
         }
         return false;
     }
-
     public boolean atualizarValorDespesa(int idDespesa, double novoValor, String emailQuemPagou) {
         String sql = "UPDATE Despesa_Pagadores SET valor_divida = ? WHERE despesa_id = ? AND utilizador_email = ?";
 
@@ -191,7 +203,6 @@ public class DespesaPagadoresDB {
         }
         return false;
     }
-
     public Double getDividaPorId(int idDespesa, String email) {
         String sql = "SELECT valor_divida FROM Despesa_Pagadores WHERE despesa_id = ? AND utilizador_email = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -206,7 +217,6 @@ public class DespesaPagadoresDB {
         }
         return null;
     }
-
     public boolean atualizarEstadoDivida(int idDespesa, String email, String estado) {
         String sql = "UPDATE Despesa_Pagadores SET estado_pagamento = ? WHERE despesa_id = ? AND utilizador_email = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -228,7 +238,6 @@ public class DespesaPagadoresDB {
         }
         return false;
     }
-
     public ArrayList<Divida> getDividasPorEmail(String email) {
         String sql = "SELECT * FROM Despesa_Pagadores WHERE utilizador_email = ?";
         ArrayList<Divida> dividas = new ArrayList<>();

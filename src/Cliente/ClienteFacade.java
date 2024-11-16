@@ -36,11 +36,11 @@ public class ClienteFacade {
         clienteModel.enviarMensagem(comunicacao);
     }
 
-    public void register(String nome, String email, String password) {
+    public void register(String nome, String email, String password, String telemovel) {
         utilizador.setNome(nome);
         utilizador.setEmail(email);
         utilizador.setPassword(password);
-        utilizador.setTelefone(911111111);
+        utilizador.setTelefone(telemovel);
         utilizador.setAtivo(0);
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Registo");
@@ -74,6 +74,13 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Total gastos");
+        clienteModel.enviarMensagem(comunicacao);
+    }
+
+    public void listPayments(){
+        utilizador = clienteModel.getUtilizadorAtualizado();
+        Comunicacao comunicacao = new Comunicacao(utilizador);
+        comunicacao.setMensagem("Listar pagamentos");
         clienteModel.enviarMensagem(comunicacao);
     }
 
@@ -213,7 +220,7 @@ public class ClienteFacade {
 
     public void updateUserPhone(String telefone) {
         utilizador = clienteModel.getUtilizadorAtualizado();
-        utilizador.setTelefone(Integer.parseInt(telefone));
+        utilizador.setTelefone(telefone);
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Atualizar Telefone Utilizador");
         clienteModel.enviarMensagem(comunicacao);

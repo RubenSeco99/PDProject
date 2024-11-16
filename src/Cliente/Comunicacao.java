@@ -13,6 +13,7 @@ public class Comunicacao implements Serializable {
     private ArrayList<Despesas> despesa;
     private ArrayList<Divida> dividas;
     private Pagamento pagamento;
+    private ArrayList<Pagamento> pagamentos;
     private int despesaId;
 
     public Comunicacao() {
@@ -23,6 +24,7 @@ public class Comunicacao implements Serializable {
         this.grupos = new ArrayList<>();
         this.convites = new ArrayList<>();
         this.despesa = new ArrayList<>();
+        this.pagamentos = new ArrayList<>();
     }
 
     public String getMensagem() {
@@ -75,6 +77,9 @@ public class Comunicacao implements Serializable {
         this.despesa = despesa;
     }
 
+    public ArrayList<Pagamento> getPagamentos() {
+        return pagamentos;
+    }
     public void setDividas(ArrayList<Divida> dividas) {
         this.dividas = dividas;
     }
@@ -85,6 +90,10 @@ public class Comunicacao implements Serializable {
 
     public void setPagamento(Pagamento pagamento) {
         this.pagamento = pagamento;
+    }
+
+    public void setPagamentos(ArrayList<Pagamento> pagamentos) {
+        this.pagamentos = pagamentos;
     }
 
     public void setDespesaId(int despesaId) {this.despesaId = despesaId;}

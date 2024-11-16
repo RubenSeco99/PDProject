@@ -72,7 +72,28 @@ public class DespesaDB {
         }
         return total;
     }
+    public boolean updateNomeGrupo(String nomeAtual,String nomeNovo) {
+        try {
+            String query= "UPDATE Despesa SET grupo_nome=? WHERE grupo_nome = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1,nomeNovo);
+            preparedStatement.setString(2,nomeAtual);
+            int rowsUpdated = preparedStatement.executeUpdate();
 
+            if (rowsUpdated > 0) {
+                versaoDB.incrementarVersao();
+                backupSupport.setQuery(query);
+                backupSupport.setParametros(List.of(nomeNovo, nomeAtual));
+                backupSupport.setVersao(versaoDB.getVersao());
+                backupSupport.sendMessageToBackUpServer();
+
+                return true;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar convites pendentes: " + e.getMessage());
+        }
+        return false;
+    }
     public ArrayList<Despesas> getDespesasPorGrupo(String grupoNome) {
         ArrayList<Despesas> despesasList = new ArrayList<>();
         String sql = "SELECT id, descricao, valor, data FROM Despesa WHERE grupo_nome = ? ORDER BY data DESC"; // Adicionando 'id' à consulta SQL
@@ -114,6 +135,16 @@ public class DespesaDB {
         String sql = "SELECT * FROM Despesa WHERE grupo_nome = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, grupoNome);
+            return pstmt.executeQuery().next();
+        } catch (SQLException e) {
+            System.out.println("Erro ao verificar despesas: " + e.getMessage());
+            return false;
+        }
+    }
+    public boolean checkDespesaExiste(int idDespesa){
+        String sql = "SELECT * FROM Despesa WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, idDespesa);
             return pstmt.executeQuery().next();
         } catch (SQLException e) {
             System.out.println("Erro ao verificar despesas: " + e.getMessage());
