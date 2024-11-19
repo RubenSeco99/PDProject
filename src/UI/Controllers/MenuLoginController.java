@@ -8,15 +8,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import org.w3c.dom.Text;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 
-public class MenuLoginRegisterController implements PropertyChangeListener {
+public class MenuLoginController implements PropertyChangeListener {
     private String email;
     private String password;
     private ClienteFacade facade;
@@ -31,10 +31,12 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
     Button loginBtn;
     @FXML
     Button registerBtn;
+    @FXML
+    Label loginError;
 
-    public MenuLoginRegisterController() {}
+    public MenuLoginController() {}
 
-    public MenuLoginRegisterController(ClienteFacade facade) {
+    public MenuLoginController(ClienteFacade facade) {
         this.facade = facade;
         this.facade.addPropertyChangeListener(this);
     }
@@ -46,7 +48,6 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
         password = passwordField.getText();
 
         facade.login(email, password);
-
     }
 
     public void handleGoToRegister() {
@@ -55,8 +56,8 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("../FXML/registerMenu.fxml"));
                 Parent root = loader.load();
-                MenuLoginRegisterController controller = loader.getController();
-                controller.setFacade(this.facade);
+                MenuRegisterController controller = loader.getController();
+                controller.setFacade(facade);
 
                 stage = (Stage) registerBtn.getScene().getWindow();
                 stage.setScene(new Scene(root));
@@ -78,7 +79,7 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
     public void propertyChange(PropertyChangeEvent evt) {
         if ("mensagemRecebida".equals(evt.getPropertyName())) {
             resposta = (Comunicacao) evt.getNewValue();
-            System.out.println("[Resposta do Servidor]: " + resposta.getMensagem());
+            System.out.println("[Resposta do Servidor - LoginRegisterController]: " + resposta.getMensagem());
             if (resposta.getMensagem().equalsIgnoreCase("Login aceite")) {
                 Platform.runLater(() -> {
                     try {
@@ -86,6 +87,7 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
                         Parent root = loader.load();
                         MenuMainController controller = loader.getController();
                         controller.setFacade(facade);
+                        facade.removePropertyChangeListener(this);
 
                         stage = (Stage) loginBtn.getScene().getWindow();
                         stage.setScene(new Scene(root));
@@ -95,6 +97,8 @@ public class MenuLoginRegisterController implements PropertyChangeListener {
                         throw new RuntimeException(e);
                     }
                 });
+            } else if (resposta.getMensagem().equalsIgnoreCase("Credencias incorretas")) {
+                loginError.visibleProperty().setValue(true);
             }
         }
     }

@@ -50,7 +50,7 @@
          </children></VBox>
       <HBox prefHeight="484.0" prefWidth="972.0">
          <children>
-            <VBox alignment="CENTER" prefHeight="548.0" prefWidth="506.0">
+            <VBox alignment="CENTER" prefHeight="548.0" prefWidth="506.0" HBox.hgrow="ALWAYS">
                <children>
                   <Label text="Menu Principal">
                      <VBox.margin>
@@ -60,20 +60,12 @@
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Editar dados" textFill="WHITE">
+                  <Button fx:id="editDataBtn" mnemonicParsing="false" onAction="#handleGoToEditData" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Editar dados" textFill="WHITE">
                      <font>
                         <Font size="13.0" />
                      </font>
                   </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Menu Grupos" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="10.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Menu Convites" textFill="WHITE">
+                  <Button fx:id="groupMenuBtn" mnemonicParsing="false" onAction="#handleGoToGroupMenu" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Menu Grupos" textFill="WHITE">
                      <font>
                         <Font size="13.0" />
                      </font>
@@ -81,7 +73,15 @@
                         <Insets top="10.0" />
                      </VBox.margin>
                   </Button>
-                  <Button mnemonicParsing="false" prefHeight="34.0" prefWidth="66.0" style="-fx-background-color: #000000;" text="Logout" textFill="WHITE">
+                  <Button fx:id="inviteMenuBtn" mnemonicParsing="false" onAction="#handleGoToInviteMenu" prefHeight="30.0" prefWidth="137.0" style="-fx-background-color: #06402b;" text="Menu Convites" textFill="WHITE">
+                     <font>
+                        <Font size="13.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button fx:id="logoutBtn" mnemonicParsing="false" onAction="#handleGoToLogout" prefHeight="34.0" prefWidth="72.0" style="-fx-background-color: #000000;" text="Logout" textFill="WHITE">
                      <VBox.margin>
                         <Insets top="100.0" />
                      </VBox.margin>
@@ -91,17 +91,6 @@
                   </Button>
                </children>
             </VBox>
-            <VBox prefHeight="463.0" prefWidth="488.0" style="-fx-background-color: #dddddd;">
-               <children>
-                  <Label text="Output:">
-                     <font>
-                        <Font name="System Bold" size="15.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                     </VBox.margin>
-                  </Label>
-               </children></VBox>
          </children>
       </HBox>
    </children>

@@ -1,7 +1,7 @@
 package UI;
 
 import Cliente.ClienteFacade;
-import UI.Controllers.MenuLoginRegisterController;
+import UI.Controllers.MenuLoginController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -23,8 +23,8 @@ public class MainJFX  extends Application {
         try{
             FXMLLoader loader = new FXMLLoader(getClass().getResource("FXML/loginMenu.fxml"));
             loader.setControllerFactory(c -> {
-                if(c == MenuLoginRegisterController.class){
-                    return new MenuLoginRegisterController(facade);
+                if(c == MenuLoginController.class){
+                    return new MenuLoginController(facade);
                 } else {
                     try {
                         return c.getDeclaredConstructor().newInstance();

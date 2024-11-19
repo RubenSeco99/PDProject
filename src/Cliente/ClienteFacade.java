@@ -1,12 +1,8 @@
 package Cliente;
 
-import Entidades.Convite;
-import Entidades.Despesas;
-import Entidades.Pagamento;
-import Entidades.Utilizador;
+import Entidades.*;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.sql.Date;
 
 public class ClienteFacade {
@@ -133,7 +129,7 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
         comunicacao.setMensagem("Enviar convite grupo");
-        comunicacao.setConvite( new Convite(utilizador.getGrupoAtual().getNome(), utilizador.getEmail(), email,"pendente"));
+        comunicacao.setConvite(new Convite(utilizador.getGrupoAtual().getNome(), utilizador.getEmail(), email,"pendente"));
         clienteModel.enviarMensagem(comunicacao);
     }
 
@@ -190,6 +186,13 @@ public class ClienteFacade {
         clienteModel.enviarMensagem(comunicacao);
     }
 
+    public void checkInvites() {
+        utilizador = clienteModel.getUtilizadorAtualizado();
+        Comunicacao comunicacao = new Comunicacao(utilizador);
+        comunicacao.setMensagem("Ver convites");
+        clienteModel.enviarMensagem(comunicacao);
+    }
+
     public void logout() {
         utilizador = clienteModel.getUtilizadorAtualizado();
         Comunicacao comunicacao = new Comunicacao(utilizador);
@@ -204,4 +207,13 @@ public class ClienteFacade {
     public Utilizador getUtilizador() {
         return clienteModel.getUtilizadorAtualizado();
     }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        clienteModel.removePropertyChangeListener(listener);
+    }
+
+    public Grupo getGrupoAtual() {
+        return clienteModel.getUtilizadorAtualizado().getGrupoAtual();
+    }
+
 }

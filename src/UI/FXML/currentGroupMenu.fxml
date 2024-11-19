@@ -35,11 +35,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="551.0" prefWidth="972.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="551.0" prefWidth="972.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="UI.Controllers.MenuCurrentGroupController">
    <children>
       <VBox alignment="CENTER" prefHeight="67.0" prefWidth="640.0" style="-fx-background-color: #79a7c2;">
          <children>
@@ -54,100 +55,125 @@
                <children>
                   <Label text="Menu Grupo Atual">
                      <VBox.margin>
-                        <Insets bottom="15.0" top="15.0" />
+                        <Insets bottom="40.0" top="15.0" />
                      </VBox.margin>
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Enviar convite" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Mudar nome grupo" textFill="WHITE">
+                  <HBox alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <VBox alignment="CENTER">
+                           <children>
+                              <Button fx:id="sendInviteBtn" mnemonicParsing="false" onAction="#handleSendInvite" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Enviar convite" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="changeGroupNameBtn" mnemonicParsing="false" onAction="#handleChangeGroupName" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Mudar nome grupo" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button fx:id="deleteGroupBtn" mnemonicParsing="false" onAction="#handleDeleteGroup" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Apagar grupo" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handleViewTotalExpenses" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Ver gastos totais" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handleViewExpenses" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Ver historico de despesas" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#handleExportCSV" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Exportar despesas (csv)" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handleEditExpense" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Editar despesa" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handleDeleteExpense" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Eliminar despesa" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handlePayDebt" prefHeight="27.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Fazer pagamento" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#handleNewExpense" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Nova despesa" textFill="WHITE">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </Button>
+                           </children>
+                           <HBox.margin>
+                              <Insets left="20.0" />
+                           </HBox.margin>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Button fx:id="leaveGroupBtn" mnemonicParsing="false" onAction="#handleLeaveGroup" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Sair do grupo" textFill="WHITE">
                      <font>
                         <Font size="13.0" />
                      </font>
                      <VBox.margin>
-                        <Insets top="5.0" />
+                        <Insets top="15.0" />
                      </VBox.margin>
                   </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Apagar grupo" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
+                  <TextField fx:id="prompt" visible="false">
                      <VBox.margin>
-                        <Insets top="5.0" />
+                        <Insets left="100.0" right="100.0" top="15.0" />
+                     </VBox.margin>
+                  </TextField>
+                  <Button fx:id="confirmBtn" mnemonicParsing="false" onAction="#handleConfirm" prefHeight="25.0" prefWidth="72.0" text="Confirmar" visible="false">
+                     <VBox.margin>
+                        <Insets top="10.0" />
                      </VBox.margin>
                   </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Nova despesa" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
+                  <Button fx:id="goBackBtn" mnemonicParsing="false" onAction="#handleGoBack" prefHeight="32.0" prefWidth="100.0" style="-fx-background-color: #000000;" text="Voltar atrás" textFill="WHITE">
                      <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Ver gastos totais" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Ver historico de despesas" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Exportar despesas (csv)" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Editar despesa" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Eliminar despesa" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Fazer pagamento" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="180.0" style="-fx-background-color: #06402b;" text="Sair do grupo" textFill="WHITE">
-                     <font>
-                        <Font size="13.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button mnemonicParsing="false" prefHeight="32.0" prefWidth="100.0" style="-fx-background-color: #000000;" text="Voltar atrás" textFill="WHITE">
-                     <VBox.margin>
-                        <Insets bottom="10.0" top="20.0" />
+                        <Insets bottom="40.0" top="20.0" />
                      </VBox.margin>
                      <font>
                         <Font size="13.0" />
@@ -163,6 +189,11 @@
                      </font>
                      <VBox.margin>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </VBox.margin>
+                  </Label>
+                  <Label fx:id="output">
+                     <VBox.margin>
+                        <Insets left="10.0" />
                      </VBox.margin>
                   </Label>
                </children></VBox>

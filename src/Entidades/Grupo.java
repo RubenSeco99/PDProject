@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Grupo implements Serializable {
-
+    private static final long serialVersionUID = 6190246476684431756L; // Estava a dar "Conexão terminado pelo servidor" se não tivesse esta linha
     private int id;
     private String nome;
     private String nomeProvisorio;//so usado quando da mudanca do nome do grupo
@@ -31,7 +31,7 @@ public class Grupo implements Serializable {
     public String getNomeProvisorio() {
         return nomeProvisorio;
     }
-
+    public List<Despesas> getDespesas() { return despesas; }
     public void setNomeProvisorio(String nomeProvisorio) {
         this.nomeProvisorio = nomeProvisorio;
     }

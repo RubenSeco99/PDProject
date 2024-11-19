@@ -1,10 +1,13 @@
 package Cliente;
 
+import BaseDeDados.DespesaDB;
+import Entidades.Despesas;
 import Entidades.Utilizador;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 public class ClienteModel {
     private Socket socket;
@@ -19,6 +22,8 @@ public class ClienteModel {
     public ClienteModel(String serverAddress, int serverPort, ClienteFacade facade) {
         this.support = new PropertyChangeSupport(this);
         this.facade = facade;
+        this.utilizadorAtualizado = new Utilizador();
+
         try {
             this.socket = new Socket(serverAddress, serverPort);
             this.Oout = new ObjectOutputStream(socket.getOutputStream());
@@ -27,8 +32,11 @@ public class ClienteModel {
             this.registado = false;
 
             startListening();
-        }catch (IOException e){
-            System.out.println("Erro a inicializar o ClienteModel " + e);
+        } catch (IOException e) {
+            System.out.println("Erro ao inicializar o ClienteModel: " + e.getMessage());
+            this.socket = null;
+            this.Oout = null;
+            this.Oin = null;
         }
     }
 
@@ -125,4 +133,5 @@ public class ClienteModel {
     public boolean isRegistado() {
         return registado;
     }
+
 }
