@@ -14,10 +14,7 @@ public class ClienteFacade {
     private final ClienteModel clienteModel;
     private Utilizador utilizador;
 
-    private boolean sincronizado;
-
     public ClienteFacade(String serverAddress, int serverPort) {
-        sincronizado = true;
         clienteModel = new ClienteModel(serverAddress, serverPort);
         utilizador = new Utilizador();
     }
@@ -167,9 +164,7 @@ public class ClienteFacade {
                 clienteModel.enviarMensagem(comunicacao);
                 return true;
             }
-        sincronizado=true;
         return false;
-
     }
     public void sendGroupInvite(String email) {
         utilizador = clienteModel.getUtilizadorAtualizado();
@@ -212,7 +207,7 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         utilizador.setNome(nome);
         Comunicacao comunicacao = new Comunicacao(utilizador);
-        comunicacao.setMensagem("Atualizar Nome Utilizador");
+        comunicacao.setMensagem("Editar dados");
         clienteModel.enviarMensagem(comunicacao);
     }
 
@@ -220,7 +215,7 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         utilizador.setPassword(password);
         Comunicacao comunicacao = new Comunicacao(utilizador);
-        comunicacao.setMensagem("Atualizar Password Utilizador");
+        comunicacao.setMensagem("Editar dados");
         clienteModel.enviarMensagem(comunicacao);
     }
 
@@ -228,7 +223,7 @@ public class ClienteFacade {
         utilizador = clienteModel.getUtilizadorAtualizado();
         utilizador.setTelefone(telefone);
         Comunicacao comunicacao = new Comunicacao(utilizador);
-        comunicacao.setMensagem("Atualizar Telefone Utilizador");
+        comunicacao.setMensagem("Editar dados");
         clienteModel.enviarMensagem(comunicacao);
     }
 
