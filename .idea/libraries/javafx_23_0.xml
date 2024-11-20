@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="javafx-23.0">
+    <CLASSES />
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/lib/javafx-23.0.1-javadoc" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>
