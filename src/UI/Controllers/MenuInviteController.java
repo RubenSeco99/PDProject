@@ -1,7 +1,7 @@
 package UI.Controllers;
 
 import Cliente.ClienteFacade;
-import Cliente.Comunicacao;
+import Comunicacao.Comunicacao;
 import Entidades.Convite;
 import Entidades.Grupo;
 import javafx.application.Platform;
@@ -41,8 +41,7 @@ public class MenuInviteController implements PropertyChangeListener {
 
     public void handleSeeInvites() {
         System.out.println("CALLED: handleSeeInvites");
-
-        facade.checkInvites();
+        facade.seeInvites();
     }
 
     public void handleGoBack() {

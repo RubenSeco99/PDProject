@@ -135,21 +135,6 @@ public class ClienteFacade {
         clienteModel.enviarMensagem(comunicacao);
     }
 
-    public void acceptInvite(String nomeGrupo) {
-        utilizador = clienteModel.getUtilizadorAtualizado();
-        Comunicacao comunicacao = new Comunicacao(utilizador);
-        comunicacao.setMensagem("Aceitar convite");
-        comunicacao.setGrupos(nomeGrupo);
-        clienteModel.enviarMensagem(comunicacao);
-    }
-
-    public void rejectInvite(String nomeGrupo) {
-        utilizador = clienteModel.getUtilizadorAtualizado();
-        Comunicacao comunicacao = new Comunicacao(utilizador);
-        comunicacao.setMensagem("Rejeitar convite");
-        comunicacao.setGrupos(nomeGrupo);
-        clienteModel.enviarMensagem(comunicacao);
-    }
     public boolean handleChangeInviteState(String estado,String nomeGrupo){
         utilizador = clienteModel.getUtilizadorAtualizado();
         List<Convite> convites= utilizador.getConvites();
@@ -240,5 +225,9 @@ public class ClienteFacade {
 
     public Utilizador getUtilizador() {
         return clienteModel.getUtilizadorAtualizado();
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        clienteModel.removePropertyChangeListener(listener);
     }
 }

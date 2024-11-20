@@ -1,7 +1,7 @@
 package UI.Controllers;
 
 import Cliente.ClienteFacade;
-import Cliente.Comunicacao;
+import Comunicacao.Comunicacao;
 import Entidades.Despesas;
 import Entidades.Grupo;
 import javafx.application.Platform;

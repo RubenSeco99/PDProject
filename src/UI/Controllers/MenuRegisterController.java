@@ -1,7 +1,7 @@
 package UI.Controllers;
 
 import Cliente.ClienteFacade;
-import Cliente.Comunicacao;
+import Comunicacao.Comunicacao;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +17,7 @@ public class MenuRegisterController {
     private String email;
     private String username;
     private String password;
+    private String telefone;
     private ClienteFacade facade;
     private Comunicacao resposta;
     private Stage stage;
@@ -35,6 +36,7 @@ public class MenuRegisterController {
 
     public void setFacade(ClienteFacade facade) {
         this.facade = facade;
+        telefone = "999999999";
     }
 
     public void handleRegister() {
@@ -44,7 +46,7 @@ public class MenuRegisterController {
         username = usernameField.getText();
         password = passwordField.getText();
 
-        facade.register(username, email, password);
+        facade.register(username, email, password, telefone);
 
         Platform.runLater(() -> {
             try {
