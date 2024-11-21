@@ -4,6 +4,7 @@ import Cliente.ClienteFacade;
 import Comunicacao.Comunicacao;
 import Entidades.Despesas;
 import Entidades.Grupo;
+import Entidades.Pagamento;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 
 public class MenuCurrentGroupController implements PropertyChangeListener {
     private ClienteFacade facade;
@@ -175,6 +177,18 @@ public class MenuCurrentGroupController implements PropertyChangeListener {
         comando = "Convite";
     }
 
+    public void handleViewBalances() {
+        System.out.println("CALLED: handleViewBalances");
+
+        facade.viewBalances();
+    }
+
+    public void handleListPayments() {
+        System.out.println("CALLED: handleListPayments");
+
+        facade.listPayments();
+    }
+
     public void handleLeaveGroup() {
         System.out.println("CALLED: handleLeaveGroup");
 
@@ -264,6 +278,67 @@ public class MenuCurrentGroupController implements PropertyChangeListener {
                     sb.append(despesa.getIdDespesa()).append(" - ").append(despesa.getDescricao()).append(" - ").append(despesa.getValor()).append(" - ").append(despesa.getData()).append("\n");
                 }
                 Platform.runLater(() -> output.setText("Despesas: \n" + sb));
+            } else if (resposta.getMensagem().equalsIgnoreCase("Lista de pagamentos")) {
+                StringBuilder sb = new StringBuilder();
+                List<Pagamento> pagamentos = resposta.getPagamentos();
+                for (Pagamento pagamento : pagamentos) {
+                    sb.append("Pago por ").append(pagamento.getQuemPagou()).append(" a ").append(pagamento.getQuemRecebeu()).append(" no valor de ").append(pagamento.getValorPagamento()).append("\n");
+                }
+                Platform.runLater(() -> output.setText("Pagamentos: \n" + sb));
+            } else if (resposta.getMensagem().equalsIgnoreCase("Saldos do grupo")) {
+                StringBuilder sb = new StringBuilder();
+
+                Map<String, Double> totalDividas = resposta.getValoresDevidos();
+                sb.append("\nTotal em dívida de cada utilizador:\n");
+
+                for (Map.Entry<String, Double> entry : totalDividas.entrySet()) {
+                    String utilizador = entry.getKey();
+                    Double valor = entry.getValue();
+                    sb.append("Utilizador: ").append(utilizador).append(" - Total em dívida: ").append(String.format("%.2f", valor)).append("\n");
+                }
+
+                Map<String, Double> totalReceber = resposta.getTotalReceber();
+                sb.append("\nTotal em dívida de cada utilizador:\n");
+
+                for (Map.Entry<String, Double> entry : totalReceber.entrySet()) {
+                    String utilizador = entry.getKey();
+                    Double valor = entry.getValue();
+                    sb.append("Utilizador: ").append(utilizador).append(" - Total a receber: ").append(String.format("%.2f", valor)).append("\n");
+                }
+
+                Map<String, Map<String, Double>> deveParaCada = resposta.getDeveParaCada();
+                sb.append("\nQuem deve a quem:\n");
+
+                for (Map.Entry<String, Map<String, Double>> entry : deveParaCada.entrySet()) {
+                    String utilizador = entry.getKey();
+                    Map<String, Double> dividas = entry.getValue();
+
+                    sb.append("Utilizador: ").append(utilizador).append(" deve a:\n");
+
+                    for (Map.Entry<String, Double> divida : dividas.entrySet()) {
+                        String credor = divida.getKey();
+                        Double valor = divida.getValue();
+                        sb.append("  - ").append(credor).append(": ").append(String.format("%.2f", valor)).append("\n");
+                    }
+                }
+
+                Map<String, Map<String, Double>> receberDeCada = resposta.getReceberDeCada();
+                sb.append("\nQuem recebe de quem:\n");
+
+                for (Map.Entry<String, Map<String, Double>> entry : receberDeCada.entrySet()) {
+                    String utilizador = entry.getKey();
+                    Map<String, Double> dividas = entry.getValue();
+
+                    sb.append("Utilizador: ").append(utilizador).append(" recebeu de:\n");
+
+                    for (Map.Entry<String, Double> divida : dividas.entrySet()) {
+                        String credor = divida.getKey();
+                        Double valor = divida.getValue();
+                        sb.append("  - ").append(credor).append(": ").append(String.format("%.2f", valor)).append("\n");
+                    }
+                }
+
+                Platform.runLater(() -> output.setText("Saldos: \n" + sb));
             } else {
                 Platform.runLater(() -> output.setText(resposta.getMensagem()));
             }

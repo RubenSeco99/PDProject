@@ -71,7 +71,12 @@
                         <Insets left="300.0" right="300.0" top="15.0" />
                      </VBox.margin>
                   </TextField>
-                  <TextField fx:id="passwordField" prefHeight="25.0" prefWidth="334.0" promptText="Password">
+                  <TextField fx:id="phoneField" promptText="Telefone">
+                     <VBox.margin>
+                        <Insets left="300.0" right="300.0" top="15.0" />
+                     </VBox.margin>
+                  </TextField>
+                  <TextField fx:id="passwordField1" prefHeight="25.0" prefWidth="334.0" promptText="Password">
                      <VBox.margin>
                         <Insets bottom="30.0" left="300.0" right="300.0" top="15.0" />
                      </VBox.margin>

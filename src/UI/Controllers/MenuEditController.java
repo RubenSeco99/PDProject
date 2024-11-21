@@ -1,6 +1,8 @@
 package UI.Controllers;
 
 import Cliente.ClienteFacade;
+import Comunicacao.Comunicacao;
+import Entidades.Grupo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,10 +13,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.util.List;
 
-public class MenuEditController {
+public class MenuEditController implements PropertyChangeListener {
     private ClienteFacade facade;
+    private Comunicacao resposta;
     private Stage stage;
     private String comando;
 
@@ -28,10 +34,14 @@ public class MenuEditController {
     Label output;
 
     public MenuEditController() {}
-    public MenuEditController(ClienteFacade facade) { this.facade = facade; }
+    public MenuEditController(ClienteFacade facade) {
+        this.facade = facade;
+        this.facade.addPropertyChangeListener(this);
+    }
 
     public void setFacade(ClienteFacade facade) {
         this.facade = facade;
+        this.facade.addPropertyChangeListener(this);
     }
 
     public void handleEditName() {
@@ -116,5 +126,18 @@ public class MenuEditController {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if ("mensagemRecebida".equals(evt.getPropertyName())) {
+            resposta = (Comunicacao) evt.getNewValue();
+            System.out.println("[Resposta do Servidor - MenuEditController]: " + resposta.getMensagem());
+            if (resposta.getMensagem().equalsIgnoreCase("Edicao utilizador bem sucedida")) {
+                Platform.runLater(() -> output.setText("Dados de utilizador atualizados com sucesso"));
+            } else {
+                Platform.runLater(() -> output.setText(resposta.getMensagem()));
+            }
+        }
     }
 }

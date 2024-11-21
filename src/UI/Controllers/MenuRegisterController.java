@@ -17,7 +17,7 @@ public class MenuRegisterController {
     private String email;
     private String username;
     private String password;
-    private String telefone;
+    private String phone;
     private ClienteFacade facade;
     private Comunicacao resposta;
     private Stage stage;
@@ -29,6 +29,8 @@ public class MenuRegisterController {
     @FXML
     TextField usernameField;
     @FXML
+    TextField phoneField;
+    @FXML
     Button registerBtn;
 
     public MenuRegisterController() {}
@@ -36,7 +38,6 @@ public class MenuRegisterController {
 
     public void setFacade(ClienteFacade facade) {
         this.facade = facade;
-        telefone = "999999999";
     }
 
     public void handleRegister() {
@@ -45,8 +46,14 @@ public class MenuRegisterController {
         email = emailField.getText();
         username = usernameField.getText();
         password = passwordField.getText();
+        phone = phoneField.getText();
 
-        facade.register(username, email, password, telefone);
+        if(email.isEmpty() || username.isEmpty() || password.isEmpty() || phone.isEmpty()) {
+            System.out.println("ERROR: Empty fields");
+            return;
+        }
+
+        facade.register(username, email, password, phone);
 
         Platform.runLater(() -> {
             try {

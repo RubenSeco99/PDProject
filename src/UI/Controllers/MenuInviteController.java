@@ -11,6 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.beans.PropertyChangeEvent;
@@ -22,11 +23,16 @@ public class MenuInviteController implements PropertyChangeListener {
     private ClienteFacade facade;
     private Stage stage;
     private Comunicacao resposta;
+    private String comando;
 
     @FXML
     Button goBackBtn;
     @FXML
     Label output;
+    @FXML
+    TextField input;
+    @FXML
+    Button confirmBtn;
 
     public MenuInviteController() {}
     public MenuInviteController(ClienteFacade facade) {
@@ -42,6 +48,25 @@ public class MenuInviteController implements PropertyChangeListener {
     public void handleSeeInvites() {
         System.out.println("CALLED: handleSeeInvites");
         facade.seeInvites();
+    }
+
+    public void handleAcceptInvite() {
+        System.out.println("CALLED: handleAcceptInvite");
+
+        Platform.runLater(() -> {
+            input.setVisible(true);
+            input.setManaged(true);
+            confirmBtn.setVisible(true);
+            confirmBtn.setManaged(true);
+        });
+
+        comando = "Aceitar convite";
+    }
+
+    public void handleRejectInvite() {
+        System.out.println("CALLED: handleRejectInvite");
+
+        comando = "Rejeitar convite";
     }
 
     public void handleGoBack() {
@@ -64,6 +89,21 @@ public class MenuInviteController implements PropertyChangeListener {
         });
     }
 
+    public void handleConfirm() {
+        System.out.println("CALLED: handleConfirm");
+
+        if(input.getText().isEmpty()) {
+            output.setText("Introduza um nome de grupo.");
+            return;
+        }
+
+        if (comando.equalsIgnoreCase("Aceitar convite")) {
+            facade.handleChangeInviteState("Aceite", input.getText());
+        } else if (comando.equalsIgnoreCase("Rejeitar convite")) {
+            facade.handleChangeInviteState("Rejeitado", input.getText());
+        }
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if ("mensagemRecebida".equals(evt.getPropertyName())) {
@@ -78,6 +118,8 @@ public class MenuInviteController implements PropertyChangeListener {
                     sb.append("Convite para o grupo: ").append(c.getNomeGrupo()).append("\n");
                 }
                 Platform.runLater(() -> output.setText("Convites pendentes: \n" + sb));
+            } else {
+                Platform.runLater(() -> output.setText(resposta.getMensagem()));
             }
         }
     }

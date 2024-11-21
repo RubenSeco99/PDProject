@@ -150,6 +150,8 @@ public class MenuGroupController implements PropertyChangeListener {
                     joinGroupBtn.setManaged(false);
                     output.setText("Grupo criado com sucesso.");
                 });
+            } else {
+                Platform.runLater(() -> output.setText(resposta.getMensagem()));
             }
         }
     }
