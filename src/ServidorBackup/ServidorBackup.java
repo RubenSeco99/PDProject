@@ -15,6 +15,8 @@ public class ServidorBackup {
 
     public static void main(String[] args) {
 
+        int versaoAnterior = -1;
+
         if (args.length != 1) {
             System.out.println("Sintaxe: Java Client serverAddress serverPort");
             return;
@@ -66,6 +68,7 @@ public class ServidorBackup {
                 received = oin.readObject();
                 if(received instanceof ServerBackUpSupport) {
                     serverSupport = (ServerBackUpSupport) received;
+                    versaoAnterior = serverSupport.getVersao();
                 }
                 System.out.println("Porto recebido: " + serverSupport.getPortoTCP());
 
@@ -100,8 +103,6 @@ public class ServidorBackup {
                     multiSocket.setSoTimeout(TIMEOUT);
 
                     backupConnection = conectBackUpDB(localFilePath);
-
-                    int versaoAnterior = -1;
 
                     try {
                         while (true) {
