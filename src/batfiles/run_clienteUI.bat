@@ -1,10 +1,12 @@
 @echo off
 echo Executar GUI...
+cd ..
+cd ..
 
-rem Caminho para a biblioteca do JavaFX
-set JAVA_FX_LIB=..\..\lib\javafx-sdk-23.0.1\lib
+REM Definir o caminho para a biblioteca JavaFX
+set JAVA_FX_LIB=lib\javafx\lib
 
-rem Executar a aplicação
-java --module-path "%JAVA_FX_LIB%" --add-modules javafx.controls,javafx.fxml -cp ..\..\out\production\PDProject Main
+REM Executar a aplicação com JavaFX
+java --module-path %JAVA_FX_LIB% --add-modules javafx.controls,javafx.fxml -cp out\production\PDProject Main
 
 pause
